@@ -6,6 +6,6 @@ interface UseSelectRegion {
 }
 
 export const useSelectRegion = create<UseSelectRegion>((set) => ({
-	region: "MALUKU DAN PAPUA",
+	region: "PUMA",
 	setSelectedRegion: (val: string) => set({ region: val }),
 }));

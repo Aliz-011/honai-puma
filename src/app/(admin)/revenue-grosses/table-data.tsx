@@ -38,6 +38,8 @@ export const TableData = () => {
         )
     }
 
+    console.log(revenues);
+
     return (
         <div className="max-w-full overflow-x-auto remove-scrollbar">
             <div className="min-w-[1400px]">
@@ -126,30 +128,40 @@ export const TableData = () => {
                                             {revenue.name}
                                         </TableCell>
                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                            {formatToBillion(revenue.totalRevenue)}
+                                            {formatToBillion(revenue.currMonthTarget)}
                                         </TableCell>
                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                            {formatToBillion(revenue.currTarget)}
+                                            {formatToBillion(revenue.currMonthRevenue)}
                                         </TableCell>
                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                            {formatToBillion(revenue.prevMonthTarget)}
+                                            {formatToBillion(revenue.prevMonthRevenue)}
                                         </TableCell>
                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                            {formatToBillion(revenue.prevYearCurrMonthReveneu)}
-                                        </TableCell>
-                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                            BLANK
+                                            {formatToBillion(revenue.prevYearCurrMonthRevenue)}
                                         </TableCell>
                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                             BLANK
                                         </TableCell>
                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                             BLANK
+                                        </TableCell>
+                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                            <span className={cn(getGrowthColor(revenue.prevMonthRevenue / revenue.currMonthTarget) ? 'text-green-500' : 'text-rose-500')}>
+                                                {formatToPercentage(revenue.prevMonthRevenue / revenue.currMonthTarget)}%
+                                            </span>
                                         </TableCell>
                                         <TableCell className={cn("px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs font-medium dark:border-gray-800")}>
-                                            <span className={cn(getGrowthColor(((revenue.currTarget - revenue.prevMonthTarget) / revenue.prevMonthTarget)) ? 'text-green-500' : 'text-rose-500')}>
-                                                {formatToPercentage((revenue.currTarget - revenue.prevMonthTarget) / revenue.prevMonthTarget)}%
+                                            <span className={cn(getGrowthColor(((revenue.currMonthRevenue - revenue.prevMonthRevenue) / revenue.prevMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
+                                                {formatToPercentage((revenue.currMonthRevenue - revenue.prevMonthRevenue) / revenue.prevMonthRevenue)}%
                                             </span>
+                                        </TableCell>
+                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                            <span className={cn(getGrowthColor(revenue.currMonthRevenue / revenue.prevYearCurrMonthRevenue) ? 'text-green-500' : 'text-rose-500')}>
+                                                {formatToPercentage(revenue.currMonthRevenue / revenue.prevYearCurrMonthRevenue)}%
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                            BLANK
                                         </TableCell>
                                     </TableRow>
 
@@ -166,30 +178,40 @@ export const TableData = () => {
                                                     {branch.name}
                                                 </TableCell>
                                                 <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                    {formatToBillion(branch.totalRevenue)}
+                                                    {formatToBillion(branch.currMonthTarget)}
                                                 </TableCell>
                                                 <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                    {formatToBillion(branch.currTarget)}
+                                                    {formatToBillion(branch.currMonthRevenue)}
                                                 </TableCell>
                                                 <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                    {formatToBillion(branch.prevMonthTarget)}
+                                                    {formatToBillion(branch.prevMonthRevenue)}
                                                 </TableCell>
                                                 <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                    {formatToBillion(branch.prevYearCurrMonthReveneu)}
-                                                </TableCell>
-                                                <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                    BLANK
+                                                    {formatToBillion(branch.prevYearCurrMonthRevenue)}
                                                 </TableCell>
                                                 <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                     BLANK
                                                 </TableCell>
                                                 <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                     BLANK
+                                                </TableCell>
+                                                <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                    <span className={cn(getGrowthColor(branch.prevMonthRevenue / branch.currMonthTarget) ? 'text-green-500' : 'text-rose-500')}>
+                                                        {formatToPercentage(branch.prevMonthRevenue / branch.currMonthTarget)}%
+                                                    </span>
                                                 </TableCell>
                                                 <TableCell className={cn("px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs font-medium dark:border-gray-800")}>
-                                                    <span className={cn(getGrowthColor(((branch.currTarget - branch.prevMonthTarget) / branch.prevMonthTarget)) ? 'text-green-500' : 'text-rose-500')}>
-                                                        {formatToPercentage((branch.currTarget - branch.prevMonthTarget) / branch.prevMonthTarget)}%
+                                                    <span className={cn(getGrowthColor(((branch.currMonthRevenue - branch.prevMonthRevenue) / branch.prevMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
+                                                        {formatToPercentage((branch.currMonthRevenue - branch.prevMonthRevenue) / branch.prevMonthRevenue)}%
                                                     </span>
+                                                </TableCell>
+                                                <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                    <span className={cn(getGrowthColor(branch.currMonthRevenue / branch.prevYearCurrMonthRevenue) ? 'text-green-500' : 'text-rose-500')}>
+                                                        {formatToPercentage(branch.currMonthRevenue / branch.prevYearCurrMonthRevenue)}%
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                    BLANK
                                                 </TableCell>
                                             </TableRow>
                                         </React.Fragment>
@@ -209,30 +231,40 @@ export const TableData = () => {
                                                         {subbranch.name}
                                                     </TableCell>
                                                     <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                        {formatToBillion(subbranch.totalRevenue)}
+                                                        {formatToBillion(subbranch.currMonthTarget)}
                                                     </TableCell>
                                                     <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                        {formatToBillion(subbranch.currTarget)}
+                                                        {formatToBillion(subbranch.currMonthRevenue)}
                                                     </TableCell>
                                                     <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                        {formatToBillion(subbranch.prevMonthTarget)}
+                                                        {formatToBillion(subbranch.prevMonthRevenue)}
                                                     </TableCell>
                                                     <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                        {formatToBillion(subbranch.prevYearCurrMonthReveneu)}
-                                                    </TableCell>
-                                                    <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                        BLANK
+                                                        {formatToBillion(subbranch.prevYearCurrMonthRevenue)}
                                                     </TableCell>
                                                     <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                         BLANK
                                                     </TableCell>
                                                     <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                         BLANK
+                                                    </TableCell>
+                                                    <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                        <span className={cn(getGrowthColor(subbranch.prevMonthRevenue / subbranch.currMonthTarget) ? 'text-green-500' : 'text-rose-500')}>
+                                                            {formatToPercentage(subbranch.prevMonthRevenue / subbranch.currMonthTarget)}%
+                                                        </span>
                                                     </TableCell>
                                                     <TableCell className={cn("px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs font-medium dark:border-gray-800")}>
-                                                        <span className={cn(getGrowthColor(((subbranch.currTarget - subbranch.prevMonthTarget) / subbranch.prevMonthTarget)) ? 'text-green-500' : 'text-rose-500')}>
-                                                            {formatToPercentage((subbranch.currTarget - subbranch.prevMonthTarget) / subbranch.prevMonthTarget)}%
+                                                        <span className={cn(getGrowthColor(((subbranch.currMonthRevenue - subbranch.prevMonthRevenue) / subbranch.prevMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
+                                                            {formatToPercentage((subbranch.currMonthRevenue - subbranch.prevMonthRevenue) / subbranch.prevMonthRevenue)}%
                                                         </span>
+                                                    </TableCell>
+                                                    <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                        <span className={cn(getGrowthColor(subbranch.currMonthRevenue / subbranch.prevYearCurrMonthRevenue) ? 'text-green-500' : 'text-rose-500')}>
+                                                            {formatToPercentage(subbranch.currMonthRevenue / subbranch.prevYearCurrMonthRevenue)}%
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                        BLANK
                                                     </TableCell>
                                                 </TableRow>
                                             </React.Fragment>
@@ -252,30 +284,40 @@ export const TableData = () => {
                                                             {cluster.name}
                                                         </TableCell>
                                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                            {formatToBillion(cluster.totalRevenue)}
+                                                            {formatToBillion(cluster.currMonthTarget)}
                                                         </TableCell>
                                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                            {formatToBillion(cluster.currTarget)}
+                                                            {formatToBillion(cluster.currMonthRevenue)}
                                                         </TableCell>
                                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                            {formatToBillion(cluster.prevMonthTarget)}
+                                                            {formatToBillion(cluster.prevMonthRevenue)}
                                                         </TableCell>
                                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                            {formatToBillion(cluster.prevYearCurrMonthReveneu)}
-                                                        </TableCell>
-                                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                            BLANK
+                                                            {formatToBillion(cluster.prevYearCurrMonthRevenue)}
                                                         </TableCell>
                                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                             BLANK
                                                         </TableCell>
                                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                             BLANK
+                                                        </TableCell>
+                                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                            <span className={cn(getGrowthColor(cluster.prevMonthRevenue / cluster.currMonthTarget) ? 'text-green-500' : 'text-rose-500')}>
+                                                                {formatToPercentage(cluster.prevMonthRevenue / cluster.currMonthTarget)}%
+                                                            </span>
                                                         </TableCell>
                                                         <TableCell className={cn("px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs font-medium dark:border-gray-800")}>
-                                                            <span className={cn(getGrowthColor(((cluster.currTarget - cluster.prevMonthTarget) / cluster.prevMonthTarget)) ? 'text-green-500' : 'text-rose-500')}>
-                                                                {formatToPercentage((cluster.currTarget - cluster.prevMonthTarget) / cluster.prevMonthTarget)}%
+                                                            <span className={cn(getGrowthColor(((cluster.currMonthRevenue - cluster.prevMonthRevenue) / cluster.prevMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
+                                                                {formatToPercentage((cluster.currMonthRevenue - cluster.prevMonthRevenue) / cluster.prevMonthRevenue)}%
                                                             </span>
+                                                        </TableCell>
+                                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                            <span className={cn(getGrowthColor(cluster.currMonthRevenue / cluster.prevYearCurrMonthRevenue) ? 'text-green-500' : 'text-rose-500')}>
+                                                                {formatToPercentage(cluster.currMonthRevenue / cluster.prevYearCurrMonthRevenue)}%
+                                                            </span>
+                                                        </TableCell>
+                                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                            BLANK
                                                         </TableCell>
                                                     </TableRow>
                                                 </React.Fragment>
@@ -296,30 +338,40 @@ export const TableData = () => {
                                                                 {kabupaten.name}
                                                             </TableCell>
                                                             <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                                {formatToBillion(kabupaten.totalRevenue)}
+                                                                {formatToBillion(kabupaten.currMonthTarget)}
                                                             </TableCell>
                                                             <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                                {formatToBillion(kabupaten.currTarget)}
+                                                                {formatToBillion(kabupaten.currMonthRevenue)}
                                                             </TableCell>
                                                             <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                                {formatToBillion(kabupaten.prevMonthTarget)}
+                                                                {formatToBillion(kabupaten.prevMonthRevenue)}
                                                             </TableCell>
                                                             <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                                {formatToBillion(kabupaten.prevYearCurrMonthReveneu)}
-                                                            </TableCell>
-                                                            <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                                BLANK
+                                                                {formatToBillion(kabupaten.prevYearCurrMonthRevenue)}
                                                             </TableCell>
                                                             <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                                 BLANK
                                                             </TableCell>
                                                             <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                                 BLANK
+                                                            </TableCell>
+                                                            <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                                <span className={cn(getGrowthColor(kabupaten.prevMonthRevenue / kabupaten.currMonthTarget) ? 'text-green-500' : 'text-rose-500')}>
+                                                                    {formatToPercentage(kabupaten.prevMonthRevenue / kabupaten.currMonthTarget)}%
+                                                                </span>
                                                             </TableCell>
                                                             <TableCell className={cn("px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs font-medium dark:border-gray-800")}>
-                                                                <span className={cn(getGrowthColor(((kabupaten.currTarget - kabupaten.prevMonthTarget) / kabupaten.prevMonthTarget)) ? 'text-green-500' : 'text-rose-500')}>
-                                                                    {formatToPercentage((kabupaten.currTarget - kabupaten.prevMonthTarget) / kabupaten.prevMonthTarget)}%
+                                                                <span className={cn(getGrowthColor((kabupaten.currMonthRevenue - kabupaten.prevMonthRevenue) / kabupaten.prevMonthRevenue) ? 'text-green-500' : 'text-rose-500')}>
+                                                                    {formatToPercentage(((kabupaten.currMonthRevenue - kabupaten.prevMonthRevenue) / kabupaten.prevMonthRevenue))}%
                                                                 </span>
+                                                            </TableCell>
+                                                            <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                                <span className={cn(getGrowthColor(kabupaten.currMonthRevenue / kabupaten.prevYearCurrMonthRevenue) ? 'text-green-500' : 'text-rose-500')}>
+                                                                    {formatToPercentage(kabupaten.currMonthRevenue / kabupaten.prevYearCurrMonthRevenue)}%
+                                                                </span>
+                                                            </TableCell>
+                                                            <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                                BLANK
                                                             </TableCell>
                                                         </TableRow>
                                                     </React.Fragment>
