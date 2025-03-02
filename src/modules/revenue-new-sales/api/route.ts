@@ -3,17 +3,17 @@ import { z } from 'zod'
 import { and, asc, between, eq, isNotNull, sql } from "drizzle-orm";
 import { subMonths, subDays, format, subYears } from 'date-fns'
 
-import { db, db3 } from "@/db";
+import { db, db4 } from "@/db";
 import {
     branches,
     regionals,
     clusters,
     kabupatens,
     subbranches,
-    revenueByu,
+    revenueNewSales,
 } from "@/db/schema";
 import { zValidator } from "@/lib/validator-wrapper";
-import { dynamicByuTable } from "@/db/schema3";
+import { dynamicMergeNewSalesPumaTable } from "@/db/schema4";
 
 const app = new Hono().get("/",
     zValidator('query', z.object({ date: z.string().optional(), branch: z.string().optional(), subbranch: z.string().optional(), cluster: z.string().optional(), kabupaten: z.string().optional() })),
@@ -23,7 +23,7 @@ const app = new Hono().get("/",
         const month = (selectedDate.getMonth() + 1).toString()
 
         // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
-        const monthColumn = `m${month}` as keyof typeof revenueByu.$inferSelect
+        const monthColumn = `m${month}` as keyof typeof revenueNewSales.$inferSelect
 
         // VARIABLE TANGGAL UNTUK IMPORT TABEL SECARA DINAMIS
         const latestDataDate = subDays(selectedDate, 2);
@@ -35,10 +35,10 @@ const app = new Hono().get("/",
         const prevMonthYear = isPrevMonthLastYear ? format(subYears(latestDataDate, 1), 'yyyy') : format(latestDataDate, 'yyyy')
         const prevYear = format(subYears(latestDataDate, 1), 'yyyy')
 
-        // TABEL DINAMIS
-        const currRevByu = dynamicByuTable(currYear, currMonth)
-        const prevMonthRevByu = dynamicByuTable(prevMonthYear, prevMonth)
-        const prevYearCurrMonthRevByu = dynamicByuTable(prevYear, currMonth)
+        // TABEL `byu_`
+        const currRevNewSales = dynamicMergeNewSalesPumaTable(currYear, currMonth)
+        const prevMonthRevNewSales = dynamicMergeNewSalesPumaTable(prevMonthYear, prevMonth)
+        const prevYearCurrMonthRevNewSales = dynamicMergeNewSalesPumaTable(prevYear, currMonth)
 
         // VARIABLE TANGGAL
         const firstDayOfCurrMonth = format(new Date(latestDataDate.getFullYear(), latestDataDate.getMonth(), 1), 'yyyy-MM-dd')
@@ -48,17 +48,14 @@ const app = new Hono().get("/",
         const prevDate = format(subMonths(latestDataDate, 1), 'yyyy-MM-dd')
         const prevYearCurrDate = format(subYears(latestDataDate, 1), 'yyyy-MM-dd')
 
-        const regClassP2 = db3
-            .select({
-                msisdn: currRevByu.msisdn,
-                periodde: currRevByu.periode,
-                eventDate: currRevByu.eventDate,
-                rev: currRevByu.rev,
-                regionName: currRevByu.regionSales,
-                kabupatenName: currRevByu.kabupaten,
-                branchName: sql<string>`
+        const regClassP2 = db4.select({
+            mtdDt: currRevNewSales.mtdDt,
+            rev: currRevNewSales.rev,
+            regionName: currRevNewSales.regionSales,
+            kabupatenName: currRevNewSales.kabupaten,
+            branchName: sql<string>`
     CASE
-        WHEN ${currRevByu.kabupaten} IN (
+        WHEN ${currRevNewSales.kabupaten} IN (
             'AMBON',
             'KOTA AMBON',
             'MALUKU TENGAH',
@@ -73,7 +70,7 @@ const app = new Hono().get("/",
             'SERAM BAGIAN BARAT',
             'KEPULAUAN TANIMBAR'
         ) THEN 'AMBON'
-        WHEN ${currRevByu.kabupaten} IN (
+        WHEN ${currRevNewSales.kabupaten} IN (
             'KOTA JAYAPURA',
             'JAYAPURA',
             'KEEROM',
@@ -93,7 +90,7 @@ const app = new Hono().get("/",
             'YAHUKIMO',
             'YALIMO'
         ) THEN 'JAYAPURA'
-        WHEN ${currRevByu.kabupaten} IN (
+        WHEN ${currRevNewSales.kabupaten} IN (
             'MANOKWARI',
             'FAKFAK',
             'FAK FAK',
@@ -109,7 +106,7 @@ const app = new Hono().get("/",
             'SORONG SELATAN',
             'TAMBRAUW'
         ) THEN 'SORONG'
-        WHEN ${currRevByu.kabupaten} IN (
+        WHEN ${currRevNewSales.kabupaten} IN (
             'ASMAT',
             'BOVEN DIGOEL',
             'MAPPI',
@@ -127,15 +124,15 @@ const app = new Hono().get("/",
         ELSE NULL
     END
         `.as('branchName'),
-                subbranchName: sql<string>`
+            subbranchName: sql<string>`
     CASE
-        WHEN ${currRevByu.kabupaten} IN (
+        WHEN ${currRevNewSales.kabupaten} IN (
             'AMBON',
             'KOTA AMBON',
             'MALUKU TENGAH',
             'SERAM BAGIAN TIMUR'
         ) THEN 'AMBON'
-        WHEN ${currRevByu.kabupaten} IN (
+        WHEN ${currRevNewSales.kabupaten} IN (
             'KEPULAUAN ARU',
             'KOTA TUAL',
             'MALUKU BARAT DAYA',
@@ -143,9 +140,9 @@ const app = new Hono().get("/",
             'MALUKU TENGGARA BARAT',
             'KEPULAUAN TANIMBAR'
         ) THEN 'KEPULAUAN AMBON'
-        WHEN ${currRevByu.kabupaten} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BURU'
-        WHEN ${currRevByu.kabupaten} IN ('KOTA JAYAPURA') THEN 'JAYAPURA'
-        WHEN ${currRevByu.kabupaten} IN (
+        WHEN ${currRevNewSales.kabupaten} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BURU'
+        WHEN ${currRevNewSales.kabupaten} IN ('KOTA JAYAPURA') THEN 'JAYAPURA'
+        WHEN ${currRevNewSales.kabupaten} IN (
             'JAYAPURA',
             'KEEROM',
             'MAMBERAMO RAYA',
@@ -164,8 +161,8 @@ const app = new Hono().get("/",
             'YAHUKIMO',
             'YALIMO'
         ) THEN 'SENTANI'
-        WHEN ${currRevByu.kabupaten} IN ('MANOKWARI') THEN 'MANOKWARI'
-        WHEN ${currRevByu.kabupaten} IN (
+        WHEN ${currRevNewSales.kabupaten} IN ('MANOKWARI') THEN 'MANOKWARI'
+        WHEN ${currRevNewSales.kabupaten} IN (
             'FAKFAK',
             'FAK FAK',
             'KAIMANA',
@@ -174,7 +171,7 @@ const app = new Hono().get("/",
             'TELUK BINTUNI',
             'TELUK WONDAMA'
         ) THEN 'MANOKWARI OUTER'
-        WHEN ${currRevByu.kabupaten} IN (
+        WHEN ${currRevNewSales.kabupaten} IN (
             'KOTA SORONG',
             'MAYBRAT',
             'RAJA AMPAT',
@@ -182,26 +179,26 @@ const app = new Hono().get("/",
             'SORONG SELATAN',
             'TAMBRAUW'
         ) THEN 'SORONG RAJA AMPAT'
-        WHEN ${currRevByu.kabupaten} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'MERAUKE'
-        WHEN ${currRevByu.kabupaten} IN (
+        WHEN ${currRevNewSales.kabupaten} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'MERAUKE'
+        WHEN ${currRevNewSales.kabupaten} IN (
             'INTAN JAYA',
             'MIMIKA',
             'PUNCAK',
             'PUNCAK JAYA',
             'TIMIKA'
         ) THEN 'MIMIKA'
-        WHEN ${currRevByu.kabupaten} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
+        WHEN ${currRevNewSales.kabupaten} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
         ELSE NULL
     END
         `.as('subbranchName'),
-                clusterName: sql<string>`
+            clusterName: sql<string>`
     CASE
-        WHEN ${currRevByu.kabupaten} IN (
+        WHEN ${currRevNewSales.kabupaten} IN (
             'KOTA AMBON',
             'MALUKU TENGAH',
             'SERAM BAGIAN TIMUR'
         ) THEN 'AMBON'
-        WHEN ${currRevByu.kabupaten} IN (
+        WHEN ${currRevNewSales.kabupaten} IN (
             'KEPULAUAN ARU',
             'KOTA TUAL',
             'MALUKU BARAT DAYA',
@@ -209,17 +206,17 @@ const app = new Hono().get("/",
             'MALUKU TENGGARA BARAT',
             'KEPULAUAN TANIMBAR'
         ) THEN 'KEPULAUAN TUAL'
-        WHEN ${currRevByu.kabupaten} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BARAT BURU'
-        WHEN ${currRevByu.kabupaten} IN ('KOTA JAYAPURA') THEN 'KOTA JAYAPURA'
-        WHEN ${currRevByu.kabupaten} IN ('JAYAPURA', 'KEEROM', 'MAMBERAMO RAYA', 'SARMI') THEN 'JAYAPURA OUTER'
-        WHEN ${currRevByu.kabupaten} IN (
+        WHEN ${currRevNewSales.kabupaten} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BARAT BURU'
+        WHEN ${currRevNewSales.kabupaten} IN ('KOTA JAYAPURA') THEN 'KOTA JAYAPURA'
+        WHEN ${currRevNewSales.kabupaten} IN ('JAYAPURA', 'KEEROM', 'MAMBERAMO RAYA', 'SARMI') THEN 'JAYAPURA OUTER'
+        WHEN ${currRevNewSales.kabupaten} IN (
             'BIAK',
             'BIAK NUMFOR',
             'KEPULAUAN YAPEN',
             'SUPIORI',
             'WAROPEN'
         ) THEN 'NEW BIAK NUMFOR'
-        WHEN ${currRevByu.kabupaten} IN (
+        WHEN ${currRevNewSales.kabupaten} IN (
             'JAYAWIJAYA',
             'LANNY JAYA',
             'MAMBERAMO TENGAH',
@@ -229,8 +226,8 @@ const app = new Hono().get("/",
             'YAHUKIMO',
             'YALIMO'
         ) THEN 'PAPUA PEGUNUNGAN'
-        WHEN ${currRevByu.kabupaten} IN ('MANOKWARI') THEN 'MANOKWARI'
-        WHEN ${currRevByu.kabupaten} IN (
+        WHEN ${currRevNewSales.kabupaten} IN ('MANOKWARI') THEN 'MANOKWARI'
+        WHEN ${currRevNewSales.kabupaten} IN (
             'FAKFAK',
             'FAK FAK',
             'KAIMANA',
@@ -239,7 +236,7 @@ const app = new Hono().get("/",
             'TELUK BINTUNI',
             'TELUK WONDAMA'
         ) THEN 'MANOKWARI OUTER'
-        WHEN ${currRevByu.kabupaten} IN (
+        WHEN ${currRevNewSales.kabupaten} IN (
             'KOTA SORONG',
             'MAYBRAT',
             'RAJA AMPAT',
@@ -247,24 +244,24 @@ const app = new Hono().get("/",
             'SORONG SELATAN',
             'TAMBRAUW'
         ) THEN 'NEW SORONG RAJA AMPAT'
-        WHEN ${currRevByu.kabupaten} IN (
+        WHEN ${currRevNewSales.kabupaten} IN (
             'INTAN JAYA',
             'MIMIKA',
             'PUNCAK',
             'PUNCAK JAYA',
             'TIMIKA'
         ) THEN 'MIMIKA PUNCAK'
-        WHEN ${currRevByu.kabupaten} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
-        WHEN ${currRevByu.kabupaten} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'NEW MERAUKE'
+        WHEN ${currRevNewSales.kabupaten} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
+        WHEN ${currRevNewSales.kabupaten} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'NEW MERAUKE'
         ELSE NULL
     END
         `.as('clusterName'),
-            })
-            .from(currRevByu)
-            .where(between(currRevByu.eventDate, firstDayOfCurrMonth, currDate))
+        })
+            .from(currRevNewSales)
+            .where(between(currRevNewSales.mtdDt, firstDayOfCurrMonth, currDate))
             .as('regionClassififcation')
 
-        const kabSumsP2 = db3
+        const kabSumsP2 = db4
             .select({
                 region: regClassP2.regionName,
                 branch: sql<string>`${regClassP2.branchName}`.as('kabBranch'),
@@ -278,7 +275,7 @@ const app = new Hono().get("/",
             .groupBy(regClassP2.regionName, regClassP2.branchName, regClassP2.subbranchName, regClassP2.clusterName, regClassP2.kabupatenName)
             .as('kabSums')
 
-        const clusSumsP2 = db3
+        const clusSumsP2 = db4
             .select({
                 region: kabSumsP2.region,
                 branch: sql<string>`${kabSumsP2.branch}`.as('clusBranch'),
@@ -290,7 +287,7 @@ const app = new Hono().get("/",
             .groupBy(kabSumsP2.region, kabSumsP2.branch, kabSumsP2.subbranch, kabSumsP2.cluster)
             .as('clusSums')
 
-        const subSumsP2 = db3
+        const subSumsP2 = db4
             .select({
                 region: clusSumsP2.region,
                 branch: sql<string>`${clusSumsP2.branch}`.as('subSumsBranch'),
@@ -301,7 +298,7 @@ const app = new Hono().get("/",
             .groupBy(clusSumsP2.region, clusSumsP2.branch, clusSumsP2.subbranch)
             .as('subSums')
 
-        const branchSumsP2 = db3
+        const branchSumsP2 = db4
             .select({
                 region: subSumsP2.region,
                 branch: sql`${subSumsP2.branch}`.as('branch'),
@@ -311,7 +308,7 @@ const app = new Hono().get("/",
             .groupBy(subSumsP2.region, subSumsP2.branch)
             .as('branchSums')
 
-        const regSumsP2 = db3
+        const regSumsP2 = db4
             .select({
                 regionName: branchSumsP2.region,
                 regionalRev: sql<number>`CAST(SUM(${branchSumsP2.branchRev}) AS DOUBLE PRECISION)`.as('regionalRev')
@@ -320,17 +317,15 @@ const app = new Hono().get("/",
             .groupBy(branchSumsP2.region)
             .as('regSums')
 
-        const regClassP3 = db3
+        const regClassP3 = db4
             .select({
-                msisdn: prevMonthRevByu.msisdn,
-                periodde: prevMonthRevByu.periode,
-                eventDate: prevMonthRevByu.eventDate,
-                rev: prevMonthRevByu.rev,
-                regionName: prevMonthRevByu.regionSales,
-                kabupatenName: prevMonthRevByu.kabupaten,
+                mtdDt: prevMonthRevNewSales.mtdDt,
+                rev: prevMonthRevNewSales.rev,
+                regionName: prevMonthRevNewSales.regionSales,
+                kabupatenName: prevMonthRevNewSales.kabupaten,
                 branchName: sql<string>`
         CASE
-            WHEN ${prevMonthRevByu.kabupaten} IN (
+            WHEN ${prevMonthRevNewSales.kabupaten} IN (
                 'AMBON',
                 'KOTA AMBON',
                 'MALUKU TENGAH',
@@ -345,7 +340,7 @@ const app = new Hono().get("/",
                 'SERAM BAGIAN BARAT',
                 'KEPULAUAN TANIMBAR'
             ) THEN 'AMBON'
-            WHEN ${prevMonthRevByu.kabupaten} IN (
+            WHEN ${prevMonthRevNewSales.kabupaten} IN (
                 'KOTA JAYAPURA',
                 'JAYAPURA',
                 'KEEROM',
@@ -365,7 +360,7 @@ const app = new Hono().get("/",
                 'YAHUKIMO',
                 'YALIMO'
             ) THEN 'JAYAPURA'
-            WHEN ${prevMonthRevByu.kabupaten} IN (
+            WHEN ${prevMonthRevNewSales.kabupaten} IN (
                 'MANOKWARI',
                 'FAKFAK',
                 'FAK FAK',
@@ -381,7 +376,7 @@ const app = new Hono().get("/",
                 'SORONG SELATAN',
                 'TAMBRAUW'
             ) THEN 'SORONG'
-            WHEN ${prevMonthRevByu.kabupaten} IN (
+            WHEN ${prevMonthRevNewSales.kabupaten} IN (
                 'ASMAT',
                 'BOVEN DIGOEL',
                 'MAPPI',
@@ -401,13 +396,13 @@ const app = new Hono().get("/",
             `.as('branchName'),
                 subbranchName: sql<string>`
         CASE
-            WHEN ${prevMonthRevByu.kabupaten} IN (
+            WHEN ${prevMonthRevNewSales.kabupaten} IN (
                 'AMBON',
                 'KOTA AMBON',
                 'MALUKU TENGAH',
                 'SERAM BAGIAN TIMUR'
             ) THEN 'AMBON'
-            WHEN ${prevMonthRevByu.kabupaten} IN (
+            WHEN ${prevMonthRevNewSales.kabupaten} IN (
                 'KEPULAUAN ARU',
                 'KOTA TUAL',
                 'MALUKU BARAT DAYA',
@@ -415,9 +410,9 @@ const app = new Hono().get("/",
                 'MALUKU TENGGARA BARAT',
                 'KEPULAUAN TANIMBAR'
             ) THEN 'KEPULAUAN AMBON'
-            WHEN ${prevMonthRevByu.kabupaten} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BURU'
-            WHEN ${prevMonthRevByu.kabupaten} IN ('KOTA JAYAPURA') THEN 'JAYAPURA'
-            WHEN ${prevMonthRevByu.kabupaten} IN (
+            WHEN ${prevMonthRevNewSales.kabupaten} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BURU'
+            WHEN ${prevMonthRevNewSales.kabupaten} IN ('KOTA JAYAPURA') THEN 'JAYAPURA'
+            WHEN ${prevMonthRevNewSales.kabupaten} IN (
                 'JAYAPURA',
                 'KEEROM',
                 'MAMBERAMO RAYA',
@@ -436,8 +431,8 @@ const app = new Hono().get("/",
                 'YAHUKIMO',
                 'YALIMO'
             ) THEN 'SENTANI'
-            WHEN ${prevMonthRevByu.kabupaten} IN ('MANOKWARI') THEN 'MANOKWARI'
-            WHEN ${prevMonthRevByu.kabupaten} IN (
+            WHEN ${prevMonthRevNewSales.kabupaten} IN ('MANOKWARI') THEN 'MANOKWARI'
+            WHEN ${prevMonthRevNewSales.kabupaten} IN (
                 'FAKFAK',
                 'FAK FAK',
                 'KAIMANA',
@@ -446,7 +441,7 @@ const app = new Hono().get("/",
                 'TELUK BINTUNI',
                 'TELUK WONDAMA'
             ) THEN 'MANOKWARI OUTER'
-            WHEN ${prevMonthRevByu.kabupaten} IN (
+            WHEN ${prevMonthRevNewSales.kabupaten} IN (
                 'KOTA SORONG',
                 'MAYBRAT',
                 'RAJA AMPAT',
@@ -454,26 +449,26 @@ const app = new Hono().get("/",
                 'SORONG SELATAN',
                 'TAMBRAUW'
             ) THEN 'SORONG RAJA AMPAT'
-            WHEN ${prevMonthRevByu.kabupaten} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'MERAUKE'
-            WHEN ${prevMonthRevByu.kabupaten} IN (
+            WHEN ${prevMonthRevNewSales.kabupaten} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'MERAUKE'
+            WHEN ${prevMonthRevNewSales.kabupaten} IN (
                 'INTAN JAYA',
                 'MIMIKA',
                 'PUNCAK',
                 'PUNCAK JAYA',
                 'TIMIKA'
             ) THEN 'MIMIKA'
-            WHEN ${prevMonthRevByu.kabupaten} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
+            WHEN ${prevMonthRevNewSales.kabupaten} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
             ELSE NULL
         END
             `.as('subbranchName'),
                 clusterName: sql<string>`
         CASE
-            WHEN ${prevMonthRevByu.kabupaten} IN (
+            WHEN ${prevMonthRevNewSales.kabupaten} IN (
                 'KOTA AMBON',
                 'MALUKU TENGAH',
                 'SERAM BAGIAN TIMUR'
             ) THEN 'AMBON'
-            WHEN ${prevMonthRevByu.kabupaten} IN (
+            WHEN ${prevMonthRevNewSales.kabupaten} IN (
                 'KEPULAUAN ARU',
                 'KOTA TUAL',
                 'MALUKU BARAT DAYA',
@@ -481,17 +476,17 @@ const app = new Hono().get("/",
                 'MALUKU TENGGARA BARAT',
                 'KEPULAUAN TANIMBAR'
             ) THEN 'KEPULAUAN TUAL'
-            WHEN ${prevMonthRevByu.kabupaten} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BARAT BURU'
-            WHEN ${prevMonthRevByu.kabupaten} IN ('KOTA JAYAPURA') THEN 'KOTA JAYAPURA'
-            WHEN ${prevMonthRevByu.kabupaten} IN ('JAYAPURA', 'KEEROM', 'MAMBERAMO RAYA', 'SARMI') THEN 'JAYAPURA OUTER'
-            WHEN ${prevMonthRevByu.kabupaten} IN (
+            WHEN ${prevMonthRevNewSales.kabupaten} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BARAT BURU'
+            WHEN ${prevMonthRevNewSales.kabupaten} IN ('KOTA JAYAPURA') THEN 'KOTA JAYAPURA'
+            WHEN ${prevMonthRevNewSales.kabupaten} IN ('JAYAPURA', 'KEEROM', 'MAMBERAMO RAYA', 'SARMI') THEN 'JAYAPURA OUTER'
+            WHEN ${prevMonthRevNewSales.kabupaten} IN (
                 'BIAK',
                 'BIAK NUMFOR',
                 'KEPULAUAN YAPEN',
                 'SUPIORI',
                 'WAROPEN'
             ) THEN 'NEW BIAK NUMFOR'
-            WHEN ${prevMonthRevByu.kabupaten} IN (
+            WHEN ${prevMonthRevNewSales.kabupaten} IN (
                 'JAYAWIJAYA',
                 'LANNY JAYA',
                 'MAMBERAMO TENGAH',
@@ -501,8 +496,8 @@ const app = new Hono().get("/",
                 'YAHUKIMO',
                 'YALIMO'
             ) THEN 'PAPUA PEGUNUNGAN'
-            WHEN ${prevMonthRevByu.kabupaten} IN ('MANOKWARI') THEN 'MANOKWARI'
-            WHEN ${prevMonthRevByu.kabupaten} IN (
+            WHEN ${prevMonthRevNewSales.kabupaten} IN ('MANOKWARI') THEN 'MANOKWARI'
+            WHEN ${prevMonthRevNewSales.kabupaten} IN (
                 'FAKFAK',
                 'FAK FAK',
                 'KAIMANA',
@@ -511,7 +506,7 @@ const app = new Hono().get("/",
                 'TELUK BINTUNI',
                 'TELUK WONDAMA'
             ) THEN 'MANOKWARI OUTER'
-            WHEN ${prevMonthRevByu.kabupaten} IN (
+            WHEN ${prevMonthRevNewSales.kabupaten} IN (
                 'KOTA SORONG',
                 'MAYBRAT',
                 'RAJA AMPAT',
@@ -519,24 +514,24 @@ const app = new Hono().get("/",
                 'SORONG SELATAN',
                 'TAMBRAUW'
             ) THEN 'NEW SORONG RAJA AMPAT'
-            WHEN ${prevMonthRevByu.kabupaten} IN (
+            WHEN ${prevMonthRevNewSales.kabupaten} IN (
                 'INTAN JAYA',
                 'MIMIKA',
                 'PUNCAK',
                 'PUNCAK JAYA',
                 'TIMIKA'
             ) THEN 'MIMIKA PUNCAK'
-            WHEN ${prevMonthRevByu.kabupaten} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
-            WHEN ${prevMonthRevByu.kabupaten} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'NEW MERAUKE'
+            WHEN ${prevMonthRevNewSales.kabupaten} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
+            WHEN ${prevMonthRevNewSales.kabupaten} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'NEW MERAUKE'
             ELSE NULL
         END
             `.as('clusterName'),
             })
-            .from(prevMonthRevByu)
-            .where(between(prevMonthRevByu.eventDate, firstDayOfPrevMonth, prevDate))
+            .from(prevMonthRevNewSales)
+            .where(between(prevMonthRevNewSales.mtdDt, firstDayOfPrevMonth, prevDate))
             .as('regionClassififcation')
 
-        const kabSumsP3 = db3
+        const kabSumsP3 = db4
             .select({
                 region: regClassP3.regionName,
                 branch: sql<string>`${regClassP3.branchName}`.as('kabBranch'),
@@ -550,7 +545,7 @@ const app = new Hono().get("/",
             .groupBy(regClassP3.regionName, regClassP3.branchName, regClassP3.subbranchName, regClassP3.clusterName, regClassP3.kabupatenName)
             .as('kabSums')
 
-        const clusSumsP3 = db3
+        const clusSumsP3 = db4
             .select({
                 region: kabSumsP3.region,
                 branch: sql<string>`${kabSumsP3.branch}`.as('clusBranch'),
@@ -562,7 +557,7 @@ const app = new Hono().get("/",
             .groupBy(kabSumsP3.region, kabSumsP3.branch, kabSumsP3.subbranch, kabSumsP3.cluster)
             .as('clusSums')
 
-        const subSumsP3 = db3
+        const subSumsP3 = db4
             .select({
                 region: clusSumsP3.region,
                 branch: sql<string>`${clusSumsP3.branch}`.as('subSumsBranch'),
@@ -573,7 +568,7 @@ const app = new Hono().get("/",
             .groupBy(clusSumsP3.region, clusSumsP3.branch, clusSumsP3.subbranch)
             .as('subSums')
 
-        const branchSumsP3 = db3
+        const branchSumsP3 = db4
             .select({
                 region: subSumsP3.region,
                 branch: sql`${subSumsP3.branch}`.as('branch'),
@@ -583,7 +578,7 @@ const app = new Hono().get("/",
             .groupBy(subSumsP3.region, subSumsP3.branch)
             .as('branchSums')
 
-        const regSumsP3 = db3
+        const regSumsP3 = db4
             .select({
                 regionName: branchSumsP3.region,
                 regionalRev: sql<number>`CAST(SUM(${branchSumsP3.branchRev}) AS DOUBLE PRECISION)`.as('regionalRev')
@@ -593,17 +588,15 @@ const app = new Hono().get("/",
             .as('regSums')
 
 
-        const regClassP4 = db3
+        const regClassP4 = db4
             .select({
-                msisdn: prevYearCurrMonthRevByu.msisdn,
-                periode: prevYearCurrMonthRevByu.periode,
-                eventDate: prevYearCurrMonthRevByu.eventDate,
-                rev: prevYearCurrMonthRevByu.rev,
-                regionName: prevYearCurrMonthRevByu.regionSales,
-                kabupatenName: prevYearCurrMonthRevByu.kabupaten,
+                mtdDt: prevYearCurrMonthRevNewSales.mtdDt,
+                rev: prevYearCurrMonthRevNewSales.rev,
+                regionName: prevYearCurrMonthRevNewSales.regionSales,
+                kabupatenName: prevYearCurrMonthRevNewSales.kabupaten,
                 branchName: sql<string>`
         CASE
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN (
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN (
                 'AMBON',
                 'KOTA AMBON',
                 'MALUKU TENGAH',
@@ -618,7 +611,7 @@ const app = new Hono().get("/",
                 'SERAM BAGIAN BARAT',
                 'KEPULAUAN TANIMBAR'
             ) THEN 'AMBON'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN (
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN (
                 'KOTA JAYAPURA',
                 'JAYAPURA',
                 'KEEROM',
@@ -638,7 +631,7 @@ const app = new Hono().get("/",
                 'YAHUKIMO',
                 'YALIMO'
             ) THEN 'JAYAPURA'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN (
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN (
                 'MANOKWARI',
                 'FAKFAK',
                 'FAK FAK',
@@ -654,7 +647,7 @@ const app = new Hono().get("/",
                 'SORONG SELATAN',
                 'TAMBRAUW'
             ) THEN 'SORONG'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN (
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN (
                 'ASMAT',
                 'BOVEN DIGOEL',
                 'MAPPI',
@@ -674,13 +667,13 @@ const app = new Hono().get("/",
             `.as('branchName'),
                 subbranchName: sql<string>`
         CASE
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN (
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN (
                 'AMBON',
                 'KOTA AMBON',
                 'MALUKU TENGAH',
                 'SERAM BAGIAN TIMUR'
             ) THEN 'AMBON'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN (
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN (
                 'KEPULAUAN ARU',
                 'KOTA TUAL',
                 'MALUKU BARAT DAYA',
@@ -688,9 +681,9 @@ const app = new Hono().get("/",
                 'MALUKU TENGGARA BARAT',
                 'KEPULAUAN TANIMBAR'
             ) THEN 'KEPULAUAN AMBON'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BURU'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN ('KOTA JAYAPURA') THEN 'JAYAPURA'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN (
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BURU'
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN ('KOTA JAYAPURA') THEN 'JAYAPURA'
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN (
                 'JAYAPURA',
                 'KEEROM',
                 'MAMBERAMO RAYA',
@@ -709,8 +702,8 @@ const app = new Hono().get("/",
                 'YAHUKIMO',
                 'YALIMO'
             ) THEN 'SENTANI'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN ('MANOKWARI') THEN 'MANOKWARI'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN (
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN ('MANOKWARI') THEN 'MANOKWARI'
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN (
                 'FAKFAK',
                 'FAK FAK',
                 'KAIMANA',
@@ -719,7 +712,7 @@ const app = new Hono().get("/",
                 'TELUK BINTUNI',
                 'TELUK WONDAMA'
             ) THEN 'MANOKWARI OUTER'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN (
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN (
                 'KOTA SORONG',
                 'MAYBRAT',
                 'RAJA AMPAT',
@@ -727,26 +720,26 @@ const app = new Hono().get("/",
                 'SORONG SELATAN',
                 'TAMBRAUW'
             ) THEN 'SORONG RAJA AMPAT'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'MERAUKE'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN (
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'MERAUKE'
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN (
                 'INTAN JAYA',
                 'MIMIKA',
                 'PUNCAK',
                 'PUNCAK JAYA',
                 'TIMIKA'
             ) THEN 'MIMIKA'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
             ELSE NULL
         END
             `.as('subbranchName'),
                 clusterName: sql<string>`
         CASE
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN (
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN (
                 'KOTA AMBON',
                 'MALUKU TENGAH',
                 'SERAM BAGIAN TIMUR'
             ) THEN 'AMBON'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN (
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN (
                 'KEPULAUAN ARU',
                 'KOTA TUAL',
                 'MALUKU BARAT DAYA',
@@ -754,17 +747,17 @@ const app = new Hono().get("/",
                 'MALUKU TENGGARA BARAT',
                 'KEPULAUAN TANIMBAR'
             ) THEN 'KEPULAUAN TUAL'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BARAT BURU'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN ('KOTA JAYAPURA') THEN 'KOTA JAYAPURA'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN ('JAYAPURA', 'KEEROM', 'MAMBERAMO RAYA', 'SARMI') THEN 'JAYAPURA OUTER'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN (
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BARAT BURU'
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN ('KOTA JAYAPURA') THEN 'KOTA JAYAPURA'
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN ('JAYAPURA', 'KEEROM', 'MAMBERAMO RAYA', 'SARMI') THEN 'JAYAPURA OUTER'
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN (
                 'BIAK',
                 'BIAK NUMFOR',
                 'KEPULAUAN YAPEN',
                 'SUPIORI',
                 'WAROPEN'
             ) THEN 'NEW BIAK NUMFOR'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN (
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN (
                 'JAYAWIJAYA',
                 'LANNY JAYA',
                 'MAMBERAMO TENGAH',
@@ -774,8 +767,8 @@ const app = new Hono().get("/",
                 'YAHUKIMO',
                 'YALIMO'
             ) THEN 'PAPUA PEGUNUNGAN'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN ('MANOKWARI') THEN 'MANOKWARI'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN (
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN ('MANOKWARI') THEN 'MANOKWARI'
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN (
                 'FAKFAK',
                 'FAK FAK',
                 'KAIMANA',
@@ -784,7 +777,7 @@ const app = new Hono().get("/",
                 'TELUK BINTUNI',
                 'TELUK WONDAMA'
             ) THEN 'MANOKWARI OUTER'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN (
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN (
                 'KOTA SORONG',
                 'MAYBRAT',
                 'RAJA AMPAT',
@@ -792,24 +785,24 @@ const app = new Hono().get("/",
                 'SORONG SELATAN',
                 'TAMBRAUW'
             ) THEN 'NEW SORONG RAJA AMPAT'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN (
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN (
                 'INTAN JAYA',
                 'MIMIKA',
                 'PUNCAK',
                 'PUNCAK JAYA',
                 'TIMIKA'
             ) THEN 'MIMIKA PUNCAK'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
-            WHEN ${prevYearCurrMonthRevByu.kabupaten} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'NEW MERAUKE'
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
+            WHEN ${prevYearCurrMonthRevNewSales.kabupaten} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'NEW MERAUKE'
             ELSE NULL
         END
             `.as('clusterName'),
             })
-            .from(prevYearCurrMonthRevByu)
-            .where(between(prevYearCurrMonthRevByu.eventDate, firstDayOfPrevYearCurrMonth, prevYearCurrDate))
+            .from(prevYearCurrMonthRevNewSales)
+            .where(between(prevYearCurrMonthRevNewSales.mtdDt, firstDayOfPrevYearCurrMonth, prevYearCurrDate))
             .as('regionClassififcation')
 
-        const kabSumsP4 = db3
+        const kabSumsP4 = db4
             .select({
                 region: regClassP4.regionName,
                 branch: sql<string>`${regClassP4.branchName}`.as('kabBranch'),
@@ -823,7 +816,7 @@ const app = new Hono().get("/",
             .groupBy(regClassP4.regionName, regClassP4.branchName, regClassP4.subbranchName, regClassP4.clusterName, regClassP4.kabupatenName)
             .as('kabSums')
 
-        const clusSumsP4 = db3
+        const clusSumsP4 = db4
             .select({
                 region: kabSumsP4.region,
                 branch: sql<string>`${kabSumsP4.branch}`.as('clusBranch'),
@@ -835,7 +828,7 @@ const app = new Hono().get("/",
             .groupBy(kabSumsP4.region, kabSumsP4.branch, kabSumsP4.subbranch, kabSumsP4.cluster)
             .as('clusSums')
 
-        const subSumsP4 = db3
+        const subSumsP4 = db4
             .select({
                 region: clusSumsP4.region,
                 branch: sql<string>`${clusSumsP4.branch}`.as('subSumsBranch'),
@@ -846,7 +839,7 @@ const app = new Hono().get("/",
             .groupBy(clusSumsP4.region, clusSumsP4.branch, clusSumsP4.subbranch)
             .as('subSums')
 
-        const branchSumsP4 = db3
+        const branchSumsP4 = db4
             .select({
                 region: subSumsP4.region,
                 branch: sql`${subSumsP4.branch}`.as('branch'),
@@ -856,7 +849,7 @@ const app = new Hono().get("/",
             .groupBy(subSumsP4.region, subSumsP4.branch)
             .as('branchSums')
 
-        const regSumsP4 = db3
+        const regSumsP4 = db4
             .select({
                 regionName: branchSumsP4.region,
                 regionalRev: sql<number>`CAST(SUM(${branchSumsP4.branchRev}) AS DOUBLE PRECISION)`.as('regionalRev')
@@ -875,14 +868,14 @@ const app = new Hono().get("/",
                 subbranch: subbranches.subbranchNew,
                 cluster: clusters.cluster,
                 kabupaten: kabupatens.kabupaten,
-                currMonthTargetRev: sql<number>`CAST(SUM(${revenueByu[monthColumn]}) AS DOUBLE PRECISION)`.as('currMonthTargetRev')
+                currMonthTargetRev: sql<number>`CAST(SUM(${revenueNewSales[monthColumn]}) AS DOUBLE PRECISION)`.as('currMonthTargetRev')
             })
             .from(regionals)
             .leftJoin(branches, eq(regionals.id, branches.regionalId))
             .leftJoin(subbranches, eq(branches.id, subbranches.branchId))
             .leftJoin(clusters, eq(subbranches.id, clusters.subbranchId))
             .leftJoin(kabupatens, eq(clusters.id, kabupatens.clusterId))
-            .leftJoin(revenueByu, eq(kabupatens.id, revenueByu.kabupatenId))
+            .leftJoin(revenueNewSales, eq(kabupatens.id, revenueNewSales.kabupatenId))
             .groupBy(
                 regionals.regional,
                 branches.branchNew,
@@ -894,7 +887,7 @@ const app = new Hono().get("/",
             .prepare()
 
         //  QUERY UNTUK MENDAPAT CURRENT MONTH REVENUE (Mtd)
-        const p2 = db3
+        const p2 = db4
             .select({
                 region: sql<string>`${kabSumsP2.region}`.as('region'),
                 branch: sql<string>`${kabSumsP2.branch}`.as('branch'), // Keep only one branchName
@@ -922,7 +915,7 @@ const app = new Hono().get("/",
             .prepare()
 
         // QUERY UNTUK MENDAPAT PREV MONTH REVENUE
-        const p3 = db3
+        const p3 = db4
             .select({
                 region: sql<string>`${kabSumsP3.region}`.as('region'),
                 branch: sql<string>`${kabSumsP3.branch}`.as('branch'), // Keep only one branchName
@@ -950,7 +943,7 @@ const app = new Hono().get("/",
             .prepare()
 
         // QUERY UNTUK MENDAPAT PREV YEAR CURR MONTH REVENUE
-        const p4 = db3
+        const p4 = db4
             .select({
                 region: sql<string>`${kabSumsP4.region}`.as('region'),
                 branch: sql<string>`${kabSumsP4.branch}`.as('branch'), // Keep only one branchName
@@ -1186,8 +1179,6 @@ const app = new Hono().get("/",
             const subbranchName = row.subbranch;
             const clusterName = row.cluster;
             const kabupatenName = row.kabupaten;
-
-            console.log({ row });
 
             const regional = regionalsMap.get(regionalName) || regionalsMap.set(regionalName, {
                 name: regionalName,

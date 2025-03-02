@@ -31,7 +31,7 @@ const navItems: NavItem[] = [
     path: '/'
   },
   {
-    icon: <PieChartIcon />,
+    icon: <BoxCubeIcon />,
     name: 'Revenue Gross',
     path: '/revenue-grosses'
   },
@@ -39,6 +39,21 @@ const navItems: NavItem[] = [
     icon: <BoxCubeIcon />,
     name: 'Revenue ByU',
     path: '/revenue-byu'
+  },
+  {
+    icon: <BoxCubeIcon />,
+    name: 'Revenue CVM',
+    path: '/revenue-cvm'
+  },
+  {
+    icon: <BoxCubeIcon />,
+    name: 'Revenue New Sales',
+    path: '/revenue-new-sales'
+  },
+  {
+    icon: <BoxCubeIcon />,
+    name: 'Revenue SA',
+    path: '/revenue-sa'
   },
   {
     icon: <CalenderIcon />,

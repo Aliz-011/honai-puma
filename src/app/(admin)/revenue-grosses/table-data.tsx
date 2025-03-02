@@ -8,11 +8,13 @@ import { Skeleton } from '@/components/common/skeleton';
 import ComponentCard from '@/components/common/ComponentCard';
 import { useSelectDate } from '@/hooks/use-select-date';
 import { useGetRevenueGrosses } from '@/modules/revenue-gross/hooks/use-get-revenue-grosses';
-import { cn, formatToBillion, formatToPercentage, getGrowthColor } from '@/lib/utils';
+import { cn, formatToBillion, formatToIDR, formatToPercentage, getGrowthColor } from '@/lib/utils';
 import { useSelectBranch } from '@/hooks/use-select-branch';
 import { useSelectSubbranch } from '@/hooks/use-select-subbranch';
 import { useSelectCluster } from '@/hooks/use-select-cluster';
 import { useSelectKabupaten } from '@/hooks/use-select-kabupaten';
+import { Tooltip } from '@/components/common/tooltip';
+import { TableNotFound } from '@/components/table-not-found';
 
 export const TableData = () => {
     const { date: selectedDate } = useSelectDate()
@@ -25,7 +27,7 @@ export const TableData = () => {
 
     const compactDate = subDays(selectedDate, 2)
 
-    if (isLoadingRevenue || !revenues) {
+    if (isLoadingRevenue) {
         return (
             <div className="max-w-full overflow-x-auto remove-scrollbar">
                 <div className="min-w-[1102px]">
@@ -38,7 +40,9 @@ export const TableData = () => {
         )
     }
 
-    console.log(revenues);
+    if (!revenues) {
+        return <TableNotFound date={selectedDate} daysBehind={2} />
+    }
 
     return (
         <div className="max-w-full overflow-x-auto remove-scrollbar">
@@ -59,7 +63,7 @@ export const TableData = () => {
                                     isHeader
                                     className="px-5 py-3 font-medium border dark:bg-gray-900 text-gray-500 text-center text-theme-sm dark:text-white dark:border-gray-800"
                                 >
-                                    Revenue Gross
+                                    Revenue Gross Prabayar
                                 </TableCell>
                             </TableRow>
                             <TableRow>
@@ -86,7 +90,7 @@ export const TableData = () => {
                                 </TableCell>
                                 <TableCell isHeader className="px-5 py-3 min-w-[100px] font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
                                     {intlFormat(
-                                        subYears(compactDate, 1),
+                                        subMonths(compactDate, 12),
                                         {
                                             dateStyle: "medium",
                                         },
@@ -128,16 +132,24 @@ export const TableData = () => {
                                             {revenue.name}
                                         </TableCell>
                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                            {formatToBillion(revenue.currMonthTarget)}
+                                            <Tooltip message={formatToIDR(revenue.currMonthTarget)}>
+                                                <span className='text-end'>{formatToBillion(revenue.currMonthTarget)}</span>
+                                            </Tooltip>
                                         </TableCell>
                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                            {formatToBillion(revenue.currMonthRevenue)}
+                                            <Tooltip message={formatToIDR(revenue.currMonthRevenue)}>
+                                                <span className='text-end'>{formatToBillion(revenue.currMonthRevenue)}</span>
+                                            </Tooltip>
                                         </TableCell>
                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                            {formatToBillion(revenue.prevMonthRevenue)}
+                                            <Tooltip message={formatToIDR(revenue.prevMonthRevenue)}>
+                                                <span className='text-end'>{formatToBillion(revenue.prevMonthRevenue)}</span>
+                                            </Tooltip>
                                         </TableCell>
                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                            {formatToBillion(revenue.prevYearCurrMonthRevenue)}
+                                            <Tooltip message={formatToIDR(revenue.prevYearCurrMonthRevenue)}>
+                                                <span>{formatToBillion(revenue.prevYearCurrMonthRevenue)}</span>
+                                            </Tooltip>
                                         </TableCell>
                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                             BLANK
@@ -178,16 +190,24 @@ export const TableData = () => {
                                                     {branch.name}
                                                 </TableCell>
                                                 <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                    {formatToBillion(branch.currMonthTarget)}
+                                                    <Tooltip message={formatToIDR(branch.currMonthTarget)}>
+                                                        <span>{formatToBillion(branch.currMonthTarget)}</span>
+                                                    </Tooltip>
                                                 </TableCell>
                                                 <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                    {formatToBillion(branch.currMonthRevenue)}
+                                                    <Tooltip message={formatToIDR(branch.currMonthRevenue)}>
+                                                        <span>{formatToBillion(branch.currMonthRevenue)}</span>
+                                                    </Tooltip>
                                                 </TableCell>
                                                 <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                    {formatToBillion(branch.prevMonthRevenue)}
+                                                    <Tooltip message={formatToIDR(branch.prevMonthRevenue)}>
+                                                        <span>{formatToBillion(branch.prevMonthRevenue)}</span>
+                                                    </Tooltip>
                                                 </TableCell>
                                                 <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                    {formatToBillion(branch.prevYearCurrMonthRevenue)}
+                                                    <Tooltip message={formatToIDR(branch.prevYearCurrMonthRevenue)}>
+                                                        <span>{formatToBillion(branch.prevYearCurrMonthRevenue)}</span>
+                                                    </Tooltip>
                                                 </TableCell>
                                                 <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                     BLANK
@@ -231,16 +251,24 @@ export const TableData = () => {
                                                         {subbranch.name}
                                                     </TableCell>
                                                     <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                        {formatToBillion(subbranch.currMonthTarget)}
+                                                        <Tooltip message={formatToIDR(subbranch.currMonthTarget)}>
+                                                            <span>{formatToBillion(subbranch.currMonthTarget)}</span>
+                                                        </Tooltip>
                                                     </TableCell>
                                                     <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                        {formatToBillion(subbranch.currMonthRevenue)}
+                                                        <Tooltip message={formatToIDR(subbranch.currMonthRevenue)}>
+                                                            <span>{formatToBillion(subbranch.currMonthRevenue)}</span>
+                                                        </Tooltip>
                                                     </TableCell>
                                                     <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                        {formatToBillion(subbranch.prevMonthRevenue)}
+                                                        <Tooltip message={formatToIDR(subbranch.prevMonthRevenue)}>
+                                                            <span>{formatToBillion(subbranch.prevMonthRevenue)}</span>
+                                                        </Tooltip>
                                                     </TableCell>
                                                     <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                        {formatToBillion(subbranch.prevYearCurrMonthRevenue)}
+                                                        <Tooltip message={formatToIDR(subbranch.prevYearCurrMonthRevenue)}>
+                                                            <span>{formatToBillion(subbranch.prevYearCurrMonthRevenue)}</span>
+                                                        </Tooltip>
                                                     </TableCell>
                                                     <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                         BLANK
@@ -284,16 +312,24 @@ export const TableData = () => {
                                                             {cluster.name}
                                                         </TableCell>
                                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                            {formatToBillion(cluster.currMonthTarget)}
+                                                            <Tooltip message={formatToIDR(cluster.currMonthTarget)}>
+                                                                <span>{formatToBillion(cluster.currMonthTarget)}</span>
+                                                            </Tooltip>
                                                         </TableCell>
                                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                            {formatToBillion(cluster.currMonthRevenue)}
+                                                            <Tooltip message={formatToIDR(cluster.currMonthRevenue)}>
+                                                                <span>{formatToBillion(cluster.currMonthRevenue)}</span>
+                                                            </Tooltip>
                                                         </TableCell>
                                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                            {formatToBillion(cluster.prevMonthRevenue)}
+                                                            <Tooltip message={formatToIDR(cluster.prevMonthRevenue)}>
+                                                                <span>{formatToBillion(cluster.prevMonthRevenue)}</span>
+                                                            </Tooltip>
                                                         </TableCell>
                                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                            {formatToBillion(cluster.prevYearCurrMonthRevenue)}
+                                                            <Tooltip message={formatToIDR(cluster.prevYearCurrMonthRevenue)}>
+                                                                <span>{formatToBillion(cluster.prevYearCurrMonthRevenue)}</span>
+                                                            </Tooltip>
                                                         </TableCell>
                                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                             BLANK
@@ -338,16 +374,24 @@ export const TableData = () => {
                                                                 {kabupaten.name}
                                                             </TableCell>
                                                             <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                                {formatToBillion(kabupaten.currMonthTarget)}
+                                                                <Tooltip message={formatToIDR(kabupaten.currMonthTarget)}>
+                                                                    <span>{formatToBillion(kabupaten.currMonthTarget)}</span>
+                                                                </Tooltip>
                                                             </TableCell>
                                                             <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                                {formatToBillion(kabupaten.currMonthRevenue)}
+                                                                <Tooltip message={formatToIDR(kabupaten.currMonthRevenue)}>
+                                                                    <span>{formatToBillion(kabupaten.currMonthRevenue)}</span>
+                                                                </Tooltip>
                                                             </TableCell>
                                                             <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                                {formatToBillion(kabupaten.prevMonthRevenue)}
+                                                                <Tooltip message={formatToIDR(kabupaten.prevMonthRevenue)}>
+                                                                    <span>{formatToBillion(kabupaten.prevMonthRevenue)}</span>
+                                                                </Tooltip>
                                                             </TableCell>
                                                             <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                                {formatToBillion(kabupaten.prevYearCurrMonthRevenue)}
+                                                                <Tooltip message={formatToIDR(kabupaten.prevYearCurrMonthRevenue)}>
+                                                                    <span>{formatToBillion(kabupaten.prevYearCurrMonthRevenue)}</span>
+                                                                </Tooltip>
                                                             </TableCell>
                                                             <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                                 BLANK

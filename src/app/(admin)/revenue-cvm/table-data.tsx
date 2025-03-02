@@ -7,15 +7,15 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components
 import { useSelectDate } from '@/hooks/use-select-date';
 import { Skeleton } from '@/components/common/skeleton';
 import ComponentCard from '@/components/common/ComponentCard';
-import { Tooltip } from '@/components/common/tooltip'
+import { TableNotFound } from '@/components/table-not-found';
+import { Tooltip } from '@/components/common/tooltip';
 
 import { cn, formatToBillion, formatToIDR, formatToPercentage, getGrowthColor } from '@/lib/utils';
-import { useGetRevenueByu } from '@/modules/revenue-byu/hooks/use-get-revenue-byu';
 import { useSelectBranch } from '@/hooks/use-select-branch';
 import { useSelectSubbranch } from '@/hooks/use-select-subbranch';
 import { useSelectCluster } from '@/hooks/use-select-cluster';
 import { useSelectKabupaten } from '@/hooks/use-select-kabupaten';
-import { TableNotFound } from '@/components/table-not-found';
+import { useGetRevenueCVM } from '@/modules/revenue-cvm/hooks/use-get-revenue-cvm';
 
 export const TableData = () => {
     const { date: selectedDate } = useSelectDate()
@@ -23,9 +23,9 @@ export const TableData = () => {
     const { subbranch: selectedSubbranch } = useSelectSubbranch()
     const { cluster: selectedCluster } = useSelectCluster()
     const { kabupaten: selectedKabupaten } = useSelectKabupaten()
-    const { data: revenues, isLoading: isLoadingRevenue } = useGetRevenueByu({ date: selectedDate, branch: selectedBranch, subbranch: selectedSubbranch, cluster: selectedCluster, kabupaten: selectedKabupaten })
+    const { data: revenues, isLoading: isLoadingRevenue } = useGetRevenueCVM({ date: selectedDate, branch: selectedBranch, subbranch: selectedSubbranch, cluster: selectedCluster, kabupaten: selectedKabupaten })
 
-    const compactDate = subDays(selectedDate, 2) // today - 2 days
+    const compactDate = subDays(selectedDate, 3) // today - 2 days
 
     if (isLoadingRevenue) {
         return (
@@ -41,7 +41,7 @@ export const TableData = () => {
     }
 
     if (!revenues) {
-        return <TableNotFound date={selectedDate} daysBehind={2} />
+        return <TableNotFound date={selectedDate} daysBehind={3} />
     }
 
     return (
@@ -63,7 +63,7 @@ export const TableData = () => {
                                     isHeader
                                     className="px-5 py-3 font-medium border dark:bg-gray-900 text-gray-500 text-center text-theme-sm dark:text-white dark:border-gray-800"
                                 >
-                                    Revenue ByU
+                                    Revenue CVM
                                 </TableCell>
                             </TableRow>
                             <TableRow>
