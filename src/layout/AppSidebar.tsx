@@ -55,11 +55,6 @@ const navItems: NavItem[] = [
     name: 'Revenue SA',
     path: '/revenue-sa'
   },
-  {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
-  },
 ];
 
 const othersItems: NavItem[] = [

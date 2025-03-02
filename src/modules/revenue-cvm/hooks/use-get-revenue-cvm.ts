@@ -1,13 +1,13 @@
 import { client } from "@/lib/client"
 import { useQuery } from "@tanstack/react-query"
 
-type QueryParams = { date?: Date; kabupaten?: string; cluster?: string; subbranch?: string; branch?: string; }
+type QueryParams = { date?: Date }
 
-export const useGetRevenueCVM = ({ branch, subbranch, cluster, kabupaten, date }: QueryParams) => {
+export const useGetRevenueCVM = ({ date }: QueryParams) => {
     const query = useQuery({
-        queryKey: ['revenue-cvm', { date, branch, subbranch, cluster, kabupaten }],
+        queryKey: ['revenue-cvm', { date }],
         queryFn: async () => {
-            const response = await client.api["revenue-cvm"].$get({ query: { date: date?.toDateString(), branch, subbranch, cluster, kabupaten } })
+            const response = await client.api["revenue-cvm"].$get({ query: { date: date?.toDateString() } })
 
             if (!response.ok) {
                 throw new Error('Failed to fetch Revenue CVM')

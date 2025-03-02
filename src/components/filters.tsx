@@ -34,8 +34,6 @@ export const Filters = () => {
     // const isLoading = isLoadingByu || isLoadingGross
 
     const handleRegionChange = (value: string) => {
-        console.log(selectedRegion);
-        console.log(value);
         setSelectedRegion(value);
         setSelectedBranch("");
         setSelectedSubbranch("");

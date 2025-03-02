@@ -23,7 +23,7 @@ export const TableData = () => {
     const { cluster: selectedCluster } = useSelectCluster()
     const { kabupaten: selectedKabupaten } = useSelectKabupaten()
 
-    const { data: revenues, isLoading: isLoadingRevenue } = useGetRevenueGrosses({ date: selectedDate, branch: selectedBranch, subbranch: selectedSubbranch, cluster: selectedCluster, kabupaten: selectedKabupaten })
+    const { data: revenues, isLoading: isLoadingRevenue } = useGetRevenueGrosses({ date: selectedDate })
 
     const compactDate = subDays(selectedDate, 2)
 
@@ -43,6 +43,26 @@ export const TableData = () => {
     if (!revenues) {
         return <TableNotFound date={selectedDate} daysBehind={2} />
     }
+
+    const filteredRevenues = revenues.map(regional => ({
+        ...regional,
+        branches: regional.branches.filter((branch: any) => !selectedBranch || branch.name === selectedBranch)
+            .map((branch: any) => ({
+                ...branch,
+                subbranches: branch.subbranches
+                    .filter((subbranch: any) => !selectedSubbranch || subbranch.name === selectedSubbranch)
+                    .map((subbranch: any) => ({
+                        ...subbranch,
+                        clusters: subbranch.clusters
+                            .filter((cluster: any) => !selectedCluster || cluster.name === selectedCluster)
+                            .map((cluster: any) => ({
+                                ...cluster,
+                                kabupatens: cluster.kabupatens
+                                    .filter((kabupaten: any) => !selectedKabupaten || kabupaten.name === selectedKabupaten)
+                            }))
+                    }))
+            }))
+    }))
 
     return (
         <div className="max-w-full overflow-x-auto remove-scrollbar">
@@ -125,7 +145,7 @@ export const TableData = () => {
                                     Regional
                                 </TableCell>
                             </TableRow>
-                            {revenues.map((revenue, regionalIndex) => (
+                            {filteredRevenues.map((revenue, regionalIndex) => (
                                 <React.Fragment key={regionalIndex}>
                                     <TableRow>
                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-start font-normal text-theme-xs dark:text-white dark:border-gray-800">

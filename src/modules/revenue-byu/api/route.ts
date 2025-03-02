@@ -16,11 +16,11 @@ import { zValidator } from "@/lib/validator-wrapper";
 import { dynamicByuTable } from "@/db/schema3";
 
 const app = new Hono().get("/",
-    zValidator('query', z.object({ date: z.string().optional(), branch: z.string().optional(), subbranch: z.string().optional(), cluster: z.string().optional(), kabupaten: z.string().optional() })),
+    zValidator('query', z.object({ date: z.string().optional() })),
     async (c) => {
-        const { branch, cluster, subbranch, kabupaten, date } = c.req.valid('query')
+        const { date } = c.req.valid('query')
         const selectedDate = date ? new Date(date) : new Date()
-        const month = (selectedDate.getMonth() + 1).toString()
+        const month = (subDays(selectedDate, 2).getMonth() + 1).toString()
 
         // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
         const monthColumn = `m${month}` as keyof typeof revenueByu.$inferSelect
@@ -1186,8 +1186,6 @@ const app = new Hono().get("/",
             const subbranchName = row.subbranch;
             const clusterName = row.cluster;
             const kabupatenName = row.kabupaten;
-
-            console.log({ row });
 
             const regional = regionalsMap.get(regionalName) || regionalsMap.set(regionalName, {
                 name: regionalName,

@@ -1,9 +1,9 @@
 import { client } from "@/lib/client"
 import { useQuery } from "@tanstack/react-query"
 
-type QueryParams = { date?: Date; kabupaten?: string; cluster?: string; subbranch?: string; branch?: string; }
+type QueryParams = { date?: Date }
 
-export const useGetRevenueSA = ({ branch, subbranch, cluster, kabupaten, date }: QueryParams) => {
+export const useGetRevenueSA = ({ date }: QueryParams) => {
     const query = useQuery({
         queryKey: ['revenue-sa', { date }],
         queryFn: async () => {

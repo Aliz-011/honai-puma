@@ -23,7 +23,7 @@ export const TableData = () => {
     const { subbranch: selectedSubbranch } = useSelectSubbranch()
     const { cluster: selectedCluster } = useSelectCluster()
     const { kabupaten: selectedKabupaten } = useSelectKabupaten()
-    const { data: revenues, isLoading: isLoadingRevenue } = useGetRevenueSA({ date: selectedDate, branch: selectedBranch, subbranch: selectedSubbranch, cluster: selectedCluster, kabupaten: selectedKabupaten })
+    const { data: revenues, isLoading: isLoadingRevenue } = useGetRevenueSA({ date: selectedDate })
 
     const compactDate = subDays(selectedDate, 3) // today - 2 days
 
@@ -46,6 +46,26 @@ export const TableData = () => {
         )
     }
 
+    const filteredRevenues = revenues.map(regional => ({
+        ...regional,
+        branches: regional.branches.filter((branch: any) => !selectedBranch || branch.name === selectedBranch)
+            .map((branch: any) => ({
+                ...branch,
+                subbranches: branch.subbranches
+                    .filter((subbranch: any) => !selectedSubbranch || subbranch.name === selectedSubbranch)
+                    .map((subbranch: any) => ({
+                        ...subbranch,
+                        clusters: subbranch.clusters
+                            .filter((cluster: any) => !selectedCluster || cluster.name === selectedCluster)
+                            .map((cluster: any) => ({
+                                ...cluster,
+                                kabupatens: cluster.kabupatens
+                                    .filter((kabupaten: any) => !selectedKabupaten || kabupaten.name === selectedKabupaten)
+                            }))
+                    }))
+            }))
+    }))
+
     return (
         <div className="max-w-full overflow-x-auto remove-scrollbar">
             <div className="min-w-[1400px]">
@@ -56,7 +76,7 @@ export const TableData = () => {
                                 <TableCell
                                     rowSpan={2}
                                     isHeader
-                                    className="px-5 py-3 font-medium border-r dark:border-gray-700 text-white text-center text-theme-sm bg-rose-500"
+                                    className="px-5 py-3 font-medium border-r min-w-[200px] dark:border-gray-700 text-white text-center text-theme-sm bg-rose-500"
                                 >
                                     Territory
                                 </TableCell>
@@ -127,10 +147,10 @@ export const TableData = () => {
                                     Regional
                                 </TableCell>
                             </TableRow>
-                            {revenues.map((revenue, regionalIndex) => (
+                            {filteredRevenues.map((revenue, regionalIndex) => (
                                 <React.Fragment key={regionalIndex}>
                                     <TableRow>
-                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-start font-normal text-theme-xs dark:text-white dark:border-gray-800">
+                                        <TableCell className="px-5 py-4 sm:px-6 border-r min-w-[100px] last:border-r-0 text-start font-normal text-theme-xs dark:text-white dark:border-gray-800">
                                             {revenue.name}
                                         </TableCell>
                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">

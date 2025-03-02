@@ -1,11 +1,8 @@
 import {
-	int,
-	text,
-	mysqlTable,
 	varchar,
-	decimal,
 	mysqlSchema,
 	index,
+	double,
 } from "drizzle-orm/mysql-core";
 
 
@@ -97,5 +94,32 @@ export const dynamicCbProfileTable = (year: string, month: string) => {
 		kecamatan: varchar("kecamatan", { length: 100 }),
 		brand: varchar("brand", { length: 35 }),
 		userId: varchar("user_id", { length: 100 }),
-	})
+		flagRGB: varchar("flag_RGB", { length: 7 }).notNull(),
+		RGBDATA: varchar("RGB_DATA", { length: 3 }).notNull(),
+		RGBVoice: varchar("RGB_Voice", { length: 3 }).notNull(),
+		RGBSMS: varchar("RGB_SMS", { length: 3 }).notNull(),
+		RGBDLS: varchar("RGB_DLS", { length: 3 }).notNull(),
+		flagHVC: varchar("flag_HVC", { length: 12 }).notNull(),
+		flagSegmentNHVC: varchar("flag_segment_NHVC", { length: 15 }).notNull(),
+		flagLoS: varchar("flag_LoS", { length: 15 }).notNull(),
+		usim: varchar("usim", { length: 100 }),
+		deviceType: varchar("Device_type", { length: 100 }),
+		deviceNetwork: varchar("Device_Network", { length: 15 }).notNull(),
+		flagSegmentA4: varchar("Flag_Segment_a4", { length: 15 }).notNull(),
+		catRech: varchar("cat_rech", { length: 9 }).notNull(),
+		payload: varchar("payload", { length: 9 }).notNull(),
+		payloadm1: varchar("payloadm1", { length: 9 }).notNull(),
+		REVMTD: double('REV_MTD'),
+		RECH_MTD: double('RECH_MTD'),
+		REV_DATA_MTD: double('REV_DATA_MTD'),
+		VOL_DATA_MTD: double('VOL_DATA_MTD'),
+		REV_VOICE_M1: double('REV_VOICE_M1'),
+		REV_SMS_MTD: double('REV_SMS_MTD'),
+		REV_DIGITAL_MTD: double('REV_DIGITAL_MTD'),
+		REV_DATA_PACK_MTD: double('REV_DATA_PACK_MTD'),
+		REMAIN_QUOTA: double('REMAIN_QUOTA'),
+	}, t => [
+		index('msisdn').on(t.msisdn).using('btree'),
+		index('kabupaten').on(t.kabupaten).using('btree'),
+	])
 }

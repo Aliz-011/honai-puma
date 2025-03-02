@@ -10,20 +10,20 @@ import {
     clusters,
     kabupatens,
     subbranches,
-    revenueCVM,
+    revenueSA,
 } from "@/db/schema";
 import { zValidator } from "@/lib/validator-wrapper";
 import { dynamicRevenueSATable } from "@/db/schema5";
 
 const app = new Hono().get('/',
-    zValidator('query', z.object({ date: z.string().optional(), branch: z.string().optional(), subbranch: z.string().optional(), cluster: z.string().optional(), kabupaten: z.string().optional() })),
+    zValidator('query', z.object({ date: z.string().optional() })),
     async c => {
-        const { branch, cluster, subbranch, kabupaten, date } = c.req.valid('query')
+        const { date } = c.req.valid('query')
         const selectedDate = date ? new Date(date) : new Date()
-        const month = (selectedDate.getMonth() + 1).toString()
+        const month = (subDays(selectedDate, 3).getMonth() + 1).toString()
 
         // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
-        const monthColumn = `m${month}` as keyof typeof revenueCVM.$inferSelect
+        const monthColumn = `m${month}` as keyof typeof revenueSA.$inferSelect
 
         // VARIABLE TANGGAL UNTUK IMPORT TABEL SECARA DINAMIS
         const latestDataDate = subDays(selectedDate, 3);
@@ -757,14 +757,14 @@ const app = new Hono().get('/',
                 subbranch: subbranches.subbranchNew,
                 cluster: clusters.cluster,
                 kabupaten: kabupatens.kabupaten,
-                currMonthTargetRev: sql<number>`SUM(${revenueCVM[monthColumn]})`.as('currMonthTargetRev')
+                currMonthTargetRev: sql<number>`SUM(${revenueSA[monthColumn]})`.as('currMonthTargetRev')
             })
             .from(regionals)
             .leftJoin(branches, eq(regionals.id, branches.regionalId))
             .leftJoin(subbranches, eq(branches.id, subbranches.branchId))
             .leftJoin(clusters, eq(subbranches.id, clusters.subbranchId))
             .leftJoin(kabupatens, eq(clusters.id, kabupatens.clusterId))
-            .leftJoin(revenueCVM, eq(kabupatens.id, revenueCVM.kabupatenId))
+            .leftJoin(revenueSA, eq(kabupatens.id, revenueSA.kabupatenId))
             .groupBy(
                 regionals.regional,
                 branches.branchNew,
@@ -783,10 +783,10 @@ const app = new Hono().get('/',
                 subbranch: sql<string>`${regClassP2.subbranchName}`.as('subbranch'),
                 cluster: sql<string>`${regClassP2.clusterName}`.as('cluster'),
                 kabupaten: sql<string>`${regClassP2.cityName}`.as('kabupaten'),
-                currMonthKabupatenRev: sql<number>`SUM(SUM(${regClassP2.revenue})) OVER (PARTITION BY ${regClassP2.regionName}, ${regClassP2.branchName}, ${regClassP2.subbranchName}, ${regClassP2.clusterName})`.as('currMonthKabupatenRev'),
-                currMonthClusterRev: sql<number>`SUM(SUM(${regClassP2.revenue})) OVER (PARTITION BY ${regClassP2.regionName}, ${regClassP2.branchName}, ${regClassP2.subbranchName})`.as('currMonthClusterRev'),
+                currMonthKabupatenRev: sql<number>`SUM(${regClassP2.revenue})`.as('currMonthKabupatenRev'),
+                currMonthClusterRev: sql<number>`SUM(SUM(${regClassP2.revenue})) OVER (PARTITION BY ${regClassP2.regionName}, ${regClassP2.branchName}, ${regClassP2.subbranchName}, ${regClassP2.clusterName})`.as('currMonthClusterRev'),
                 currMonthSubbranchRev: sql<number>`SUM(SUM(${regClassP2.revenue})) OVER (PARTITION BY ${regClassP2.regionName}, ${regClassP2.branchName}, ${regClassP2.subbranchName})`.as('currMonthSubbranchRev'),
-                currMonthBranchRev: sql<number>`SUM(SUM(${regClassP2.revenue})) OVER (PARTITION BY ${regClassP2.regionName}, ${regClassP2.branchName}, ${regClassP2.subbranchName}, ${regClassP2.clusterName})`.as('currMonthBranchRev'),
+                currMonthBranchRev: sql<number>`SUM(SUM(${regClassP2.revenue})) OVER (PARTITION BY ${regClassP2.regionName}, ${regClassP2.branchName})`.as('currMonthBranchRev'),
                 currMonthRegionalRev: sql<number>`SUM(SUM(${regClassP2.revenue})) OVER (PARTITION BY ${regClassP2.regionName})`.as('currMonthRegionalRev')
             })
             .from(regClassP2)
@@ -801,10 +801,10 @@ const app = new Hono().get('/',
                 subbranch: sql<string>`${regClassP3.subbranchName}`.as('subbranch'),
                 cluster: sql<string>`${regClassP3.clusterName}`.as('cluster'),
                 kabupaten: sql<string>`${regClassP3.cityName}`.as('kabupaten'),
-                prevMonthKabupatenRev: sql<number>`SUM(SUM(${regClassP3.revenue})) OVER (PARTITION BY ${regClassP3.regionName}, ${regClassP3.branchName}, ${regClassP3.subbranchName}, ${regClassP3.clusterName})`.as('currMonthKabupatenRev'),
-                prevMonthClusterRev: sql<number>`SUM(SUM(${regClassP3.revenue})) OVER (PARTITION BY ${regClassP3.regionName}, ${regClassP3.branchName}, ${regClassP3.subbranchName})`.as('currMonthClusterRev'),
+                prevMonthKabupatenRev: sql<number>`SUM(${regClassP3.revenue})`.as('currMonthKabupatenRev'),
+                prevMonthClusterRev: sql<number>`SUM(SUM(${regClassP3.revenue})) OVER (PARTITION BY ${regClassP3.regionName}, ${regClassP3.branchName}, ${regClassP3.subbranchName}, ${regClassP3.clusterName})`.as('currMonthClusterRev'),
                 prevMonthSubbranchRev: sql<number>`SUM(SUM(${regClassP3.revenue})) OVER (PARTITION BY ${regClassP3.regionName}, ${regClassP3.branchName}, ${regClassP3.subbranchName})`.as('currMonthSubbranchRev'),
-                prevMonthBranchRev: sql<number>`SUM(SUM(${regClassP3.revenue})) OVER (PARTITION BY ${regClassP3.regionName}, ${regClassP3.branchName}, ${regClassP3.subbranchName}, ${regClassP3.clusterName})`.as('currMonthBranchRev'),
+                prevMonthBranchRev: sql<number>`SUM(SUM(${regClassP3.revenue})) OVER (PARTITION BY ${regClassP3.regionName}, ${regClassP3.branchName})`.as('currMonthBranchRev'),
                 prevMonthRegionalRev: sql<number>`SUM(SUM(${regClassP3.revenue})) OVER (PARTITION BY ${regClassP3.regionName})`.as('currMonthRegionalRev')
             })
             .from(regClassP3)
@@ -819,10 +819,10 @@ const app = new Hono().get('/',
                 subbranch: sql<string>`${regClassP4.subbranchName}`.as('subbranch'),
                 cluster: sql<string>`${regClassP4.clusterName}`.as('cluster'),
                 kabupaten: sql<string>`${regClassP4.cityName}`.as('kabupaten'),
-                prevYearCurrMonthKabupatenRev: sql<number>`SUM(SUM(${regClassP4.revenue})) OVER (PARTITION BY ${regClassP4.regionName}, ${regClassP4.branchName}, ${regClassP4.subbranchName}, ${regClassP4.clusterName})`.as('currMonthKabupatenRev'),
-                prevYearCurrMonthClusterRev: sql<number>`SUM(SUM(${regClassP4.revenue})) OVER (PARTITION BY ${regClassP4.regionName}, ${regClassP4.branchName}, ${regClassP4.subbranchName})`.as('currMonthClusterRev'),
+                prevYearCurrMonthKabupatenRev: sql<number>`SUM(${regClassP4.revenue})`.as('currMonthKabupatenRev'),
+                prevYearCurrMonthClusterRev: sql<number>`SUM(SUM(${regClassP4.revenue})) OVER (PARTITION BY ${regClassP4.regionName}, ${regClassP4.branchName}, ${regClassP4.subbranchName}, ${regClassP4.clusterName})`.as('currMonthClusterRev'),
                 prevYearCurrMonthSubbranchRev: sql<number>`SUM(SUM(${regClassP4.revenue})) OVER (PARTITION BY ${regClassP4.regionName}, ${regClassP4.branchName}, ${regClassP4.subbranchName})`.as('currMonthSubbranchRev'),
-                prevYearCurrMonthBranchRev: sql<number>`SUM(SUM(${regClassP4.revenue})) OVER (PARTITION BY ${regClassP4.regionName}, ${regClassP4.branchName}, ${regClassP4.subbranchName}, ${regClassP4.clusterName})`.as('currMonthBranchRev'),
+                prevYearCurrMonthBranchRev: sql<number>`SUM(SUM(${regClassP4.revenue})) OVER (PARTITION BY ${regClassP4.regionName}, ${regClassP4.branchName})`.as('currMonthBranchRev'),
                 prevYearCurrMonthRegionalRev: sql<number>`SUM(SUM(${regClassP4.revenue})) OVER (PARTITION BY ${regClassP4.regionName})`.as('currMonthRegionalRev')
             })
             .from(regClassP4)
@@ -1038,8 +1038,6 @@ const app = new Hono().get('/',
             const subbranchName = row.subbranch;
             const clusterName = row.cluster;
             const kabupatenName = row.kabupaten;
-
-            console.log({ row });
 
             const regional = regionalsMap.get(regionalName) || regionalsMap.set(regionalName, {
                 name: regionalName,
