@@ -265,17 +265,6 @@ const app = new Hono().get("/",
             ))
             .as('sq2')
 
-        const regClassP2 = db4.select({
-            regionName: sq2.regionName,
-            kabupatenName: sq2.cityName,
-            branchName: sq2.branchName,
-            subbranchName: sq2.subbranchName,
-            clusterName: sq2.clusterName,
-            revenue: sq2.rev
-        })
-            .from(sq2)
-            .as('regionClassififcation')
-
         const sq3 = db4
             .select({
                 regionName: prevMonthRevNewSales.regionSales,
@@ -493,219 +482,6 @@ const app = new Hono().get("/",
             ))
             .as('sq3')
 
-        const regClassP3 = db4
-            .select({
-                mtdDt: sq3.mtdDt,
-                rev: sq3.rev,
-                regionName: sq3.regionName,
-                kabupatenName: sq3.cityName,
-                branchName: sql<string>`
-        CASE
-            WHEN ${sq3.cityName} IN (
-                'AMBON',
-                'KOTA AMBON',
-                'MALUKU TENGAH',
-                'SERAM BAGIAN TIMUR',
-                'KEPULAUAN ARU',
-                'KOTA TUAL',
-                'MALUKU BARAT DAYA',
-                'MALUKU TENGGARA',
-                'MALUKU TENGGARA BARAT',
-                'BURU',
-                'BURU SELATAN',
-                'SERAM BAGIAN BARAT',
-                'KEPULAUAN TANIMBAR'
-            ) THEN 'AMBON'
-            WHEN ${sq3.cityName} IN (
-                'KOTA JAYAPURA',
-                'JAYAPURA',
-                'KEEROM',
-                'MAMBERAMO RAYA',
-                'SARMI',
-                'BIAK',
-                'BIAK NUMFOR',
-                'KEPULAUAN YAPEN',
-                'SUPIORI',
-                'WAROPEN',
-                'JAYAWIJAYA',
-                'LANNY JAYA',
-                'MAMBERAMO TENGAH',
-                'NDUGA',
-                'PEGUNUNGAN BINTANG',
-                'TOLIKARA',
-                'YAHUKIMO',
-                'YALIMO'
-            ) THEN 'JAYAPURA'
-            WHEN ${sq3.cityName} IN (
-                'MANOKWARI',
-                'FAKFAK',
-                'FAK FAK',
-                'KAIMANA',
-                'MANOKWARI SELATAN',
-                'PEGUNUNGAN ARFAK',
-                'TELUK BINTUNI',
-                'TELUK WONDAMA',
-                'KOTA SORONG',
-                'MAYBRAT',
-                'RAJA AMPAT',
-                'SORONG',
-                'SORONG SELATAN',
-                'TAMBRAUW'
-            ) THEN 'SORONG'
-            WHEN ${sq3.cityName} IN (
-                'ASMAT',
-                'BOVEN DIGOEL',
-                'MAPPI',
-                'MERAUKE',
-                'INTAN JAYA',
-                'MIMIKA',
-                'PUNCAK',
-                'PUNCAK JAYA',
-                'TIMIKA',
-                'DEIYAI',
-                'DOGIYAI',
-                'NABIRE',
-                'PANIAI'
-            ) THEN 'TIMIKA'
-            ELSE NULL
-        END
-            `.as('branchName'),
-                subbranchName: sql<string>`
-        CASE
-            WHEN ${sq3.cityName} IN (
-                'AMBON',
-                'KOTA AMBON',
-                'MALUKU TENGAH',
-                'SERAM BAGIAN TIMUR'
-            ) THEN 'AMBON'
-            WHEN ${sq3.cityName} IN (
-                'KEPULAUAN ARU',
-                'KOTA TUAL',
-                'MALUKU BARAT DAYA',
-                'MALUKU TENGGARA',
-                'MALUKU TENGGARA BARAT',
-                'KEPULAUAN TANIMBAR'
-            ) THEN 'KEPULAUAN AMBON'
-            WHEN ${sq3.cityName} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BURU'
-            WHEN ${sq3.cityName} IN ('KOTA JAYAPURA') THEN 'JAYAPURA'
-            WHEN ${sq3.cityName} IN (
-                'JAYAPURA',
-                'KEEROM',
-                'MAMBERAMO RAYA',
-                'SARMI',
-                'BIAK',
-                'BIAK NUMFOR',
-                'KEPULAUAN YAPEN',
-                'SUPIORI',
-                'WAROPEN',
-                'JAYAWIJAYA',
-                'LANNY JAYA',
-                'MAMBERAMO TENGAH',
-                'NDUGA',
-                'PEGUNUNGAN BINTANG',
-                'TOLIKARA',
-                'YAHUKIMO',
-                'YALIMO'
-            ) THEN 'SENTANI'
-            WHEN ${sq3.cityName} IN ('MANOKWARI') THEN 'MANOKWARI'
-            WHEN ${sq3.cityName} IN (
-                'FAKFAK',
-                'FAK FAK',
-                'KAIMANA',
-                'MANOKWARI SELATAN',
-                'PEGUNUNGAN ARFAK',
-                'TELUK BINTUNI',
-                'TELUK WONDAMA'
-            ) THEN 'MANOKWARI OUTER'
-            WHEN ${sq3.cityName} IN (
-                'KOTA SORONG',
-                'MAYBRAT',
-                'RAJA AMPAT',
-                'SORONG',
-                'SORONG SELATAN',
-                'TAMBRAUW'
-            ) THEN 'SORONG RAJA AMPAT'
-            WHEN ${sq3.cityName} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'MERAUKE'
-            WHEN ${sq3.cityName} IN (
-                'INTAN JAYA',
-                'MIMIKA',
-                'PUNCAK',
-                'PUNCAK JAYA',
-                'TIMIKA'
-            ) THEN 'MIMIKA'
-            WHEN ${sq3.cityName} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
-            ELSE NULL
-        END
-            `.as('subbranchName'),
-                clusterName: sql<string>`
-        CASE
-            WHEN ${sq3.cityName} IN (
-                'KOTA AMBON',
-                'MALUKU TENGAH',
-                'SERAM BAGIAN TIMUR'
-            ) THEN 'AMBON'
-            WHEN ${sq3.cityName} IN (
-                'KEPULAUAN ARU',
-                'KOTA TUAL',
-                'MALUKU BARAT DAYA',
-                'MALUKU TENGGARA',
-                'MALUKU TENGGARA BARAT',
-                'KEPULAUAN TANIMBAR'
-            ) THEN 'KEPULAUAN TUAL'
-            WHEN ${sq3.cityName} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BARAT BURU'
-            WHEN ${sq3.cityName} IN ('KOTA JAYAPURA') THEN 'KOTA JAYAPURA'
-            WHEN ${sq3.cityName} IN ('JAYAPURA', 'KEEROM', 'MAMBERAMO RAYA', 'SARMI') THEN 'JAYAPURA OUTER'
-            WHEN ${sq3.cityName} IN (
-                'BIAK',
-                'BIAK NUMFOR',
-                'KEPULAUAN YAPEN',
-                'SUPIORI',
-                'WAROPEN'
-            ) THEN 'NEW BIAK NUMFOR'
-            WHEN ${sq3.cityName} IN (
-                'JAYAWIJAYA',
-                'LANNY JAYA',
-                'MAMBERAMO TENGAH',
-                'NDUGA',
-                'PEGUNUNGAN BINTANG',
-                'TOLIKARA',
-                'YAHUKIMO',
-                'YALIMO'
-            ) THEN 'PAPUA PEGUNUNGAN'
-            WHEN ${sq3.cityName} IN ('MANOKWARI') THEN 'MANOKWARI'
-            WHEN ${sq3.cityName} IN (
-                'FAKFAK',
-                'FAK FAK',
-                'KAIMANA',
-                'MANOKWARI SELATAN',
-                'PEGUNUNGAN ARFAK',
-                'TELUK BINTUNI',
-                'TELUK WONDAMA'
-            ) THEN 'MANOKWARI OUTER'
-            WHEN ${sq3.cityName} IN (
-                'KOTA SORONG',
-                'MAYBRAT',
-                'RAJA AMPAT',
-                'SORONG',
-                'SORONG SELATAN',
-                'TAMBRAUW'
-            ) THEN 'NEW SORONG RAJA AMPAT'
-            WHEN ${sq3.cityName} IN (
-                'INTAN JAYA',
-                'MIMIKA',
-                'PUNCAK',
-                'PUNCAK JAYA',
-                'TIMIKA'
-            ) THEN 'MIMIKA PUNCAK'
-            WHEN ${sq3.cityName} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
-            WHEN ${sq3.cityName} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'NEW MERAUKE'
-            ELSE NULL
-        END
-            `.as('clusterName'),
-            })
-            .from(sq3)
-            .as('regionClassififcation')
-
         const sq4 = db4
             .select({
                 regionName: prevYearCurrMonthRevNewSales.regionSales,
@@ -919,22 +695,9 @@ const app = new Hono().get("/",
             .from(prevYearCurrMonthRevNewSales)
             .where(and(
                 notInArray(prevYearCurrMonthRevNewSales.kabupaten, ['TMP']),
-                between(prevYearCurrMonthRevNewSales.mtdDt, firstDayOfPrevYearCurrMonth, currDate)
+                between(prevYearCurrMonthRevNewSales.mtdDt, firstDayOfPrevYearCurrMonth, prevYearCurrDate)
             ))
             .as('sq4')
-
-        const regClassP4 = db4
-            .select({
-                mtdDt: sq4.mtdDt,
-                rev: sq4.rev,
-                regionName: sq4.regionName,
-                kabupatenName: sq4.cityName,
-                branchName: sq4.branchName,
-                subbranchName: sq4.subbranchName,
-                clusterName: sq4.clusterName,
-            })
-            .from(sq4)
-            .as('regionClassififcation')
 
         // QUERY UNTUK TARGET BULAN INI
         const p1 = db
@@ -960,60 +723,61 @@ const app = new Hono().get("/",
                 clusters.cluster,
                 kabupatens.kabupaten
             )
-            .orderBy(asc(regionals.regional), asc(branches.branchNew), asc(subbranches.subbranchNew), asc(clusters.cluster), asc(kabupatens.kabupaten))
+            .orderBy(asc(regionals.regional))
             .prepare()
 
         //  QUERY UNTUK MENDAPAT CURRENT MONTH REVENUE (Mtd)
         const p2 = db4
             .select({
-                region: sql<string>`${regClassP2.regionName}`.as('region'),
-                branch: sql<string>`${regClassP2.branchName}`.as('branch'), // Keep only one branchName
-                subbranch: sql<string>`${regClassP2.subbranchName}`.as('subbranch'),
-                cluster: sql<string>`${regClassP2.clusterName}`.as('cluster'),
-                kabupaten: sql<string>`${regClassP2.kabupatenName}`.as('kabupaten'),
-                currMonthKabupatenRev: sql<number>`SUM(${regClassP2.revenue})`.as('currMonthKabupatenRev'),
-                currMonthClusterRev: sql<number>`SUM(SUM(${regClassP2.revenue})) OVER (PARTITION BY ${regClassP2.regionName}, ${regClassP2.branchName}, ${regClassP2.subbranchName}, ${regClassP2.clusterName})`.as('currMonthClusterRev'),
-                currMonthSubbranchRev: sql<number>`SUM(SUM(${regClassP2.revenue})) OVER (PARTITION BY ${regClassP2.regionName}, ${regClassP2.branchName}, ${regClassP2.subbranchName})`.as('currMonthSubbranchRev'),
-                currMonthBranchRev: sql<number>`SUM(SUM(${regClassP2.revenue})) OVER (PARTITION BY ${regClassP2.regionName}, ${regClassP2.branchName})`.as('currMonthBranchRev'),
-                currMonthRegionalRev: sql<number>`SUM(SUM(${regClassP2.revenue})) OVER (PARTITION BY ${regClassP2.regionName})`.as('currMonthRegionalRev')
+                region: sql<string>`${sq2.regionName}`.as('region'),
+                branch: sql<string>`${sq2.branchName}`.as('branch'), // Keep only one branchName
+                subbranch: sql<string>`${sq2.subbranchName}`.as('subbranch'),
+                cluster: sql<string>`${sq2.clusterName}`.as('cluster'),
+                kabupaten: sql<string>`${sq2.cityName}`.as('kabupaten'),
+                currMonthKabupatenRev: sql<number>`SUM(${sq2.rev})`.as('currMonthKabupatenRev'),
+                currMonthClusterRev: sql<number>`SUM(SUM(${sq2.rev})) OVER (PARTITION BY ${sq2.regionName}, ${sq2.branchName}, ${sq2.subbranchName}, ${sq2.clusterName})`.as('currMonthClusterRev'),
+                currMonthSubbranchRev: sql<number>`SUM(SUM(${sq2.rev})) OVER (PARTITION BY ${sq2.regionName}, ${sq2.branchName}, ${sq2.subbranchName})`.as('currMonthSubbranchRev'),
+                currMonthBranchRev: sql<number>`SUM(SUM(${sq2.rev})) OVER (PARTITION BY ${sq2.regionName}, ${sq2.branchName})`.as('currMonthBranchRev'),
+                currMonthRegionalRev: sql<number>`SUM(SUM(${sq2.rev})) OVER (PARTITION BY ${sq2.regionName})`.as('currMonthRegionalRev')
             })
-            .from(regClassP2)
+            .from(sq2)
             .groupBy(sql`1,2,3,4,5`)
             .prepare()
 
         // QUERY UNTUK MENDAPAT PREV MONTH REVENUE
         const p3 = db4
             .select({
-                region: sql<string>`${regClassP3.regionName}`.as('region'),
-                branch: sql<string>`${regClassP3.branchName}`.as('branch'), // Keep only one branchName
-                subbranch: sql<string>`${regClassP3.subbranchName}`.as('subbranch'),
-                cluster: sql<string>`${regClassP3.clusterName}`.as('cluster'),
-                kabupaten: sql<string>`${regClassP3.kabupatenName}`.as('kabupaten'),
-                prevMonthKabupatenRev: sql<number>`SUM(${regClassP3.rev})`.as('currMonthKabupatenRev'),
-                prevMonthClusterRev: sql<number>`SUM(SUM(${regClassP3.rev})) OVER (PARTITION BY ${regClassP3.regionName}, ${regClassP3.branchName}, ${regClassP3.subbranchName}, ${regClassP3.clusterName})`.as('currMonthClusterRev'),
-                prevMonthSubbranchRev: sql<number>`SUM(SUM(${regClassP3.rev})) OVER (PARTITION BY ${regClassP3.regionName}, ${regClassP3.branchName}, ${regClassP3.subbranchName})`.as('currMonthSubbranchRev'),
-                prevMonthBranchRev: sql<number>`SUM(SUM(${regClassP3.rev})) OVER (PARTITION BY ${regClassP3.regionName}, ${regClassP3.branchName})`.as('currMonthBranchRev'),
-                prevMonthRegionalRev: sql<number>`SUM(SUM(${regClassP3.rev})) OVER (PARTITION BY ${regClassP3.regionName})`.as('currMonthRegionalRev')
+                region: sql<string>`${sq3.regionName}`.as('region'),
+                branch: sql<string>`${sq3.branchName}`.as('branch'), // Keep only one branchName
+                subbranch: sql<string>`${sq3.subbranchName}`.as('subbranch'),
+                cluster: sql<string>`${sq3.clusterName}`.as('cluster'),
+                kabupaten: sql<string>`${sq3.cityName}`.as('kabupaten'),
+                prevMonthKabupatenRev: sql<number>`SUM(${sq3.rev})`.as('currMonthKabupatenRev'),
+                prevMonthClusterRev: sql<number>`SUM(SUM(${sq3.rev})) OVER (PARTITION BY ${sq3.regionName}, ${sq3.branchName}, ${sq3.subbranchName}, ${sq3.clusterName})`.as('currMonthClusterRev'),
+                prevMonthSubbranchRev: sql<number>`SUM(SUM(${sq3.rev})) OVER (PARTITION BY ${sq3.regionName}, ${sq3.branchName}, ${sq3.subbranchName})`.as('currMonthSubbranchRev'),
+                prevMonthBranchRev: sql<number>`SUM(SUM(${sq3.rev})) OVER (PARTITION BY ${sq3.regionName}, ${sq3.branchName})`.as('currMonthBranchRev'),
+                prevMonthRegionalRev: sql<number>`SUM(SUM(${sq3.rev})) OVER (PARTITION BY ${sq3.regionName})`.as('currMonthRegionalRev')
             })
-            .from(regClassP3)
+            .from(sq3)
             .groupBy(sql`1,2,3,4,5`)
             .prepare()
 
         // QUERY UNTUK MENDAPAT PREV YEAR CURR MONTH REVENUE
         const p4 = db4
             .select({
-                region: sql<string>`${regClassP4.regionName}`.as('region'),
-                branch: sql<string>`${regClassP4.branchName}`.as('branch'), // Keep only one branchName
-                subbranch: sql<string>`${regClassP4.subbranchName}`.as('subbranch'),
-                cluster: sql<string>`${regClassP4.clusterName}`.as('cluster'),
-                kabupaten: sql<string>`${regClassP4.kabupatenName}`.as('kabupaten'),
-                prevYearCurrMonthKabupatenRev: sql<number>`SUM(${regClassP4.rev})`.as('currMonthKabupatenRev'),
-                prevYearCurrMonthClusterRev: sql<number>`SUM(SUM(${regClassP4.rev})) OVER (PARTITION BY ${regClassP4.regionName}, ${regClassP4.branchName}, ${regClassP4.subbranchName}, ${regClassP4.clusterName})`.as('currMonthClusterRev'),
-                prevYearCurrMonthSubbranchRev: sql<number>`SUM(SUM(${regClassP4.rev})) OVER (PARTITION BY ${regClassP4.regionName}, ${regClassP4.branchName}, ${regClassP4.subbranchName})`.as('currMonthSubbranchRev'),
-                prevYearCurrMonthBranchRev: sql<number>`SUM(SUM(${regClassP4.rev})) OVER (PARTITION BY ${regClassP4.regionName}, ${regClassP4.branchName})`.as('currMonthBranchRev'),
-                prevYearCurrMonthRegionalRev: sql<number>`SUM(SUM(${regClassP4.rev})) OVER (PARTITION BY ${regClassP4.regionName})`.as('currMonthRegionalRev')
+                region: sql<string>`${sq4.regionName}`.as('region'),
+                branch: sql<string>`${sq4.branchName}`.as('branch'), // Keep only one branchName
+                subbranch: sql<string>`${sq4.subbranchName}`.as('subbranch'),
+                cluster: sql<string>`${sq4.clusterName}`.as('cluster'),
+                kabupaten: sql<string>`${sq4.cityName}`.as('kabupaten'),
+                prevYearCurrMonthKabupatenRev: sql<number>`SUM(${sq4.rev})`.as('currMonthKabupatenRev'),
+                prevYearCurrMonthClusterRev: sql<number>`SUM(SUM(${sq4.rev})) OVER (PARTITION BY ${sq4.regionName}, ${sq4.branchName}, ${sq4.subbranchName}, ${sq4.clusterName})`.as('currMonthClusterRev'),
+                prevYearCurrMonthSubbranchRev: sql<number>`SUM(SUM(${sq4.rev})) OVER (PARTITION BY ${sq4.regionName}, ${sq4.branchName}, ${sq4.subbranchName})`.as('currMonthSubbranchRev'),
+                prevYearCurrMonthBranchRev: sql<number>`SUM(SUM(${sq4.rev})) OVER (PARTITION BY ${sq4.regionName}, ${sq4.branchName})`.as('currMonthBranchRev'),
+                prevYearCurrMonthRegionalRev: sql<number>`SUM(SUM(${sq4.rev})) OVER (PARTITION BY ${sq4.regionName})`.as('currMonthRegionalRev')
             })
-            .from(regClassP4)
+            .from(sq4)
+            .groupBy(sql`1,2,3,4,5`)
             .prepare()
 
         // QUERY UNTUK YtD 2025

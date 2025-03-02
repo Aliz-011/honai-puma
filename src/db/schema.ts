@@ -222,7 +222,6 @@ export const payingLOS_01 = pumaSchema.table("Target_paying_los_0_1", {
 	m10: decimal("m10", { precision: 18, scale: 7 }),
 	m11: decimal("m11", { precision: 18, scale: 7 }),
 	m12: decimal("m12", { precision: 18, scale: 7 }),
-	year: varchar({ length: 5 }).notNull(),
 });
 
 export const payingLOS_01Relations = relations(payingLOS_01, ({ one }) => ({

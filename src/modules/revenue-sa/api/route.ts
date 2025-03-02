@@ -26,7 +26,7 @@ const app = new Hono().get('/',
         const monthColumn = `m${month}` as keyof typeof revenueSA.$inferSelect
 
         // VARIABLE TANGGAL UNTUK IMPORT TABEL SECARA DINAMIS
-        const latestDataDate = subDays(selectedDate, 3);
+        const latestDataDate = subDays(selectedDate, 3); // - 3 days
 
         const currMonth = format(latestDataDate, 'MM')
         const currYear = format(latestDataDate, 'yyyy')
@@ -47,7 +47,6 @@ const app = new Hono().get('/',
         const currDate = format(latestDataDate, 'yyyy-MM-dd')
         const prevDate = format(subMonths(latestDataDate, 1), 'yyyy-MM-dd')
         const prevYearCurrDate = format(subYears(latestDataDate, 1), 'yyyy-MM-dd')
-
 
         const sq2 = db5
             .select({
@@ -772,7 +771,7 @@ const app = new Hono().get('/',
                 clusters.cluster,
                 kabupatens.kabupaten
             )
-            .orderBy(asc(regionals.regional), asc(branches.branchNew), asc(subbranches.subbranchNew), asc(clusters.cluster), asc(kabupatens.kabupaten))
+            .orderBy(asc(regionals.regional))
             .prepare()
 
         //  QUERY UNTUK MENDAPAT CURRENT MONTH REVENUE (Mtd)

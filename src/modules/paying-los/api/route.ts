@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 
 import { zValidator } from "@/lib/validator-wrapper";
-import { branches, clusters, kabupatens, payingSubs, regionals, subbranches } from "@/db/schema";
+import { branches, clusters, kabupatens, payingLOS_01, regionals, subbranches } from "@/db/schema";
 import { dynamicCbProfileTable } from "@/db/schema2";
 import { db, db2 } from "@/db";
 import { and, asc, eq, inArray, notInArray, sql } from "drizzle-orm";
@@ -16,7 +16,7 @@ const app = new Hono()
             const month = (subDays(selectedDate, 2).getMonth() + 1).toString()
 
             // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
-            const monthColumn = `m${month}` as keyof typeof payingSubs.$inferSelect
+            const monthColumn = `m${month}` as keyof typeof payingLOS_01.$inferSelect
 
             // VARIABLE TANGGAL UNTUK IMPORT TABEL SECARA DINAMIS
             const latestDataDate = subDays(selectedDate, 2);
@@ -252,8 +252,11 @@ END
                 })
                 .from(currRevSubs)
                 .where(and(
-                    eq(currRevSubs.flagRGB, 'RGB'),
-                    inArray(currRevSubs.branch, ['AMBON', 'SORONG', 'JAYAPURA', 'TIMIKA'])
+                    eq(currRevSubs.flagLoS, 'SALES N'),
+                    and(
+                        eq(currRevSubs.flagRGB, 'RGB'),
+                        inArray(currRevSubs.branch, ['AMBON', 'SORONG', 'JAYAPURA', 'TIMIKA'])
+                    )
                 ))
                 .as('sq2')
 
@@ -468,8 +471,11 @@ END
                 })
                 .from(prevMonthRevSubs)
                 .where(and(
-                    eq(prevMonthRevSubs.flagRGB, 'RGB'),
-                    inArray(prevMonthRevSubs.branch, ['AMBON', 'SORONG', 'JAYAPURA', 'TIMIKA'])
+                    eq(prevMonthRevSubs.flagLoS, 'SALES N'),
+                    and(
+                        eq(prevMonthRevSubs.flagRGB, 'RGB'),
+                        inArray(prevMonthRevSubs.branch, ['AMBON', 'SORONG', 'JAYAPURA', 'TIMIKA'])
+                    )
                 ))
                 .as('sq3')
 
@@ -684,8 +690,11 @@ END
                 })
                 .from(prevYearCurrMonthRevSubs)
                 .where(and(
-                    eq(prevYearCurrMonthRevSubs.flagRGB, 'RGB'),
-                    inArray(prevYearCurrMonthRevSubs.branch, ['AMBON', 'SORONG', 'JAYAPURA', 'TIMIKA'])
+                    eq(prevYearCurrMonthRevSubs.flagRGB, 'SALES N'),
+                    and(
+                        eq(prevYearCurrMonthRevSubs.flagRGB, 'RGB'),
+                        inArray(prevYearCurrMonthRevSubs.branch, ['AMBON', 'SORONG', 'JAYAPURA', 'TIMIKA'])
+                    )
                 ))
                 .as('sq4')
 
@@ -698,14 +707,14 @@ END
                     subbranch: subbranches.subbranchNew,
                     cluster: clusters.cluster,
                     kabupaten: kabupatens.kabupaten,
-                    currMonthTargetRev: sql<number>`CAST(SUM(${payingSubs[monthColumn]}) AS DOUBLE PRECISION)`.as('currMonthTargetRev')
+                    currMonthTargetRev: sql<number>`CAST(SUM(${payingLOS_01[monthColumn]}) AS DOUBLE PRECISION)`.as('currMonthTargetRev')
                 })
                 .from(regionals)
                 .leftJoin(branches, eq(regionals.id, branches.regionalId))
                 .leftJoin(subbranches, eq(branches.id, subbranches.branchId))
                 .leftJoin(clusters, eq(subbranches.id, clusters.subbranchId))
                 .leftJoin(kabupatens, eq(clusters.id, kabupatens.clusterId))
-                .leftJoin(payingSubs, eq(kabupatens.id, payingSubs.kabupatenId))
+                .leftJoin(payingLOS_01, eq(kabupatens.id, payingLOS_01.kabupatenId))
                 .groupBy(
                     regionals.regional,
                     branches.branchNew,

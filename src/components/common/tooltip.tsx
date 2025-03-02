@@ -2,7 +2,7 @@ export function Tooltip({ message, children }: { message: string, children: Reac
     return (
         <div className="group relative flex justify-end cursor-default">
             {children}
-            <span className="absolute z-50 top-10 scale-0 transition-all rounded bg-gray-800 dark:bg-white p-2 text-xs text-white dark:text-black group-hover:scale-100">{message}</span>
+            <span className="absolute z-[999999] top-10 scale-0 transition-all rounded bg-gray-800 dark:bg-white p-2 text-xs text-white dark:text-black group-hover:scale-100">{message}</span>
         </div>
     )
 }

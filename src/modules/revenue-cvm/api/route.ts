@@ -268,18 +268,6 @@ END
             ))
             .as('sq2')
 
-        const regClassP2 = db2.select({
-            trxDate: sq2.trxDate,
-            regionName: sq2.regionName,
-            branchName: sq2.branchName,
-            subbranchName: sq2.subbranchName,
-            clusterName: sq2.clusterName,
-            cityName: sq2.cityName,
-            revenue: sq2.rev
-        })
-            .from(sq2)
-            .as('regionClassififcation')
-
         const sq3 = db2
             .select({
                 regionName: prevMonthRevCVM.region,
@@ -500,18 +488,6 @@ END
             ))
             .as('sq3')
 
-        const regClassP3 = db2.select({
-            trxDate: sq3.trxDate,
-            regionName: sq3.regionName,
-            branchName: sq3.branchName,
-            subbranchName: sq3.subbranchName,
-            clusterName: sq3.clusterName,
-            cityName: sq3.cityName,
-            revenue: sq3.rev
-        })
-            .from(sq3)
-            .as('regionClassififcation')
-
         const sq4 = db2
             .select({
                 regionName: prevYearCurrMonthRevCVM.region,
@@ -727,22 +703,10 @@ END
                 notInArray(prevYearCurrMonthRevCVM.city, ['TMP']),
                 and(
                     like(prevYearCurrMonthRevCVM.packageGroup, '%CVM%'),
-                    between(prevYearCurrMonthRevCVM.trxDate, firstDayOfPrevYearCurrMonth, currDate)
+                    between(prevYearCurrMonthRevCVM.trxDate, firstDayOfPrevYearCurrMonth, prevYearCurrDate)
                 )
             ))
             .as('sq4')
-
-        const regClassP4 = db2.select({
-            trxDate: sq4.trxDate,
-            regionName: sq4.regionName,
-            branchName: sq4.branchName,
-            subbranchName: sq4.subbranchName,
-            clusterName: sq4.clusterName,
-            cityName: sq4.cityName,
-            revenue: sq4.rev
-        })
-            .from(sq4)
-            .as('regionClassififcation')
 
         // QUERY UNTUK TARGET BULAN INI
         const p1 = db
@@ -774,54 +738,54 @@ END
         //  QUERY UNTUK MENDAPAT CURRENT MONTH REVENUE (Mtd)
         const p2 = db2
             .select({
-                region: sql<string>`${regClassP2.regionName}`.as('region'),
-                branch: sql<string>`${regClassP2.branchName}`.as('branch'), // Keep only one branchName
-                subbranch: sql<string>`${regClassP2.subbranchName}`.as('subbranch'),
-                cluster: sql<string>`${regClassP2.clusterName}`.as('cluster'),
-                kabupaten: sql<string>`${regClassP2.cityName}`.as('kabupaten'),
-                currMonthKabupatenRev: sql<number>`SUM(${regClassP2.revenue})`.as('currMonthKabupatenRev'),
-                currMonthClusterRev: sql<number>`SUM(SUM(${regClassP2.revenue})) OVER (PARTITION BY ${regClassP2.regionName}, ${regClassP2.branchName}, ${regClassP2.subbranchName}, ${regClassP2.clusterName})`.as('currMonthClusterRev'),
-                currMonthSubbranchRev: sql<number>`SUM(SUM(${regClassP2.revenue})) OVER (PARTITION BY ${regClassP2.regionName}, ${regClassP2.branchName}, ${regClassP2.subbranchName})`.as('currMonthSubbranchRev'),
-                currMonthBranchRev: sql<number>`SUM(SUM(${regClassP2.revenue})) OVER (PARTITION BY ${regClassP2.regionName}, ${regClassP2.branchName})`.as('currMonthBranchRev'),
-                currMonthRegionalRev: sql<number>`SUM(SUM(${regClassP2.revenue})) OVER (PARTITION BY ${regClassP2.regionName})`.as('currMonthRegionalRev')
+                region: sql<string>`${sq2.regionName}`.as('region'),
+                branch: sql<string>`${sq2.branchName}`.as('branch'), // Keep only one branchName
+                subbranch: sql<string>`${sq2.subbranchName}`.as('subbranch'),
+                cluster: sql<string>`${sq2.clusterName}`.as('cluster'),
+                kabupaten: sql<string>`${sq2.cityName}`.as('kabupaten'),
+                currMonthKabupatenRev: sql<number>`SUM(${sq2.rev})`.as('currMonthKabupatenRev'),
+                currMonthClusterRev: sql<number>`SUM(SUM(${sq2.rev})) OVER (PARTITION BY ${sq2.regionName}, ${sq2.branchName}, ${sq2.subbranchName}, ${sq2.clusterName})`.as('currMonthClusterRev'),
+                currMonthSubbranchRev: sql<number>`SUM(SUM(${sq2.rev})) OVER (PARTITION BY ${sq2.regionName}, ${sq2.branchName}, ${sq2.subbranchName})`.as('currMonthSubbranchRev'),
+                currMonthBranchRev: sql<number>`SUM(SUM(${sq2.rev})) OVER (PARTITION BY ${sq2.regionName}, ${sq2.branchName})`.as('currMonthBranchRev'),
+                currMonthRegionalRev: sql<number>`SUM(SUM(${sq2.rev})) OVER (PARTITION BY ${sq2.regionName})`.as('currMonthRegionalRev')
             })
-            .from(regClassP2)
+            .from(sq2)
             .groupBy(sql`1,2,3,4,5`)
             .prepare()
 
         // QUERY UNTUK MENDAPAT PREV MONTH REVENUE
         const p3 = db2
             .select({
-                region: sql<string>`${regClassP3.regionName}`.as('region'),
-                branch: sql<string>`${regClassP3.branchName}`.as('branch'), // Keep only one branchName
-                subbranch: sql<string>`${regClassP3.subbranchName}`.as('subbranch'),
-                cluster: sql<string>`${regClassP3.clusterName}`.as('cluster'),
-                kabupaten: sql<string>`${regClassP3.cityName}`.as('kabupaten'),
-                prevMonthKabupatenRev: sql<number>`SUM(${regClassP3.revenue})`.as('currMonthKabupatenRev'),
-                prevMonthClusterRev: sql<number>`SUM(SUM(${regClassP3.revenue})) OVER (PARTITION BY ${regClassP3.regionName}, ${regClassP3.branchName}, ${regClassP3.subbranchName}, ${regClassP3.clusterName})`.as('currMonthClusterRev'),
-                prevMonthSubbranchRev: sql<number>`SUM(SUM(${regClassP3.revenue})) OVER (PARTITION BY ${regClassP3.regionName}, ${regClassP3.branchName}, ${regClassP3.subbranchName})`.as('currMonthSubbranchRev'),
-                prevMonthBranchRev: sql<number>`SUM(SUM(${regClassP3.revenue})) OVER (PARTITION BY ${regClassP3.regionName}, ${regClassP3.branchName})`.as('currMonthBranchRev'),
-                prevMonthRegionalRev: sql<number>`SUM(SUM(${regClassP3.revenue})) OVER (PARTITION BY ${regClassP3.regionName})`.as('currMonthRegionalRev')
+                region: sql<string>`${sq3.regionName}`.as('region'),
+                branch: sql<string>`${sq3.branchName}`.as('branch'), // Keep only one branchName
+                subbranch: sql<string>`${sq3.subbranchName}`.as('subbranch'),
+                cluster: sql<string>`${sq3.clusterName}`.as('cluster'),
+                kabupaten: sql<string>`${sq3.cityName}`.as('kabupaten'),
+                prevMonthKabupatenRev: sql<number>`SUM(${sq3.rev})`.as('currMonthKabupatenRev'),
+                prevMonthClusterRev: sql<number>`SUM(SUM(${sq3.rev})) OVER (PARTITION BY ${sq3.regionName}, ${sq3.branchName}, ${sq3.subbranchName}, ${sq3.clusterName})`.as('currMonthClusterRev'),
+                prevMonthSubbranchRev: sql<number>`SUM(SUM(${sq3.rev})) OVER (PARTITION BY ${sq3.regionName}, ${sq3.branchName}, ${sq3.subbranchName})`.as('currMonthSubbranchRev'),
+                prevMonthBranchRev: sql<number>`SUM(SUM(${sq3.rev})) OVER (PARTITION BY ${sq3.regionName}, ${sq3.branchName})`.as('currMonthBranchRev'),
+                prevMonthRegionalRev: sql<number>`SUM(SUM(${sq3.rev})) OVER (PARTITION BY ${sq3.regionName})`.as('currMonthRegionalRev')
             })
-            .from(regClassP3)
+            .from(sq3)
             .groupBy(sql`1,2,3,4,5`)
             .prepare()
 
         // QUERY UNTUK MENDAPAT PREV YEAR CURR MONTH REVENUE
         const p4 = db2
             .select({
-                region: sql<string>`${regClassP4.regionName}`.as('region'),
-                branch: sql<string>`${regClassP4.branchName}`.as('branch'), // Keep only one branchName
-                subbranch: sql<string>`${regClassP4.subbranchName}`.as('subbranch'),
-                cluster: sql<string>`${regClassP4.clusterName}`.as('cluster'),
-                kabupaten: sql<string>`${regClassP4.cityName}`.as('kabupaten'),
-                prevYearCurrMonthKabupatenRev: sql<number>`SUM(${regClassP4.revenue})`.as('currMonthKabupatenRev'),
-                prevYearCurrMonthClusterRev: sql<number>`SUM(SUM(${regClassP4.revenue})) OVER (PARTITION BY ${regClassP4.regionName}, ${regClassP4.branchName}, ${regClassP4.subbranchName}, ${regClassP4.clusterName})`.as('currMonthClusterRev'),
-                prevYearCurrMonthSubbranchRev: sql<number>`SUM(SUM(${regClassP4.revenue})) OVER (PARTITION BY ${regClassP4.regionName}, ${regClassP4.branchName}, ${regClassP4.subbranchName})`.as('currMonthSubbranchRev'),
-                prevYearCurrMonthBranchRev: sql<number>`SUM(SUM(${regClassP4.revenue})) OVER (PARTITION BY ${regClassP4.regionName}, ${regClassP4.branchName})`.as('currMonthBranchRev'),
-                prevYearCurrMonthRegionalRev: sql<number>`SUM(SUM(${regClassP4.revenue})) OVER (PARTITION BY ${regClassP4.regionName})`.as('currMonthRegionalRev')
+                region: sql<string>`${sq4.regionName}`.as('region'),
+                branch: sql<string>`${sq4.branchName}`.as('branch'), // Keep only one branchName
+                subbranch: sql<string>`${sq4.subbranchName}`.as('subbranch'),
+                cluster: sql<string>`${sq4.clusterName}`.as('cluster'),
+                kabupaten: sql<string>`${sq4.cityName}`.as('kabupaten'),
+                prevYearCurrMonthKabupatenRev: sql<number>`SUM(${sq4.rev})`.as('currMonthKabupatenRev'),
+                prevYearCurrMonthClusterRev: sql<number>`SUM(SUM(${sq4.rev})) OVER (PARTITION BY ${sq4.regionName}, ${sq4.branchName}, ${sq4.subbranchName}, ${sq4.clusterName})`.as('currMonthClusterRev'),
+                prevYearCurrMonthSubbranchRev: sql<number>`SUM(SUM(${sq4.rev})) OVER (PARTITION BY ${sq4.regionName}, ${sq4.branchName}, ${sq4.subbranchName})`.as('currMonthSubbranchRev'),
+                prevYearCurrMonthBranchRev: sql<number>`SUM(SUM(${sq4.rev})) OVER (PARTITION BY ${sq4.regionName}, ${sq4.branchName})`.as('currMonthBranchRev'),
+                prevYearCurrMonthRegionalRev: sql<number>`SUM(SUM(${sq4.rev})) OVER (PARTITION BY ${sq4.regionName})`.as('currMonthRegionalRev')
             })
-            .from(regClassP4)
+            .from(sq4)
             .groupBy(sql`1,2,3,4,5`)
             .prepare()
 

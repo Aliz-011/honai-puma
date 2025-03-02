@@ -15,7 +15,6 @@ import {
   UserCircleIcon,
   GridIcon
 } from "../icons/index";
-import SidebarWidget from "./SidebarWidget";
 
 type NavItem = {
   name: string;
@@ -33,27 +32,41 @@ const navItems: NavItem[] = [
   {
     icon: <BoxCubeIcon />,
     name: 'Revenue Gross',
-    path: '/revenue-grosses'
+    subItems: [
+      { name: 'Gross', path: '/revenue-grosses' },
+      { name: 'Gross ByU', path: '/revenue-byu' },
+      { name: 'Gross Prabayar', path: '/revenue-gross-prabayar' },
+    ]
   },
   {
     icon: <BoxCubeIcon />,
-    name: 'Revenue ByU',
-    path: '/revenue-byu'
+    name: 'Paying Subs',
+    path: '/paying-subs'
   },
   {
     icon: <BoxCubeIcon />,
     name: 'Revenue CVM',
-    path: '/revenue-cvm'
+    subItems: [
+      { name: 'CVM', path: '/revenue-cvm', },
+      { name: 'CVM Outlet', path: '/revenue-cvm-outlet', },
+    ]
   },
   {
     icon: <BoxCubeIcon />,
     name: 'Revenue New Sales',
-    path: '/revenue-new-sales'
+    subItems: [
+      { name: 'New Sales', path: '/revenue-new-sales', },
+      { name: 'New Sales Prabayar', path: '/revenue-new-sales-prabayar', },
+    ]
   },
   {
     icon: <BoxCubeIcon />,
     name: 'Revenue SA',
-    path: '/revenue-sa'
+    subItems: [
+      { name: 'SA', path: '/revenue-sa' },
+      { name: 'SA ByU', path: '/revenue-sa-byu' },
+      { name: 'SA Prabayar', path: '/revenue-sa-prabayar' },
+    ]
   },
 ];
 
