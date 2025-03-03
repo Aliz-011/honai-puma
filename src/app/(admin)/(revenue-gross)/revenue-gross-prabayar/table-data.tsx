@@ -7,7 +7,6 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components
 import { Skeleton } from '@/components/common/skeleton';
 import ComponentCard from '@/components/common/ComponentCard';
 import { useSelectDate } from '@/hooks/use-select-date';
-import { useGetRevenueGrosses } from '@/modules/revenue-gross/hooks/use-get-revenue-grosses';
 import { cn, formatToBillion, formatToIDR, formatToPercentage, getGrowthColor } from '@/lib/utils';
 import { useSelectBranch } from '@/hooks/use-select-branch';
 import { useSelectSubbranch } from '@/hooks/use-select-subbranch';
@@ -15,6 +14,7 @@ import { useSelectCluster } from '@/hooks/use-select-cluster';
 import { useSelectKabupaten } from '@/hooks/use-select-kabupaten';
 import { Tooltip } from '@/components/common/tooltip';
 import { TableNotFound } from '@/components/table-not-found';
+import { useGetRevenueGrossPrabayar } from '@/modules/revenue-gross/hooks/use-get-revenue-prabayar';
 
 export const TableData = () => {
     const { date: selectedDate } = useSelectDate()
@@ -23,7 +23,7 @@ export const TableData = () => {
     const { cluster: selectedCluster } = useSelectCluster()
     const { kabupaten: selectedKabupaten } = useSelectKabupaten()
 
-    const { data: revenues, isLoading: isLoadingRevenue } = useGetRevenueGrosses({ date: selectedDate })
+    const { data: revenues, isLoading: isLoadingRevenue } = useGetRevenueGrossPrabayar({ date: selectedDate })
 
     const compactDate = subDays(selectedDate, 2)
     const daysInCurrMonth = getDaysInMonth(selectedDate)
@@ -90,7 +90,7 @@ export const TableData = () => {
                                     isHeader
                                     className="px-5 py-3 font-medium border dark:bg-gray-900 text-gray-500 text-center text-theme-sm dark:text-white dark:border-gray-800"
                                 >
-                                    Revenue Gross All
+                                    Revenue Gross Prabayar
                                 </TableCell>
                             </TableRow>
                             <TableRow>

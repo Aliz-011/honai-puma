@@ -33,39 +33,72 @@ const navItems: NavItem[] = [
     icon: <BoxCubeIcon />,
     name: 'Revenue Gross',
     subItems: [
-      { name: 'Gross', path: '/revenue-grosses' },
-      { name: 'Gross ByU', path: '/revenue-byu' },
-      { name: 'Gross Prabayar', path: '/revenue-gross-prabayar' },
-    ]
-  },
-  {
-    icon: <BoxCubeIcon />,
-    name: 'Paying Subs',
-    path: '/paying-subs'
-  },
-  {
-    icon: <BoxCubeIcon />,
-    name: 'Revenue CVM',
-    subItems: [
-      { name: 'CVM', path: '/revenue-cvm', },
-      { name: 'CVM Outlet', path: '/revenue-cvm-outlet', },
+      { name: 'Revenue Gross All', path: '/revenue-grosses' },
+      { name: 'Revenue Gross ByU', path: '/revenue-byu' },
+      { name: 'Revenue Gross Prabayar', path: '/revenue-gross-prabayar' },
     ]
   },
   {
     icon: <BoxCubeIcon />,
     name: 'Revenue New Sales',
     subItems: [
-      { name: 'New Sales', path: '/revenue-new-sales', },
-      { name: 'New Sales Prabayar', path: '/revenue-new-sales-prabayar', },
+      { name: 'Revenue New Sales All', path: '/revenue-new-sales', },
+      { name: 'Revenue New Sales Prabayar', path: '/revenue-new-sales-prabayar', },
+      { name: 'Revenue New Sales ByU', path: '/revenue-new-sales-byu', },
+    ]
+  },
+  {
+    icon: <BoxCubeIcon />,
+    name: 'Paying Subs',
+    subItems: [
+      { name: 'Paying Subs All', 'path': '/paying-subs' },
+      { name: 'Paying LOS 0-1 All', 'path': '/paying-los' },
+      { name: 'Paying LOS 0-1 Prabayar', 'path': '/paying-los-prabayar' },
+      { name: 'Paying LOS 0-1 ByU', 'path': '/paying-los-byu' },
+    ]
+  },
+  {
+    icon: <BoxCubeIcon />,
+    name: 'Revenue CVM',
+    subItems: [
+      { name: 'Revenue CVM All', path: '/revenue-cvm', },
+      { name: 'Revenue CVM Outlet', path: '/revenue-cvm-outlet', },
     ]
   },
   {
     icon: <BoxCubeIcon />,
     name: 'Revenue SA',
     subItems: [
-      { name: 'SA', path: '/revenue-sa' },
-      { name: 'SA ByU', path: '/revenue-sa-byu' },
-      { name: 'SA Prabayar', path: '/revenue-sa-prabayar' },
+      { name: 'Revenue SA All', path: '/revenue-sa' },
+      { name: 'Revenue SA Prabayar', path: '/revenue-sa-prabayar' },
+      { name: 'Revenue SA ByU', path: '/revenue-sa-byu' },
+    ]
+  },
+  {
+    icon: <BoxCubeIcon />,
+    name: 'Trx SA',
+    subItems: [
+      { name: 'Trx SA All', path: '/trx-sa' },
+      { name: 'Trx SA Prabayar', path: '/trx-sa-prabayar' },
+      { name: 'Trx SA ByU', path: '/trx-sa-byu' },
+    ]
+  },
+  {
+    icon: <BoxCubeIcon />,
+    name: 'Target SO',
+    subItems: [
+      { name: 'SO All', path: '/target-so' },
+      { name: 'SO Prabayar', path: '/target-so-prabayar' },
+      { name: 'SO ByU', path: '/target-so-byu' },
+    ]
+  },
+  {
+    icon: <BoxCubeIcon />,
+    name: 'Trx New Sales',
+    subItems: [
+      { name: 'Trx New Sales All', path: '/trx-new-sales' },
+      { name: 'Trx New Sales Prabayar', path: '/trx-new-sales-prabayar' },
+      { name: 'Trx New Sales ByU', path: '/trx-new-sales-byu' },
     ]
   },
 ];

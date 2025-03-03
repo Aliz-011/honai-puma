@@ -136,8 +136,7 @@ export const Filters = () => {
                     selected={selectedDate}
                     renderMonthContent={renderMonthContent}
                     onChange={(date) => handleDateChange(date)}
-                    showMonthYearPicker
-                    dateFormat="yyyy-MM"
+                    dateFormat="yyyy-MM-dd"
                     maxDate={new Date(new Date().getFullYear(), 11, 31)}
                     className="w-full text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     calendarClassName="shadow-lg border-0"

@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { subMonths, intlFormat, subDays } from "date-fns";
+import { subMonths, intlFormat, subDays, format, endOfMonth, subYears } from "date-fns";
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table'
 import { useSelectDate } from '@/hooks/use-select-date';
@@ -26,6 +26,10 @@ export const TableData = () => {
     const { data: revenues, isLoading: isLoadingRevenue } = useGetRevenueCVM({ date: selectedDate })
 
     const compactDate = subDays(selectedDate, 3) // today - 2 days
+    // Last days of months
+    const lastDayOfCurrMonth = format(endOfMonth(compactDate), 'yyyy-MM-dd');
+    const lastDayOfPrevMonth = format(endOfMonth(subMonths(compactDate, 1)), 'yyyy-MM-dd');
+    const lastDayOfPrevYearCurrMonth = format(endOfMonth(subYears(compactDate, 1)), 'yyyy-MM-dd');
 
     if (isLoadingRevenue) {
         return (
@@ -92,7 +96,7 @@ export const TableData = () => {
                                 </TableCell>
                                 <TableCell isHeader className="px-5 py-3 min-w-[100px] font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
                                     {intlFormat(
-                                        compactDate,
+                                        lastDayOfCurrMonth,
                                         {
                                             dateStyle: "medium",
                                         },
@@ -101,7 +105,7 @@ export const TableData = () => {
                                 </TableCell>
                                 <TableCell isHeader className="px-5 py-3 min-w-[100px] font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
                                     {intlFormat(
-                                        subMonths(compactDate, 1),
+                                        lastDayOfPrevMonth,
                                         {
                                             dateStyle: "medium",
                                         },
@@ -110,7 +114,7 @@ export const TableData = () => {
                                 </TableCell>
                                 <TableCell isHeader className="px-5 py-3 min-w-[100px] font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
                                     {intlFormat(
-                                        subMonths(compactDate, 12),
+                                        lastDayOfPrevYearCurrMonth,
                                         {
                                             dateStyle: "medium",
                                         },

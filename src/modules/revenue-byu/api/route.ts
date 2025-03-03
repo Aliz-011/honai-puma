@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { z } from 'zod'
 import { and, asc, between, eq, isNotNull, sql } from "drizzle-orm";
-import { subMonths, subDays, format, subYears } from 'date-fns'
+import { subMonths, subDays, format, subYears, endOfMonth } from 'date-fns'
 
 import { db, db3 } from "@/db";
 import {
@@ -44,9 +44,11 @@ const app = new Hono().get("/",
         const firstDayOfCurrMonth = format(new Date(latestDataDate.getFullYear(), latestDataDate.getMonth(), 1), 'yyyy-MM-dd')
         const firstDayOfPrevMonth = format(subMonths(new Date(latestDataDate.getFullYear(), latestDataDate.getMonth(), 1), 1), 'yyyy-MM-dd')
         const firstDayOfPrevYearCurrMonth = format(subYears(new Date(latestDataDate.getFullYear(), latestDataDate.getMonth(), 1), 1), 'yyyy-MM-dd')
-        const currDate = format(latestDataDate, 'yyyy-MM-dd')
-        const prevDate = format(subMonths(latestDataDate, 1), 'yyyy-MM-dd')
-        const prevYearCurrDate = format(subYears(latestDataDate, 1), 'yyyy-MM-dd')
+
+        // Last days of months
+        const lastDayOfCurrMonth = format(endOfMonth(latestDataDate), 'yyyy-MM-dd');
+        const lastDayOfPrevMonth = format(endOfMonth(subMonths(latestDataDate, 1)), 'yyyy-MM-dd');
+        const lastDayOfPrevYearCurrMonth = format(endOfMonth(subYears(latestDataDate, 1)), 'yyyy-MM-dd');
 
         const sq2 = db3
             .select({
@@ -258,7 +260,7 @@ const app = new Hono().get("/",
                 rev: currRevByu.rev,
             })
             .from(currRevByu)
-            .where(between(currRevByu.eventDate, firstDayOfCurrMonth, currDate))
+            .where(between(currRevByu.eventDate, firstDayOfCurrMonth, lastDayOfCurrMonth))
             .as('sq2')
 
         const sq3 = db3
@@ -471,7 +473,7 @@ const app = new Hono().get("/",
                 rev: prevMonthRevByu.rev,
             })
             .from(prevMonthRevByu)
-            .where(between(prevMonthRevByu.eventDate, firstDayOfPrevMonth, prevDate))
+            .where(between(prevMonthRevByu.eventDate, firstDayOfPrevMonth, lastDayOfPrevMonth))
             .as('sq3')
 
         const sq4 = db3
@@ -684,7 +686,7 @@ const app = new Hono().get("/",
                 rev: prevYearCurrMonthRevByu.rev,
             })
             .from(prevYearCurrMonthRevByu)
-            .where(between(prevYearCurrMonthRevByu.eventDate, firstDayOfPrevYearCurrMonth, prevYearCurrDate))
+            .where(between(prevYearCurrMonthRevByu.eventDate, firstDayOfPrevYearCurrMonth, lastDayOfPrevYearCurrMonth))
             .as('sq4')
 
         // QUERY UNTUK TARGET BULAN INI
