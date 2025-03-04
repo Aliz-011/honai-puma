@@ -48,7 +48,7 @@ export const TableData = () => {
     }
 
     if (!revenues) {
-        return <TableNotFound date={selectedDate} daysBehind={2} />
+        return <TableNotFound date={selectedDate} daysBehind={2} tableName='Revenue Gross Prabayar' />
     }
 
     const filteredRevenues = revenues.map(regional => ({
@@ -207,8 +207,8 @@ export const TableData = () => {
                                         </TableCell>
                                         {/* YoY */}
                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                            <span className={cn(getGrowthColor(revenue.currMonthRevenue / revenue.prevYearCurrMonthRevenue) ? 'text-green-500' : 'text-rose-500')}>
-                                                {formatToPercentage(revenue.currMonthRevenue / revenue.prevYearCurrMonthRevenue)}%
+                                            <span className={cn(getGrowthColor(((revenue.currMonthRevenue - revenue.prevYearCurrMonthRevenue) / revenue.prevYearCurrMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
+                                                {formatToPercentage(((revenue.currMonthRevenue - revenue.prevYearCurrMonthRevenue) / revenue.prevYearCurrMonthRevenue))}%
                                             </span>
                                         </TableCell>
                                         {/* YtD */}
@@ -275,8 +275,8 @@ export const TableData = () => {
                                                 </TableCell>
                                                 {/* YoY */}
                                                 <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                    <span className={cn(getGrowthColor(branch.currMonthRevenue / branch.prevYearCurrMonthRevenue) ? 'text-green-500' : 'text-rose-500')}>
-                                                        {formatToPercentage(branch.currMonthRevenue / branch.prevYearCurrMonthRevenue)}%
+                                                    <span className={cn(getGrowthColor(((branch.currMonthRevenue - branch.prevYearCurrMonthRevenue) / branch.prevYearCurrMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
+                                                        {formatToPercentage(((branch.currMonthRevenue - branch.prevYearCurrMonthRevenue) / branch.prevYearCurrMonthRevenue))}%
                                                     </span>
                                                 </TableCell>
                                                 {/* YtD */}
@@ -346,8 +346,8 @@ export const TableData = () => {
                                                     </TableCell>
                                                     {/* YoY */}
                                                     <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                        <span className={cn(getGrowthColor(subbranch.currMonthRevenue / subbranch.prevYearCurrMonthRevenue) ? 'text-green-500' : 'text-rose-500')}>
-                                                            {formatToPercentage(subbranch.currMonthRevenue / subbranch.prevYearCurrMonthRevenue)}%
+                                                        <span className={cn(getGrowthColor(((subbranch.currMonthRevenue - subbranch.prevYearCurrMonthRevenue) / subbranch.prevYearCurrMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
+                                                            {formatToPercentage(((subbranch.currMonthRevenue - subbranch.prevYearCurrMonthRevenue) / subbranch.prevYearCurrMonthRevenue))}%
                                                         </span>
                                                     </TableCell>
                                                     {/* YtD */}
@@ -417,8 +417,8 @@ export const TableData = () => {
                                                         </TableCell>
                                                         {/* YoY */}
                                                         <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                            <span className={cn(getGrowthColor(cluster.currMonthRevenue / cluster.prevYearCurrMonthRevenue) ? 'text-green-500' : 'text-rose-500')}>
-                                                                {formatToPercentage(cluster.currMonthRevenue / cluster.prevYearCurrMonthRevenue)}%
+                                                            <span className={cn(getGrowthColor(((cluster.currMonthRevenue - cluster.prevYearCurrMonthRevenue) / cluster.prevYearCurrMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
+                                                                {formatToPercentage(((cluster.currMonthRevenue - cluster.prevYearCurrMonthRevenue) / cluster.prevYearCurrMonthRevenue))}%
                                                             </span>
                                                         </TableCell>
                                                         {/* YtD */}
@@ -489,8 +489,8 @@ export const TableData = () => {
                                                             </TableCell>
                                                             {/* YoY */}
                                                             <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                                <span className={cn(getGrowthColor(kabupaten.currMonthRevenue / kabupaten.prevYearCurrMonthRevenue) ? 'text-green-500' : 'text-rose-500')}>
-                                                                    {formatToPercentage(kabupaten.currMonthRevenue / kabupaten.prevYearCurrMonthRevenue)}%
+                                                                <span className={cn(getGrowthColor(((kabupaten.currMonthRevenue - kabupaten.prevYearCurrMonthRevenue) / kabupaten.prevYearCurrMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
+                                                                    {formatToPercentage(((kabupaten.currMonthRevenue - kabupaten.prevYearCurrMonthRevenue) / kabupaten.prevYearCurrMonthRevenue))}%
                                                                 </span>
                                                             </TableCell>
                                                             {/* YtD */}

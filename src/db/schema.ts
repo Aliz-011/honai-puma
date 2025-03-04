@@ -186,6 +186,31 @@ export const revenueNewSalesRelations = relations(revenueNewSales, ({ one }) => 
 	}),
 }));
 
+export const revenueNewSalesPrabayar = pumaSchema.table("Target_revenue_new_sales_prabayar", {
+	id: varchar("id", { length: 100 }).primaryKey(),
+	kabupatenId: varchar("id_kabupaten", { length: 100 }).notNull(),
+	m1: decimal("m1", { precision: 18, scale: 7 }),
+	m2: decimal("m2", { precision: 18, scale: 7 }),
+	m3: decimal("m3", { precision: 18, scale: 7 }),
+	m4: decimal("m4", { precision: 18, scale: 7 }),
+	m5: decimal("m5", { precision: 18, scale: 7 }),
+	m6: decimal("m6", { precision: 18, scale: 7 }),
+	m7: decimal("m7", { precision: 18, scale: 7 }),
+	m8: decimal("m8", { precision: 18, scale: 7 }),
+	m9: decimal("m9", { precision: 18, scale: 7 }),
+	m10: decimal("m10", { precision: 18, scale: 7 }),
+	m11: decimal("m11", { precision: 18, scale: 7 }),
+	m12: decimal("m12", { precision: 18, scale: 7 }),
+	year: varchar({ length: 5 }).notNull(),
+});
+
+export const revenueNewSalesPrabayarRelations = relations(revenueNewSalesPrabayar, ({ one }) => ({
+	kabupaten: one(kabupatens, {
+		fields: [revenueNewSalesPrabayar.kabupatenId],
+		references: [kabupatens.id],
+	}),
+}));
+
 export const revenueCVM = pumaSchema.table("Target_revenue_cvm", {
 	id: varchar("id", { length: 100 }).primaryKey(),
 	kabupatenId: varchar("id_kabupaten", { length: 100 }).notNull(),
@@ -257,6 +282,31 @@ export const revenueSA = pumaSchema.table("Target_revenue_sa", {
 export const revenueSARelations = relations(revenueSA, ({ one }) => ({
 	kabupaten: one(kabupatens, {
 		fields: [revenueSA.kabupatenId],
+		references: [kabupatens.id],
+	}),
+}));
+
+export const revenueSAPrabayar = pumaSchema.table("Target_revenue_sa_prabayar", {
+	id: varchar("id", { length: 100 }).primaryKey(),
+	kabupatenId: varchar("id_kabupaten", { length: 100 }).notNull(),
+	m1: decimal("m1", { precision: 18, scale: 7 }),
+	m2: decimal("m2", { precision: 18, scale: 7 }),
+	m3: decimal("m3", { precision: 18, scale: 7 }),
+	m4: decimal("m4", { precision: 18, scale: 7 }),
+	m5: decimal("m5", { precision: 18, scale: 7 }),
+	m6: decimal("m6", { precision: 18, scale: 7 }),
+	m7: decimal("m7", { precision: 18, scale: 7 }),
+	m8: decimal("m8", { precision: 18, scale: 7 }),
+	m9: decimal("m9", { precision: 18, scale: 7 }),
+	m10: decimal("m10", { precision: 18, scale: 7 }),
+	m11: decimal("m11", { precision: 18, scale: 7 }),
+	m12: decimal("m12", { precision: 18, scale: 7 }),
+	year: varchar({ length: 5 }).notNull(),
+});
+
+export const revenueSAPrabayarRelations = relations(revenueSAPrabayar, ({ one }) => ({
+	kabupaten: one(kabupatens, {
+		fields: [revenueSAPrabayar.kabupatenId],
 		references: [kabupatens.id],
 	}),
 }));

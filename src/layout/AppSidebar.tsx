@@ -34,8 +34,17 @@ const navItems: NavItem[] = [
     name: 'Revenue Gross',
     subItems: [
       { name: 'Revenue Gross All', path: '/revenue-grosses' },
-      { name: 'Revenue Gross ByU', path: '/revenue-byu' },
+      { name: 'Revenue ByU', path: '/revenue-byu' },
       { name: 'Revenue Gross Prabayar', path: '/revenue-gross-prabayar' },
+    ]
+  },
+  {
+    icon: <BoxCubeIcon />,
+    name: 'Target SO',
+    subItems: [
+      { name: 'SO All', path: '/target-so' },
+      { name: 'SO Prabayar', path: '/target-so-prabayar' },
+      { name: 'SO ByU', path: '/target-so-byu' },
     ]
   },
   {
@@ -81,15 +90,6 @@ const navItems: NavItem[] = [
       { name: 'Trx SA All', path: '/trx-sa' },
       { name: 'Trx SA Prabayar', path: '/trx-sa-prabayar' },
       { name: 'Trx SA ByU', path: '/trx-sa-byu' },
-    ]
-  },
-  {
-    icon: <BoxCubeIcon />,
-    name: 'Target SO',
-    subItems: [
-      { name: 'SO All', path: '/target-so' },
-      { name: 'SO Prabayar', path: '/target-so-prabayar' },
-      { name: 'SO ByU', path: '/target-so-byu' },
     ]
   },
   {

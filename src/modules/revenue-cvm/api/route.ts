@@ -52,6 +52,11 @@ const app = new Hono()
             const lastDayOfPrevMonth = format(endOfMonth(subMonths(latestDataDate, 1)), 'yyyy-MM-dd');
             const lastDayOfPrevYearCurrMonth = format(endOfMonth(subYears(latestDataDate, 1)), 'yyyy-MM-dd');
 
+            // Current dates (point in time)
+            const currDate = format(latestDataDate, 'yyyy-MM-dd');
+            const prevDate = format(subMonths(latestDataDate, 1), 'yyyy-MM-dd');
+            const prevYearCurrDate = format(subYears(latestDataDate, 1), 'yyyy-MM-dd');
+
             const sq2 = db2
                 .select({
                     regionName: currRevCVM.region,
@@ -267,7 +272,7 @@ END
                     notInArray(currRevCVM.city, ['TMP']),
                     and(
                         like(currRevCVM.packageGroup, '%CVM%'),
-                        between(currRevCVM.trxDate, firstDayOfCurrMonth, lastDayOfCurrMonth)
+                        between(currRevCVM.trxDate, firstDayOfCurrMonth, currDate)
                     )
                 ))
                 .as('sq2')
@@ -487,7 +492,7 @@ END
                     notInArray(prevMonthRevCVM.city, ['TMP']),
                     and(
                         like(prevMonthRevCVM.packageGroup, '%CVM%'),
-                        between(prevMonthRevCVM.trxDate, firstDayOfPrevMonth, lastDayOfPrevMonth)
+                        between(prevMonthRevCVM.trxDate, firstDayOfPrevMonth, prevDate)
                     )
                 ))
                 .as('sq3')
@@ -707,7 +712,7 @@ END
                     notInArray(prevYearCurrMonthRevCVM.city, ['TMP']),
                     and(
                         like(prevYearCurrMonthRevCVM.packageGroup, '%CVM%'),
-                        between(prevYearCurrMonthRevCVM.trxDate, firstDayOfPrevYearCurrMonth, lastDayOfPrevYearCurrMonth)
+                        between(prevYearCurrMonthRevCVM.trxDate, firstDayOfPrevYearCurrMonth, prevYearCurrDate)
                     )
                 ))
                 .as('sq4')

@@ -1,21 +1,21 @@
 'use client'
 
 import React from 'react'
-import { subMonths, intlFormat, subDays, format, endOfMonth, subYears, getDaysInMonth } from "date-fns";
+import { subMonths, intlFormat, subDays, endOfMonth, format, subYears, getDaysInMonth } from "date-fns";
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table'
 import { useSelectDate } from '@/hooks/use-select-date';
 import { Skeleton } from '@/components/common/skeleton';
 import ComponentCard from '@/components/common/ComponentCard';
-import { TableNotFound } from '@/components/table-not-found';
-import { Tooltip } from '@/components/common/tooltip';
 
 import { cn, formatToBillion, formatToIDR, formatToPercentage, getGrowthColor } from '@/lib/utils';
 import { useSelectBranch } from '@/hooks/use-select-branch';
 import { useSelectSubbranch } from '@/hooks/use-select-subbranch';
 import { useSelectCluster } from '@/hooks/use-select-cluster';
 import { useSelectKabupaten } from '@/hooks/use-select-kabupaten';
-import { useGetRevenueSAByu } from '@/modules/revenue-sa/hooks/use-get-revenue-sa-byu';
+import { TableNotFound } from '@/components/table-not-found';
+import { Tooltip } from '@/components/common/tooltip';
+import { useGetNewSalesPrabayar } from '@/modules/revenue-new-sales/hooks/use-get-new-sales-prabayar';
 
 export const TableData = () => {
     const { date: selectedDate } = useSelectDate()
@@ -23,11 +23,12 @@ export const TableData = () => {
     const { subbranch: selectedSubbranch } = useSelectSubbranch()
     const { cluster: selectedCluster } = useSelectCluster()
     const { kabupaten: selectedKabupaten } = useSelectKabupaten()
-    const { data: revenues, isLoading: isLoadingRevenue } = useGetRevenueSAByu({ date: selectedDate })
+    const { data: revenues, isLoading: isLoadingRevenue } = useGetNewSalesPrabayar({ date: selectedDate, })
 
-    const compactDate = subDays(selectedDate, 3) // today - 3 days
+    const compactDate = subDays(selectedDate, 2) // today - 2 days
     const daysInCurrMonth = getDaysInMonth(selectedDate)
     const currDate = parseInt(format(compactDate, 'd'))
+
     // Last days of months
     const lastDayOfCurrMonth = format(endOfMonth(compactDate), 'yyyy-MM-dd');
     const lastDayOfPrevMonth = format(endOfMonth(subMonths(compactDate, 1)), 'yyyy-MM-dd');
@@ -36,7 +37,7 @@ export const TableData = () => {
     if (isLoadingRevenue) {
         return (
             <div className="max-w-full overflow-x-auto remove-scrollbar">
-                <div className="min-w-[1102px]">
+                <div className="min-w-[1400px]">
                     <div className="flex flex-col space-y-3">
                         <Skeleton className="h-4 w-[200px]" />
                         <Skeleton className="h-[275px] w-[1104px] rounded-xl" />
@@ -47,9 +48,7 @@ export const TableData = () => {
     }
 
     if (!revenues) {
-        return (
-            <TableNotFound date={selectedDate} daysBehind={3} tableName='Revenue SA ByU' />
-        )
+        return <TableNotFound daysBehind={2} date={selectedDate} tableName='Revenue New Sales Prabayar' />
     }
 
     const filteredRevenues = revenues.map(regional => ({
@@ -91,7 +90,7 @@ export const TableData = () => {
                                     isHeader
                                     className="px-5 py-3 font-medium border dark:bg-gray-900 text-gray-500 text-center text-theme-sm dark:text-white dark:border-gray-800"
                                 >
-                                    Revenue SA ByU
+                                    Revenue New Sales Prabayar
                                 </TableCell>
                             </TableRow>
                             <TableRow>

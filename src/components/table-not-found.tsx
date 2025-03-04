@@ -5,7 +5,7 @@ import { subMonths, intlFormat, subDays } from "date-fns";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table'
 import { useSelectDate } from "@/hooks/use-select-date";
 
-export const TableNotFound = ({ date: selectedDate, daysBehind }: { date: Date, daysBehind: number }) => {
+export const TableNotFound = ({ date: selectedDate, daysBehind, tableName }: { date: Date, daysBehind: number, tableName: string }) => {
     const compactDate = subDays(selectedDate, daysBehind) // today - 2 days
 
     return (
@@ -24,7 +24,7 @@ export const TableNotFound = ({ date: selectedDate, daysBehind }: { date: Date, 
                         isHeader
                         className="px-5 py-3 font-medium border dark:bg-gray-900 text-gray-500 text-center text-theme-sm dark:text-white dark:border-gray-800"
                     >
-                        Revenue New Sales
+                        {tableName}
                     </TableCell>
                 </TableRow>
                 <TableRow>

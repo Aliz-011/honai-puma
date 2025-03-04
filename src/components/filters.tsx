@@ -63,7 +63,12 @@ export const Filters = () => {
         const today = new Date().getDate();
         const lastDayOfMonth = new Date(date!.getFullYear(), date!.getMonth() + 1, 0).getDate();
         const day = Math.min(today, lastDayOfMonth); // Ensure valid day in the month
-        setSelectedDate(new Date(date!.getFullYear(), date!.getMonth(), day));
+
+        // this for month picker, doesnt include day
+        // setSelectedDate(new Date(date!.getFullYear(), date!.getMonth(), day));
+
+        // this for date picker, day included 
+        setSelectedDate(new Date(date!));
     }
 
     if (isLoadingRegion || !areas) {
