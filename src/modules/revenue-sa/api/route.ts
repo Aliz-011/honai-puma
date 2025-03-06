@@ -1786,7 +1786,7 @@ const app = new Hono()
                 kabupaten.prevYtdRevenue = Number(row.prevYtdKabupatenRev)
             })
 
-            const finalDataRevenue = Array.from(regionalsMap.values()).map((regional: any) => ({
+            const finalDataRevenue: Regional[] = Array.from(regionalsMap.values()).map((regional: any) => ({
                 ...regional,
                 branches: Array.from(regional.branches.values()).map((branch: any) => ({
                     ...branch,
@@ -3569,7 +3569,7 @@ const app = new Hono()
                 kabupaten.prevYtdRevenue = Number(row.prevYtdKabupatenRev)
             })
 
-            const finalDataRevenue = Array.from(regionalsMap.values()).map((regional: any) => ({
+            const finalDataRevenue: Regional[] = Array.from(regionalsMap.values()).map((regional: any) => ({
                 ...regional,
                 branches: Array.from(regional.branches.values()).map((branch: any) => ({
                     ...branch,
@@ -5350,7 +5350,7 @@ const app = new Hono()
                 kabupaten.prevYtdRevenue = Number(row.prevYtdKabupatenRev)
             })
 
-            const finalDataRevenue = Array.from(regionalsMap.values()).map((regional: any) => ({
+            const finalDataRevenue: Regional[] = Array.from(regionalsMap.values()).map((regional: any) => ({
                 ...regional,
                 branches: Array.from(regional.branches.values()).map((branch: any) => ({
                     ...branch,

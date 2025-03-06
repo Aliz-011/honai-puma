@@ -1,33 +1,53 @@
 type Kabupaten = {
-    id: string;
-    clusterId: string;
-    kabupaten: string;
-    totalRevenue: number;
+    name: string;
+    currMonthRevenue: number;
+    currMonthTarget: number;
+    currYtdRevenue: number;
+    prevYtdRevenue: number;
+    prevMonthRevenue: number;
+    prevYearCurrMonthRevenue: number;
 };
 
 type Cluster = {
-    id: string;
-    subbranchId: string;
-    cluster: string;
+    name: string;
+    currMonthRevenue: number;
+    currMonthTarget: number;
+    currYtdRevenue: number;
+    prevYtdRevenue: number;
+    prevMonthRevenue: number;
+    prevYearCurrMonthRevenue: number;
     kabupatens: Kabupaten[];
 };
 
 type Subbranch = {
-    id: string;
-    branchId: string;
-    subbranchNew: string;
+    name: string;
+    currMonthRevenue: number;
+    currMonthTarget: number;
+    currYtdRevenue: number;
+    prevYtdRevenue: number;
+    prevMonthRevenue: number;
+    prevYearCurrMonthRevenue: number;
     clusters: Cluster[];
 };
 
 type Branch = {
-    id: string;
-    regionalId: string;
-    branchNew: string;
+    name: string;
+    currMonthRevenue: number;
+    currMonthTarget: number;
+    currYtdRevenue: number;
+    prevYtdRevenue: number;
+    prevMonthRevenue: number;
+    prevYearCurrMonthRevenue: number;
     subbranches: Subbranch[];
 };
 
 type Regional = {
-    id: string;
-    regional: string;
+    name: string;
+    currMonthRevenue: number;
+    currMonthTarget: number;
+    currYtdRevenue: number;
+    prevYtdRevenue: number;
+    prevMonthRevenue: number;
+    prevYearCurrMonthRevenue: number;
     branches: Branch[];
 };
