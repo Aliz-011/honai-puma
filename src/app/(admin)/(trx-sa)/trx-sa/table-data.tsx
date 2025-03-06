@@ -16,6 +16,7 @@ import { useSelectKabupaten } from '@/hooks/use-select-kabupaten';
 import { useGetRevenueSA } from '@/modules/revenue-sa/hooks/use-get-revenue-sa';
 import { TableNotFound } from '@/components/table-not-found';
 import { Tooltip } from '@/components/common/tooltip';
+import { useGetTrxSA } from '@/modules/trx-sa/hooks/use-get-trx-sa';
 
 export const TableData = () => {
     const { date: selectedDate } = useSelectDate()
@@ -23,7 +24,7 @@ export const TableData = () => {
     const { subbranch: selectedSubbranch } = useSelectSubbranch()
     const { cluster: selectedCluster } = useSelectCluster()
     const { kabupaten: selectedKabupaten } = useSelectKabupaten()
-    const { data: revenues, isLoading: isLoadingRevenue } = useGetRevenueSA({ date: selectedDate })
+    const { data: revenues, isLoading: isLoadingRevenue } = useGetTrxSA({ date: selectedDate })
 
     const compactDate = subDays(selectedDate, 3) // today - 2 days
     const daysInCurrMonth = getDaysInMonth(selectedDate)

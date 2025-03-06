@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
+import { ChevronDownIcon } from 'lucide-react'
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -8,7 +9,6 @@ import { useSidebar } from "../context/SidebarContext";
 import {
   BoxCubeIcon,
   CalenderIcon,
-  ChevronDownIcon,
   HorizontaLDots,
   ListIcon,
   PieChartIcon,
@@ -53,7 +53,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: 'Revenue New Sales All', path: '/revenue-new-sales', },
       { name: 'Revenue New Sales Prabayar', path: '/revenue-new-sales-prabayar', },
-      { name: 'Revenue New Sales ByU', path: '/revenue-new-sales-byu', },
+      // { name: 'Revenue New Sales ByU', path: '/revenue-new-sales-byu', },
     ]
   },
   {

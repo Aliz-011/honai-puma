@@ -26,13 +26,16 @@ export const TableData = () => {
     const { data: revenues, isLoading: isLoadingRevenue } = useGetRevenueGrossPrabayar({ date: selectedDate })
 
     const compactDate = subDays(selectedDate, 2)
-    const daysInCurrMonth = getDaysInMonth(selectedDate)
-    const currDate = parseInt(format(compactDate, 'd'))
+    const lastDayOfSelectedMonth = endOfMonth(compactDate);
+    const isEndOfMonth = compactDate.getDate() === lastDayOfSelectedMonth.getDate();
 
     // Last days of months
-    const lastDayOfCurrMonth = format(endOfMonth(compactDate), 'yyyy-MM-dd');
-    const lastDayOfPrevMonth = format(endOfMonth(subMonths(compactDate, 1)), 'yyyy-MM-dd');
-    const lastDayOfPrevYearCurrMonth = format(endOfMonth(subYears(compactDate, 1)), 'yyyy-MM-dd');
+    const daysInCurrMonth = isEndOfMonth ? getDaysInMonth(compactDate) : getDaysInMonth(selectedDate)
+    const currDate = parseInt(format(compactDate, 'd'))
+
+    const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : compactDate;
+    const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(compactDate, 1)) : subMonths(compactDate, 1);
+    const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(compactDate, 1)) : subYears(compactDate, 1);
 
     if (isLoadingRevenue) {
         return (
@@ -74,7 +77,7 @@ export const TableData = () => {
     return (
         <div className="max-w-full overflow-x-auto remove-scrollbar">
             <div className="min-w-[1104px]">
-                <ComponentCard title='Porto PUMA'>
+                <ComponentCard title='Revenue Gross Prabayar'>
                     <Table>
                         <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
                             <TableRow>
@@ -99,7 +102,7 @@ export const TableData = () => {
                                 </TableCell>
                                 <TableCell isHeader className="px-5 py-3 min-w-[100px] font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
                                     {intlFormat(
-                                        compactDate,
+                                        endOfCurrMonth,
                                         {
                                             dateStyle: "medium",
                                         },
@@ -108,7 +111,7 @@ export const TableData = () => {
                                 </TableCell>
                                 <TableCell isHeader className="px-5 py-3 min-w-[100px] font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
                                     {intlFormat(
-                                        subMonths(compactDate, 1),
+                                        endOfPrevMonth,
                                         {
                                             dateStyle: "medium",
                                         },
@@ -117,7 +120,7 @@ export const TableData = () => {
                                 </TableCell>
                                 <TableCell isHeader className="px-5 py-3 min-w-[100px] font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
                                     {intlFormat(
-                                        subYears(compactDate, 1),
+                                        endOfPrevYearSameMonth,
                                         {
                                             dateStyle: "medium",
                                         },
@@ -158,130 +161,142 @@ export const TableData = () => {
                             {filteredRevenues.map((revenue, regionalIndex) => (
                                 <React.Fragment key={regionalIndex}>
                                     <TableRow>
-                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-start font-normal text-theme-xs dark:text-white dark:border-gray-800">
+                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-start font-normal text-theme-xs dark:text-white dark:border-gray-800">
                                             {revenue.name}
                                         </TableCell>
-                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                             <Tooltip message={formatToIDR(revenue.currMonthTarget)}>
                                                 <span className='text-end'>{formatToBillion(revenue.currMonthTarget)}</span>
                                             </Tooltip>
                                         </TableCell>
-                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                             <Tooltip message={formatToIDR(revenue.currMonthRevenue)}>
                                                 <span className='text-end'>{formatToBillion(revenue.currMonthRevenue)}</span>
                                             </Tooltip>
                                         </TableCell>
-                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                             <Tooltip message={formatToIDR(revenue.prevMonthRevenue)}>
                                                 <span className='text-end'>{formatToBillion(revenue.prevMonthRevenue)}</span>
                                             </Tooltip>
                                         </TableCell>
-                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                             <Tooltip message={formatToIDR(revenue.prevYearCurrMonthRevenue)}>
                                                 <span>{formatToBillion(revenue.prevYearCurrMonthRevenue)}</span>
                                             </Tooltip>
                                         </TableCell>
-                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                            BLANK
+                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                            <Tooltip message={formatToIDR(revenue.currYtdRevenue)}>
+                                                <span>{formatToBillion(revenue.currYtdRevenue)}</span>
+                                            </Tooltip>
                                         </TableCell>
-                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                            BLANK
+                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                            <Tooltip message={formatToIDR(revenue.prevYtdRevenue)}>
+                                                <span>{formatToBillion(revenue.prevYtdRevenue)}</span>
+                                            </Tooltip>
                                         </TableCell>
                                         {/* ACH FM */}
-                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                            <span className={cn(getGrowthColor(revenue.currMonthRevenue / revenue.currMonthTarget) ? 'text-green-500' : 'text-rose-500')}>
-                                                {formatToPercentage(revenue.currMonthRevenue / revenue.currMonthTarget)}%
+                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                            <span className={cn(getGrowthColor(revenue.currMonthRevenue / revenue.currMonthTarget * 100) ? 'text-green-500' : 'text-rose-500')}>
+                                                {formatToPercentage(revenue.currMonthRevenue / revenue.currMonthTarget * 100)}%
                                             </span>
                                         </TableCell>
                                         {/* ACH DDR */}
-                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                            <span className={cn(getGrowthColor(((revenue.currMonthRevenue / currDate) * daysInCurrMonth) / revenue.currMonthTarget) ? 'text-green-500' : 'text-rose-500')}>
-                                                {formatToPercentage(((revenue.currMonthRevenue / currDate) * daysInCurrMonth) / revenue.currMonthTarget)}%
+                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                            <span className={cn(getGrowthColor(((revenue.currMonthRevenue / currDate) * daysInCurrMonth) / revenue.currMonthTarget * 100) ? 'text-green-500' : 'text-rose-500')}>
+                                                {formatToPercentage(((revenue.currMonthRevenue / currDate) * daysInCurrMonth) / revenue.currMonthTarget * 100)}%
                                             </span>
                                         </TableCell>
                                         {/* MoM */}
-                                        <TableCell className={cn("px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs font-medium dark:border-gray-800")}>
-                                            <span className={cn(getGrowthColor(((revenue.currMonthRevenue - revenue.prevMonthRevenue) / revenue.prevMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
-                                                {formatToPercentage((revenue.currMonthRevenue - revenue.prevMonthRevenue) / revenue.prevMonthRevenue)}%
+                                        <TableCell className={cn("px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs font-medium dark:border-gray-800")}>
+                                            <span className={cn(getGrowthColor(((revenue.currMonthRevenue - revenue.prevMonthRevenue) / revenue.prevMonthRevenue * 100)) ? 'text-green-500' : 'text-rose-500')}>
+                                                {formatToPercentage((revenue.currMonthRevenue - revenue.prevMonthRevenue) / revenue.prevMonthRevenue * 100)}%
                                             </span>
                                         </TableCell>
                                         {/* YoY */}
-                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                            <span className={cn(getGrowthColor(((revenue.currMonthRevenue - revenue.prevYearCurrMonthRevenue) / revenue.prevYearCurrMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
-                                                {formatToPercentage(((revenue.currMonthRevenue - revenue.prevYearCurrMonthRevenue) / revenue.prevYearCurrMonthRevenue))}%
+                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                            <span className={cn(getGrowthColor(((revenue.currMonthRevenue - revenue.prevYearCurrMonthRevenue) / revenue.prevYearCurrMonthRevenue * 100)) ? 'text-green-500' : 'text-rose-500')}>
+                                                {formatToPercentage(((revenue.currMonthRevenue - revenue.prevYearCurrMonthRevenue) / revenue.prevYearCurrMonthRevenue * 100))}%
                                             </span>
                                         </TableCell>
                                         {/* YtD */}
-                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                            BLANK
+                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                            <span className={cn(getGrowthColor(((revenue.currYtdRevenue - revenue.prevYtdRevenue) / revenue.prevYtdRevenue * 100)) ? 'text-green-500' : 'text-rose-500')}>
+                                                {formatToPercentage((revenue.currYtdRevenue - revenue.prevYtdRevenue) / revenue.prevYtdRevenue * 100)}%
+                                            </span>
                                         </TableCell>
                                     </TableRow>
 
                                     {/* BRANCH */}
                                     <TableRow>
-                                        <TableCell colSpan={13} className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-start font-semibold bg-gray-50 dark:text-white dark:border-gray-800 dark:bg-white/[0.03] text-theme-sm">
+                                        <TableCell colSpan={13} className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-start font-semibold bg-gray-50 dark:text-white dark:border-gray-800 dark:bg-white/[0.03] text-theme-sm">
                                             Branch
                                         </TableCell>
                                     </TableRow>
                                     {revenue.branches.map((branch: any, branchIndex: number) => (
                                         <React.Fragment key={`branch-${regionalIndex}_${branchIndex}`}>
                                             <TableRow>
-                                                <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-start font-normal text-theme-xs dark:text-white dark:border-gray-800">
+                                                <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-start font-normal text-theme-xs dark:text-white dark:border-gray-800">
                                                     {branch.name}
                                                 </TableCell>
-                                                <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                     <Tooltip message={formatToIDR(branch.currMonthTarget)}>
                                                         <span>{formatToBillion(branch.currMonthTarget)}</span>
                                                     </Tooltip>
                                                 </TableCell>
-                                                <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                     <Tooltip message={formatToIDR(branch.currMonthRevenue)}>
                                                         <span>{formatToBillion(branch.currMonthRevenue)}</span>
                                                     </Tooltip>
                                                 </TableCell>
-                                                <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                     <Tooltip message={formatToIDR(branch.prevMonthRevenue)}>
                                                         <span>{formatToBillion(branch.prevMonthRevenue)}</span>
                                                     </Tooltip>
                                                 </TableCell>
-                                                <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                     <Tooltip message={formatToIDR(branch.prevYearCurrMonthRevenue)}>
                                                         <span>{formatToBillion(branch.prevYearCurrMonthRevenue)}</span>
                                                     </Tooltip>
                                                 </TableCell>
-                                                <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                    BLANK
+                                                <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                    <Tooltip message={formatToIDR(branch.currYtdRevenue)}>
+                                                        <span>{formatToBillion(branch.currYtdRevenue)}</span>
+                                                    </Tooltip>
                                                 </TableCell>
-                                                <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                    BLANK
+                                                <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                    <Tooltip message={formatToIDR(branch.prevYtdRevenue)}>
+                                                        <span>{formatToBillion(branch.prevYtdRevenue)}</span>
+                                                    </Tooltip>
                                                 </TableCell>
                                                 {/* ACH FM */}
-                                                <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                    <span className={cn(getGrowthColor(branch.currMonthRevenue / branch.currMonthTarget) ? 'text-green-500' : 'text-rose-500')}>
-                                                        {formatToPercentage(branch.currMonthRevenue / branch.currMonthTarget)}%
+                                                <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                    <span className={cn(getGrowthColor(branch.currMonthRevenue / branch.currMonthTarget * 100) ? 'text-green-500' : 'text-rose-500')}>
+                                                        {formatToPercentage(branch.currMonthRevenue / branch.currMonthTarget * 100)}%
                                                     </span>
                                                 </TableCell>
                                                 {/* ACH DDR */}
-                                                <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                    <span className={cn(getGrowthColor(((branch.currMonthRevenue / currDate) * daysInCurrMonth) / branch.currMonthTarget) ? 'text-green-500' : 'text-rose-500')}>
-                                                        {formatToPercentage(((branch.currMonthRevenue / currDate) * daysInCurrMonth) / branch.currMonthTarget)}%
+                                                <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                    <span className={cn(getGrowthColor(((branch.currMonthRevenue / currDate) * daysInCurrMonth) / branch.currMonthTarget * 100) ? 'text-green-500' : 'text-rose-500')}>
+                                                        {formatToPercentage(((branch.currMonthRevenue / currDate) * daysInCurrMonth) / branch.currMonthTarget * 100)}%
                                                     </span>
                                                 </TableCell>
                                                 {/* MoM */}
-                                                <TableCell className={cn("px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs font-medium dark:border-gray-800")}>
-                                                    <span className={cn(getGrowthColor(((branch.currMonthRevenue - branch.prevMonthRevenue) / branch.prevMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
-                                                        {formatToPercentage((branch.currMonthRevenue - branch.prevMonthRevenue) / branch.prevMonthRevenue)}%
+                                                <TableCell className={cn("px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs font-medium dark:border-gray-800")}>
+                                                    <span className={cn(getGrowthColor(((branch.currMonthRevenue - branch.prevMonthRevenue) / branch.prevMonthRevenue * 100)) ? 'text-green-500' : 'text-rose-500')}>
+                                                        {formatToPercentage((branch.currMonthRevenue - branch.prevMonthRevenue) / branch.prevMonthRevenue * 100)}%
                                                     </span>
                                                 </TableCell>
                                                 {/* YoY */}
-                                                <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                    <span className={cn(getGrowthColor(((branch.currMonthRevenue - branch.prevYearCurrMonthRevenue) / branch.prevYearCurrMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
-                                                        {formatToPercentage(((branch.currMonthRevenue - branch.prevYearCurrMonthRevenue) / branch.prevYearCurrMonthRevenue))}%
+                                                <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                    <span className={cn(getGrowthColor(((branch.currMonthRevenue - branch.prevYearCurrMonthRevenue) / branch.prevYearCurrMonthRevenue * 100)) ? 'text-green-500' : 'text-rose-500')}>
+                                                        {formatToPercentage(((branch.currMonthRevenue - branch.prevYearCurrMonthRevenue) / branch.prevYearCurrMonthRevenue * 100))}%
                                                     </span>
                                                 </TableCell>
                                                 {/* YtD */}
-                                                <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                    BLANK
+                                                <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                    <span className={cn(getGrowthColor(((branch.currYtdRevenue - branch.prevYtdRevenue) / branch.prevYtdRevenue * 100)) ? 'text-green-500' : 'text-rose-500')}>
+                                                        {formatToPercentage((branch.currYtdRevenue - branch.prevYtdRevenue) / branch.prevYtdRevenue * 100)}%
+                                                    </span>
                                                 </TableCell>
                                             </TableRow>
                                         </React.Fragment>
@@ -289,7 +304,7 @@ export const TableData = () => {
 
                                     {/* SUBBRANCH */}
                                     <TableRow>
-                                        <TableCell colSpan={13} className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-start font-semibold bg-gray-50 dark:text-white dark:border-gray-800 dark:bg-white/[0.03] text-theme-sm">
+                                        <TableCell colSpan={13} className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-start font-semibold bg-gray-50 dark:text-white dark:border-gray-800 dark:bg-white/[0.03] text-theme-sm">
                                             Subbranch
                                         </TableCell>
                                     </TableRow>
@@ -297,69 +312,75 @@ export const TableData = () => {
                                         branch.subbranches.map((subbranch: any, subbranchIndex: number) => (
                                             <React.Fragment key={`branch-${regionalIndex}_${branchIndex}_${subbranchIndex}`}>
                                                 <TableRow>
-                                                    <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-start font-normal text-theme-xs dark:text-white dark:border-gray-800">
+                                                    <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-start font-normal text-theme-xs dark:text-white dark:border-gray-800">
                                                         {subbranch.name}
                                                     </TableCell>
-                                                    <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                    <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                         <Tooltip message={formatToIDR(subbranch.currMonthTarget)}>
                                                             <span>{formatToBillion(subbranch.currMonthTarget)}</span>
                                                         </Tooltip>
                                                     </TableCell>
-                                                    <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                    <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                         <Tooltip message={formatToIDR(subbranch.currMonthRevenue)}>
                                                             <span>{formatToBillion(subbranch.currMonthRevenue)}</span>
                                                         </Tooltip>
                                                     </TableCell>
-                                                    <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                    <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                         <Tooltip message={formatToIDR(subbranch.prevMonthRevenue)}>
                                                             <span>{formatToBillion(subbranch.prevMonthRevenue)}</span>
                                                         </Tooltip>
                                                     </TableCell>
-                                                    <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                    <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                         <Tooltip message={formatToIDR(subbranch.prevYearCurrMonthRevenue)}>
                                                             <span>{formatToBillion(subbranch.prevYearCurrMonthRevenue)}</span>
                                                         </Tooltip>
                                                     </TableCell>
-                                                    <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                        BLANK
+                                                    <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                        <Tooltip message={formatToIDR(subbranch.currYtdRevenue)}>
+                                                            <span>{formatToBillion(subbranch.currYtdRevenue)}</span>
+                                                        </Tooltip>
                                                     </TableCell>
-                                                    <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                        BLANK
+                                                    <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                        <Tooltip message={formatToIDR(subbranch.prevYtdRevenue)}>
+                                                            <span>{formatToBillion(subbranch.prevYtdRevenue)}</span>
+                                                        </Tooltip>
                                                     </TableCell>
                                                     {/* ACH FM */}
-                                                    <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                        <span className={cn(getGrowthColor(subbranch.currMonthRevenue / subbranch.currMonthTarget) ? 'text-green-500' : 'text-rose-500')}>
-                                                            {formatToPercentage(subbranch.currMonthRevenue / subbranch.currMonthTarget)}%
+                                                    <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                        <span className={cn(getGrowthColor(subbranch.currMonthRevenue / subbranch.currMonthTarget * 100) ? 'text-green-500' : 'text-rose-500')}>
+                                                            {formatToPercentage(subbranch.currMonthRevenue / subbranch.currMonthTarget * 100)}%
                                                         </span>
                                                     </TableCell>
                                                     {/* ACH DDR */}
-                                                    <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                        <span className={cn(getGrowthColor(((subbranch.currMonthRevenue / currDate) * daysInCurrMonth) / subbranch.currMonthTarget) ? 'text-green-500' : 'text-rose-500')}>
-                                                            {formatToPercentage(((subbranch.currMonthRevenue / currDate) * daysInCurrMonth) / subbranch.currMonthTarget)}%
+                                                    <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                        <span className={cn(getGrowthColor(((subbranch.currMonthRevenue / currDate) * daysInCurrMonth) / subbranch.currMonthTarget * 100) ? 'text-green-500' : 'text-rose-500')}>
+                                                            {formatToPercentage(((subbranch.currMonthRevenue / currDate) * daysInCurrMonth) / subbranch.currMonthTarget * 100)}%
                                                         </span>
                                                     </TableCell>
                                                     {/* MoM */}
-                                                    <TableCell className={cn("px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs font-medium dark:border-gray-800")}>
-                                                        <span className={cn(getGrowthColor(((subbranch.currMonthRevenue - subbranch.prevMonthRevenue) / subbranch.prevMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
-                                                            {formatToPercentage((subbranch.currMonthRevenue - subbranch.prevMonthRevenue) / subbranch.prevMonthRevenue)}%
+                                                    <TableCell className={cn("px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs font-medium dark:border-gray-800")}>
+                                                        <span className={cn(getGrowthColor(((subbranch.currMonthRevenue - subbranch.prevMonthRevenue) / subbranch.prevMonthRevenue * 100)) ? 'text-green-500' : 'text-rose-500')}>
+                                                            {formatToPercentage((subbranch.currMonthRevenue - subbranch.prevMonthRevenue) / subbranch.prevMonthRevenue * 100)}%
                                                         </span>
                                                     </TableCell>
                                                     {/* YoY */}
-                                                    <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                        <span className={cn(getGrowthColor(((subbranch.currMonthRevenue - subbranch.prevYearCurrMonthRevenue) / subbranch.prevYearCurrMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
-                                                            {formatToPercentage(((subbranch.currMonthRevenue - subbranch.prevYearCurrMonthRevenue) / subbranch.prevYearCurrMonthRevenue))}%
+                                                    <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                        <span className={cn(getGrowthColor(((subbranch.currMonthRevenue - subbranch.prevYearCurrMonthRevenue) / subbranch.prevYearCurrMonthRevenue * 100)) ? 'text-green-500' : 'text-rose-500')}>
+                                                            {formatToPercentage(((subbranch.currMonthRevenue - subbranch.prevYearCurrMonthRevenue) / subbranch.prevYearCurrMonthRevenue * 100))}%
                                                         </span>
                                                     </TableCell>
                                                     {/* YtD */}
-                                                    <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                        BLANK
+                                                    <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                        <span className={cn(getGrowthColor(((subbranch.currYtdRevenue - subbranch.prevYtdRevenue) / subbranch.prevYtdRevenue * 100)) ? 'text-green-500' : 'text-rose-500')}>
+                                                            {formatToPercentage((subbranch.currYtdRevenue - subbranch.prevYtdRevenue) / subbranch.prevYtdRevenue * 100)}%
+                                                        </span>
                                                     </TableCell>
                                                 </TableRow>
                                             </React.Fragment>
                                         )))}
 
                                     <TableRow>
-                                        <TableCell colSpan={13} className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-start font-semibold bg-gray-50 dark:text-white dark:border-gray-800 dark:bg-white/[0.03] text-theme-sm">
+                                        <TableCell colSpan={13} className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-start font-semibold bg-gray-50 dark:text-white dark:border-gray-800 dark:bg-white/[0.03] text-theme-sm">
                                             Cluster
                                         </TableCell>
                                     </TableRow>
@@ -368,69 +389,75 @@ export const TableData = () => {
                                             subbranch.clusters.map((cluster: any, clusterIndex: number) => (
                                                 <React.Fragment key={`branch-${regionalIndex}_${branchIndex}_${subbranchIndex}_${clusterIndex}`}>
                                                     <TableRow>
-                                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-start font-normal text-theme-xs dark:text-white dark:border-gray-800">
+                                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-start font-normal text-theme-xs dark:text-white dark:border-gray-800">
                                                             {cluster.name}
                                                         </TableCell>
-                                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                             <Tooltip message={formatToIDR(cluster.currMonthTarget)}>
                                                                 <span>{formatToBillion(cluster.currMonthTarget)}</span>
                                                             </Tooltip>
                                                         </TableCell>
-                                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                             <Tooltip message={formatToIDR(cluster.currMonthRevenue)}>
                                                                 <span>{formatToBillion(cluster.currMonthRevenue)}</span>
                                                             </Tooltip>
                                                         </TableCell>
-                                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                             <Tooltip message={formatToIDR(cluster.prevMonthRevenue)}>
                                                                 <span>{formatToBillion(cluster.prevMonthRevenue)}</span>
                                                             </Tooltip>
                                                         </TableCell>
-                                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                             <Tooltip message={formatToIDR(cluster.prevYearCurrMonthRevenue)}>
                                                                 <span>{formatToBillion(cluster.prevYearCurrMonthRevenue)}</span>
                                                             </Tooltip>
                                                         </TableCell>
-                                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                            BLANK
+                                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                            <Tooltip message={formatToIDR(cluster.currYtdRevenue)}>
+                                                                <span>{formatToBillion(cluster.currYtdRevenue)}</span>
+                                                            </Tooltip>
                                                         </TableCell>
-                                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                            BLANK
+                                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                            <Tooltip message={formatToIDR(cluster.prevYtdRevenue)}>
+                                                                <span>{formatToBillion(cluster.prevYtdRevenue)}</span>
+                                                            </Tooltip>
                                                         </TableCell>
                                                         {/* ACH FM */}
-                                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                            <span className={cn(getGrowthColor(cluster.currMonthRevenue / cluster.currMonthTarget) ? 'text-green-500' : 'text-rose-500')}>
-                                                                {formatToPercentage(cluster.currMonthRevenue / cluster.currMonthTarget)}%
+                                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                            <span className={cn(getGrowthColor(cluster.currMonthRevenue / cluster.currMonthTarget * 100) ? 'text-green-500' : 'text-rose-500')}>
+                                                                {formatToPercentage(cluster.currMonthRevenue / cluster.currMonthTarget * 100)}%
                                                             </span>
                                                         </TableCell>
                                                         {/* ACH DDR */}
-                                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                            <span className={cn(getGrowthColor(((cluster.currMonthRevenue / currDate) * daysInCurrMonth) / cluster.currMonthTarget) ? 'text-green-500' : 'text-rose-500')}>
-                                                                {formatToPercentage(((cluster.currMonthRevenue / currDate) * daysInCurrMonth) / cluster.currMonthTarget)}%
+                                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                            <span className={cn(getGrowthColor(((cluster.currMonthRevenue / currDate) * daysInCurrMonth) / cluster.currMonthTarget * 100) ? 'text-green-500' : 'text-rose-500')}>
+                                                                {formatToPercentage(((cluster.currMonthRevenue / currDate) * daysInCurrMonth) / cluster.currMonthTarget * 100)}%
                                                             </span>
                                                         </TableCell>
                                                         {/* MoM */}
-                                                        <TableCell className={cn("px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs font-medium dark:border-gray-800")}>
-                                                            <span className={cn(getGrowthColor(((cluster.currMonthRevenue - cluster.prevMonthRevenue) / cluster.prevMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
-                                                                {formatToPercentage((cluster.currMonthRevenue - cluster.prevMonthRevenue) / cluster.prevMonthRevenue)}%
+                                                        <TableCell className={cn("px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs font-medium dark:border-gray-800")}>
+                                                            <span className={cn(getGrowthColor(((cluster.currMonthRevenue - cluster.prevMonthRevenue) / cluster.prevMonthRevenue * 100)) ? 'text-green-500' : 'text-rose-500')}>
+                                                                {formatToPercentage((cluster.currMonthRevenue - cluster.prevMonthRevenue) / cluster.prevMonthRevenue * 100)}%
                                                             </span>
                                                         </TableCell>
                                                         {/* YoY */}
-                                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                            <span className={cn(getGrowthColor(((cluster.currMonthRevenue - cluster.prevYearCurrMonthRevenue) / cluster.prevYearCurrMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
-                                                                {formatToPercentage(((cluster.currMonthRevenue - cluster.prevYearCurrMonthRevenue) / cluster.prevYearCurrMonthRevenue))}%
+                                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                            <span className={cn(getGrowthColor(((cluster.currMonthRevenue - cluster.prevYearCurrMonthRevenue) / cluster.prevYearCurrMonthRevenue * 100)) ? 'text-green-500' : 'text-rose-500')}>
+                                                                {formatToPercentage(((cluster.currMonthRevenue - cluster.prevYearCurrMonthRevenue) / cluster.prevYearCurrMonthRevenue * 100))}%
                                                             </span>
                                                         </TableCell>
                                                         {/* YtD */}
-                                                        <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                            BLANK
+                                                        <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                            <span className={cn(getGrowthColor(((cluster.currYtdRevenue - cluster.prevYtdRevenue) / cluster.prevYtdRevenue * 100)) ? 'text-green-500' : 'text-rose-500')}>
+                                                                {formatToPercentage((cluster.currYtdRevenue - cluster.prevYtdRevenue) / cluster.prevYtdRevenue * 100)}%
+                                                            </span>
                                                         </TableCell>
                                                     </TableRow>
                                                 </React.Fragment>
                                             ))))}
 
                                     <TableRow>
-                                        <TableCell colSpan={13} className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-start font-semibold bg-gray-50 dark:text-white dark:border-gray-800 dark:bg-white/[0.03] text-theme-sm">
+                                        <TableCell colSpan={13} className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-start font-semibold bg-gray-50 dark:text-white dark:border-gray-800 dark:bg-white/[0.03] text-theme-sm">
                                             Kabupaten
                                         </TableCell>
                                     </TableRow>
@@ -440,62 +467,68 @@ export const TableData = () => {
                                                 cluster.kabupatens.map((kabupaten: any, kabupatenIndex: number) => (
                                                     <React.Fragment key={`branch-${regionalIndex}_${branchIndex}_${subbranchIndex}_${clusterIndex}_${kabupatenIndex}`}>
                                                         <TableRow>
-                                                            <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-start font-normal text-theme-xs dark:text-white dark:border-gray-800">
+                                                            <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-start font-normal text-theme-xs dark:text-white dark:border-gray-800">
                                                                 {kabupaten.name}
                                                             </TableCell>
-                                                            <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                            <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                                 <Tooltip message={formatToIDR(kabupaten.currMonthTarget)}>
                                                                     <span>{formatToBillion(kabupaten.currMonthTarget)}</span>
                                                                 </Tooltip>
                                                             </TableCell>
-                                                            <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                            <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                                 <Tooltip message={formatToIDR(kabupaten.currMonthRevenue)}>
                                                                     <span>{formatToBillion(kabupaten.currMonthRevenue)}</span>
                                                                 </Tooltip>
                                                             </TableCell>
-                                                            <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                            <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                                 <Tooltip message={formatToIDR(kabupaten.prevMonthRevenue)}>
                                                                     <span>{formatToBillion(kabupaten.prevMonthRevenue)}</span>
                                                                 </Tooltip>
                                                             </TableCell>
-                                                            <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                            <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
                                                                 <Tooltip message={formatToIDR(kabupaten.prevYearCurrMonthRevenue)}>
                                                                     <span>{formatToBillion(kabupaten.prevYearCurrMonthRevenue)}</span>
                                                                 </Tooltip>
                                                             </TableCell>
-                                                            <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                                BLANK
+                                                            <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                                <Tooltip message={formatToIDR(kabupaten.currYtdRevenue)}>
+                                                                    <span>{formatToBillion(kabupaten.currYtdRevenue)}</span>
+                                                                </Tooltip>
                                                             </TableCell>
-                                                            <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                                BLANK
+                                                            <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                                <Tooltip message={formatToIDR(kabupaten.prevYtdRevenue)}>
+                                                                    <span>{formatToBillion(kabupaten.prevYtdRevenue)}</span>
+                                                                </Tooltip>
                                                             </TableCell>
                                                             {/* ACH FM */}
-                                                            <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                                <span className={cn(getGrowthColor(kabupaten.currMonthRevenue / kabupaten.currMonthTarget) ? 'text-green-500' : 'text-rose-500')}>
-                                                                    {formatToPercentage(kabupaten.currMonthRevenue / kabupaten.currMonthTarget)}%
+                                                            <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                                <span className={cn(getGrowthColor(kabupaten.currMonthRevenue / kabupaten.currMonthTarget * 100) ? 'text-green-500' : 'text-rose-500')}>
+                                                                    {formatToPercentage(kabupaten.currMonthRevenue / kabupaten.currMonthTarget * 100)}%
                                                                 </span>
                                                             </TableCell>
                                                             {/* ACH DDR */}
-                                                            <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                                <span className={cn(getGrowthColor(((kabupaten.currMonthRevenue / currDate) * daysInCurrMonth) / kabupaten.currMonthTarget) ? 'text-green-500' : 'text-rose-500')}>
-                                                                    {formatToPercentage(((kabupaten.currMonthRevenue / currDate) * daysInCurrMonth) / kabupaten.currMonthTarget)}%
+                                                            <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                                <span className={cn(getGrowthColor(((kabupaten.currMonthRevenue / currDate) * daysInCurrMonth) / kabupaten.currMonthTarget * 100) ? 'text-green-500' : 'text-rose-500')}>
+                                                                    {formatToPercentage(((kabupaten.currMonthRevenue / currDate) * daysInCurrMonth) / kabupaten.currMonthTarget * 100)}%
                                                                 </span>
                                                             </TableCell>
                                                             {/* MoM */}
-                                                            <TableCell className={cn("px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs font-medium dark:border-gray-800")}>
-                                                                <span className={cn(getGrowthColor(((kabupaten.currMonthRevenue - kabupaten.prevMonthRevenue) / kabupaten.prevMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
-                                                                    {formatToPercentage((kabupaten.currMonthRevenue - kabupaten.prevMonthRevenue) / kabupaten.prevMonthRevenue)}%
+                                                            <TableCell className={cn("px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs font-medium dark:border-gray-800")}>
+                                                                <span className={cn(getGrowthColor(((kabupaten.currMonthRevenue - kabupaten.prevMonthRevenue) / kabupaten.prevMonthRevenue * 100)) ? 'text-green-500' : 'text-rose-500')}>
+                                                                    {formatToPercentage((kabupaten.currMonthRevenue - kabupaten.prevMonthRevenue) / kabupaten.prevMonthRevenue * 100)}%
                                                                 </span>
                                                             </TableCell>
                                                             {/* YoY */}
-                                                            <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                                <span className={cn(getGrowthColor(((kabupaten.currMonthRevenue - kabupaten.prevYearCurrMonthRevenue) / kabupaten.prevYearCurrMonthRevenue)) ? 'text-green-500' : 'text-rose-500')}>
-                                                                    {formatToPercentage(((kabupaten.currMonthRevenue - kabupaten.prevYearCurrMonthRevenue) / kabupaten.prevYearCurrMonthRevenue))}%
+                                                            <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                                <span className={cn(getGrowthColor(((kabupaten.currMonthRevenue - kabupaten.prevYearCurrMonthRevenue) / kabupaten.prevYearCurrMonthRevenue * 100)) ? 'text-green-500' : 'text-rose-500')}>
+                                                                    {formatToPercentage(((kabupaten.currMonthRevenue - kabupaten.prevYearCurrMonthRevenue) / kabupaten.prevYearCurrMonthRevenue * 100))}%
                                                                 </span>
                                                             </TableCell>
                                                             {/* YtD */}
-                                                            <TableCell className="px-5 py-4 sm:px-6 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
-                                                                BLANK
+                                                            <TableCell className="px-5 py-4 sm:px-4 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800">
+                                                                <span className={cn(getGrowthColor(((kabupaten.currYtdRevenue - kabupaten.prevYtdRevenue) / kabupaten.prevYtdRevenue * 100)) ? 'text-green-500' : 'text-rose-500')}>
+                                                                    {formatToPercentage((kabupaten.currYtdRevenue - kabupaten.prevYtdRevenue) / kabupaten.prevYtdRevenue * 100)}%
+                                                                </span>
                                                             </TableCell>
                                                         </TableRow>
                                                     </React.Fragment>

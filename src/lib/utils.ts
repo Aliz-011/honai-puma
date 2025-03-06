@@ -1,15 +1,17 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import * as XLSX from 'xlsx'
+import FileSaver from 'file-saver'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
 
 export function formatToBillion(number: number) {
-	return (number / 1_000_000_000).toLocaleString("id-ID", {
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2,
-	});
+	return (number).toLocaleString("id-ID", {
+		maximumFractionDigits: 0,
+		minimumFractionDigits: 0
+	})
 }
 
 export function formatToIDR(number: number) {
@@ -40,10 +42,15 @@ export const getDaysInMonth = (year: number, month: number) => {
 	return new Date(year, month + 1, 0).getDate();
 };
 
-function getLastDayOfMonth(date: Date) {
-	// Create a new date object for the first day of the next month
-	const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1);
-	// Subtract one day to get the last day of the current month
-	const lastDay = new Date(nextMonth.getTime() - 86400000); // 86400000 ms = 1 day
-	return lastDay.getDate();
+export function downloadToXlsx(data: any[], fileName: string, header: string[]) {
+	const ws = XLSX.utils.book_new();
+	XLSX.utils.sheet_add_aoa(ws, [header])
+	XLSX.utils.sheet_add_json(ws, data, { origin: 'A2', skipHeader: true })
+	const wb = { Sheets: { 'data': ws }, SheetNames: ['data'] }
+	const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true });
+	const fileType =
+		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+	const fileExtension = ".xlsx";
+	const finalData = new Blob([excelBuffer], { type: fileType });
+	FileSaver.saveAs(finalData, fileName + fileExtension);
 }

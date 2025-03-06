@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { z } from 'zod'
 import { and, asc, between, eq, isNotNull, sql } from "drizzle-orm";
-import { subMonths, subDays, format, subYears, endOfMonth } from 'date-fns'
+import { subMonths, subDays, format, subYears, endOfMonth, startOfMonth } from 'date-fns'
 
 import { db, db3 } from "@/db";
 import {
@@ -41,14 +41,22 @@ const app = new Hono().get("/",
         const prevYearCurrMonthRevByu = dynamicByuTable(prevYear, currMonth)
 
         // VARIABLE TANGGAL
-        const firstDayOfCurrMonth = format(new Date(latestDataDate.getFullYear(), latestDataDate.getMonth(), 1), 'yyyy-MM-dd')
-        const firstDayOfPrevMonth = format(subMonths(new Date(latestDataDate.getFullYear(), latestDataDate.getMonth(), 1), 1), 'yyyy-MM-dd')
-        const firstDayOfPrevYearCurrMonth = format(subYears(new Date(latestDataDate.getFullYear(), latestDataDate.getMonth(), 1), 1), 'yyyy-MM-dd')
+        // Get the last day of the selected month
+        const lastDayOfSelectedMonth = endOfMonth(latestDataDate);
+        const isEndOfMonth = latestDataDate.getDate() === lastDayOfSelectedMonth.getDate();
 
-        // Last days of months
-        const lastDayOfCurrMonth = format(endOfMonth(latestDataDate), 'yyyy-MM-dd');
-        const lastDayOfPrevMonth = format(endOfMonth(subMonths(latestDataDate, 1)), 'yyyy-MM-dd');
-        const lastDayOfPrevYearCurrMonth = format(endOfMonth(subYears(latestDataDate, 1)), 'yyyy-MM-dd');
+        const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : latestDataDate;
+        const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(latestDataDate, 1)) : subMonths(latestDataDate, 1);
+        const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(latestDataDate, 1)) : subYears(latestDataDate, 1);
+
+        // get the first day and last day of the selected month dynamically
+        const firstDayOfCurrMonth = format(startOfMonth(latestDataDate), 'yyyy-MM-dd')
+        const firstDayOfPrevMonth = format(startOfMonth(subMonths(latestDataDate, 1)), 'yyyy-MM-dd')
+        const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(latestDataDate, 1)), 'yyyy-MM-dd')
+
+        const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
+        const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
+        const prevYearCurrDate = format(endOfPrevYearSameMonth, 'yyyy-MM-dd');
 
         const sq2 = db3
             .select({
@@ -260,7 +268,7 @@ const app = new Hono().get("/",
                 rev: currRevByu.rev,
             })
             .from(currRevByu)
-            .where(between(currRevByu.eventDate, firstDayOfCurrMonth, lastDayOfCurrMonth))
+            .where(between(currRevByu.eventDate, firstDayOfCurrMonth, currDate))
             .as('sq2')
 
         const sq3 = db3
@@ -473,7 +481,7 @@ const app = new Hono().get("/",
                 rev: prevMonthRevByu.rev,
             })
             .from(prevMonthRevByu)
-            .where(between(prevMonthRevByu.eventDate, firstDayOfPrevMonth, lastDayOfPrevMonth))
+            .where(between(prevMonthRevByu.eventDate, firstDayOfPrevMonth, prevDate))
             .as('sq3')
 
         const sq4 = db3
@@ -686,7 +694,7 @@ const app = new Hono().get("/",
                 rev: prevYearCurrMonthRevByu.rev,
             })
             .from(prevYearCurrMonthRevByu)
-            .where(between(prevYearCurrMonthRevByu.eventDate, firstDayOfPrevYearCurrMonth, lastDayOfPrevYearCurrMonth))
+            .where(between(prevYearCurrMonthRevByu.eventDate, firstDayOfPrevYearCurrMonth, prevYearCurrDate))
             .as('sq4')
 
         // QUERY UNTUK TARGET BULAN INI
