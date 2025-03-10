@@ -11,7 +11,7 @@ export const useGetPayingSubs = ({ date }: QueryParams) => {
             const response = await client.api["paying-subs"].$get({ query: { date: date?.toDateString() } });
 
             if (!response.ok) {
-                throw new Error("Failed to fetch Revenue ByU");
+                throw new Error("Failed to fetch Paying Subs");
             }
 
             const { data } = await response.json();

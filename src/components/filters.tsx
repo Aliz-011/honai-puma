@@ -16,8 +16,6 @@ import { useSelectSubbranch } from '@/hooks/use-select-subbranch'
 import { useSelectCluster } from '@/hooks/use-select-cluster'
 import { useSelectKabupaten } from '@/hooks/use-select-kabupaten'
 import { Skeleton } from './common/skeleton'
-import { useGetRevenueGrosses } from '@/modules/revenue-gross/hooks/use-get-revenue-grosses';
-import { useGetRevenueByu } from '@/modules/revenue-byu/hooks/use-get-revenue-byu';
 
 export const Filters = () => {
     const { data: areas, isLoading: isLoadingRegion } = useGetAreas()
@@ -27,11 +25,6 @@ export const Filters = () => {
     const { subbranch: selectedSubbranch, setSelectedSubbranch } = useSelectSubbranch()
     const { cluster: selectedCluster, setSelectedCluster } = useSelectCluster()
     const { setSelectedKabupaten } = useSelectKabupaten()
-
-    // const { isLoading: isLoadingGross } = useGetRevenueGrosses({ date: selectedDate })
-    // const { isLoading: isLoadingByu } = useGetRevenueByu({ date: selectedDate })
-
-    // const isLoading = isLoadingByu || isLoadingGross
 
     const handleRegionChange = (value: string) => {
         setSelectedRegion(value);
@@ -134,7 +127,7 @@ export const Filters = () => {
     };
 
     return (
-        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4'>
             <div>
                 <Label>Tanggal</Label>
                 <DatePicker
@@ -146,7 +139,7 @@ export const Filters = () => {
                     className="w-full text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     calendarClassName="shadow-lg border-0"
                     customInput={
-                        <input className="w-full px-4 py-2 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer" />
+                        <input className="w-full h-8 px-2 py-1.5 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer" />
                     }
                     wrapperClassName="w-full"
                     showPopperArrow={false}
@@ -164,7 +157,7 @@ export const Filters = () => {
                     defaultValue={regionalOptions[0].value}
                     options={regionalOptions}
                     onChange={handleRegionChange}
-                    className="dark:bg-dark-900"
+                    className="dark:bg-dark-900 h-8 py-1.5 px-2 text-theme-sm"
                     placeholder='Select Regional'
                 />
             </div>
@@ -175,7 +168,7 @@ export const Filters = () => {
                     options={getFilteredBranches()}
                     placeholder="Select Branch"
                     onChange={handleBranchChange}
-                    className="dark:bg-dark-900"
+                    className="dark:bg-dark-900 h-8 py-1.5 px-2 text-theme-sm"
                 />
             </div>
             <div>
@@ -185,7 +178,7 @@ export const Filters = () => {
                     options={getFilteredSubbranches()}
                     placeholder="Select Subbranch"
                     onChange={handleSubbranchChange}
-                    className="dark:bg-dark-900"
+                    className="dark:bg-dark-900 h-8 py-1.5 px-2 text-theme-sm"
                 />
             </div>
             <div>
@@ -195,7 +188,7 @@ export const Filters = () => {
                     options={getFilteredClusters()}
                     placeholder="Select Cluster"
                     onChange={handleClusterChange}
-                    className="dark:bg-dark-900"
+                    className="dark:bg-dark-900 h-8 py-1.5 px-2 text-theme-sm"
                 />
             </div>
             <div>
@@ -205,7 +198,7 @@ export const Filters = () => {
                     options={getFilteredKabupatens()}
                     placeholder="Select Kabupaten"
                     onChange={setSelectedKabupaten}
-                    className="dark:bg-dark-900"
+                    className="dark:bg-dark-900 h-8 py-1.5 px-2 text-theme-sm"
                 />
             </div>
         </div>

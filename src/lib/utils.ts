@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import Exceljs from 'exceljs'
 import FileSaver from 'file-saver'
-import { endOfMonth, format, getDaysInMonth, intlFormat, subDays, subMonths, subYears } from "date-fns";
+import { endOfMonth, format, getDaysInMonth, intlFormat, subMonths, subYears } from "date-fns";
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -26,13 +26,25 @@ export function formatToIDR(number: number) {
 
 export function formatToPercentage(number: number) {
 	return (number).toLocaleString('id-ID', {
-		minimumFractionDigits: 2,
 		maximumFractionDigits: 2,
+		minimumFractionDigits: 2,
 	})
+}
+
+function formatToNormalNumber(number: number) {
+	return Number(number.toFixed(0))
 }
 
 export const getGrowthColor = (value: number) => {
 	if (value > 0) {
+		return true
+	}
+
+	return false
+};
+
+export const getAchGrowthColor = (value: number) => {
+	if (value >= 100) {
 		return true
 	}
 
@@ -85,14 +97,21 @@ export async function exportToExcel(data: Regional[], fileName: string, selected
 			cell.fill = {
 				type: 'pattern',
 				pattern: 'solid',
-				fgColor: { argb: 'F94867' }
+				fgColor: { argb: 'f43f5e' }
+			};
+		} else if (i === 2) {
+			// Second columns - blue
+			cell.fill = {
+				type: 'pattern',
+				pattern: 'solid',
+				fgColor: { argb: '3b82f6' }
 			};
 		} else {
 			// Other columns - blue
 			cell.fill = {
 				type: 'pattern',
 				pattern: 'solid',
-				fgColor: { argb: '4472C4' }
+				fgColor: { argb: '09090b' }
 			};
 		}
 	}
@@ -151,7 +170,7 @@ export async function exportToExcel(data: Regional[], fileName: string, selected
 	})
 
 	const buffer = await workbook.xlsx.writeBuffer();
-	FileSaver.saveAs(new Blob([buffer]), `${fileName}_${formatDateForFilename(selectedDate)}.xlsx`)
+	FileSaver.saveAs(new Blob([buffer]), `${fileName}_${formatDateForFilename(compactDate)}.xlsx`)
 }
 
 function formatDateForFilename(date: Date): string {
@@ -190,12 +209,12 @@ function addDataRow(worksheet: Exceljs.Worksheet, data: QuickType, currDate: num
 	// Add the row with data
 	const row = worksheet.addRow([
 		data.name,
-		data.currMonthTarget,
-		data.currMonthRevenue,
-		data.prevMonthRevenue,
-		data.prevYearCurrMonthRevenue,
-		data.currYtdRevenue,
-		data.prevYtdRevenue,
+		formatToNormalNumber(data.currMonthTarget),
+		formatToNormalNumber(data.currMonthRevenue),
+		formatToNormalNumber(data.prevMonthRevenue),
+		formatToNormalNumber(data.prevYearCurrMonthRevenue),
+		formatToNormalNumber(data.currYtdRevenue),
+		formatToNormalNumber(data.prevYtdRevenue),
 		formatToPercentage(achFM) + '%',
 		formatToPercentage(achDRR) + '%',
 		formatToPercentage(mom) + '%',
@@ -206,7 +225,7 @@ function addDataRow(worksheet: Exceljs.Worksheet, data: QuickType, currDate: num
 	// Style numbers as numbers
 	for (let i = 2; i <= 7; i++) {
 		const cell = row.getCell(i);
-		cell.numFmt = '#,##0.000';
+		cell.numFmt = '#,##0';
 	}
 
 	// Style percentages with colors

@@ -9,6 +9,7 @@ module.exports = {
     fontFamily: {
       outfit: ["Outfit", "sans-serif"],
       inter: ["Inter", "sans-serif"],
+      mono: ["Consolas", "Monaco", "Courier New", "monospace"],
     },
     screens: {
       "2xsm": "375px",

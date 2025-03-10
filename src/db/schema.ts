@@ -385,6 +385,30 @@ export const payingLOS_01Relations = relations(payingLOS_01, ({ one }) => ({
 	}),
 }));
 
+export const payingLOS_01_Prabayar = pumaSchema.table("Target_paying_los_0_1_prabayar", {
+	id: varchar("id", { length: 100 }).primaryKey(),
+	kabupatenId: varchar("id_kabupaten", { length: 100 }).notNull(),
+	m1: decimal("m1", { precision: 18, scale: 7 }),
+	m2: decimal("m2", { precision: 18, scale: 7 }),
+	m3: decimal("m3", { precision: 18, scale: 7 }),
+	m4: decimal("m4", { precision: 18, scale: 7 }),
+	m5: decimal("m5", { precision: 18, scale: 7 }),
+	m6: decimal("m6", { precision: 18, scale: 7 }),
+	m7: decimal("m7", { precision: 18, scale: 7 }),
+	m8: decimal("m8", { precision: 18, scale: 7 }),
+	m9: decimal("m9", { precision: 18, scale: 7 }),
+	m10: decimal("m10", { precision: 18, scale: 7 }),
+	m11: decimal("m11", { precision: 18, scale: 7 }),
+	m12: decimal("m12", { precision: 18, scale: 7 }),
+});
+
+export const payingLOS_01_PrabayarRelations = relations(payingLOS_01_Prabayar, ({ one }) => ({
+	kabupaten: one(kabupatens, {
+		fields: [payingLOS_01_Prabayar.kabupatenId],
+		references: [kabupatens.id],
+	}),
+}));
+
 export const payingSubs = pumaSchema.table("Target_paying_subs", {
 	id: varchar("id", { length: 100 }).primaryKey(),
 	kabupatenId: varchar("id_kabupaten", { length: 100 }).notNull(),
@@ -456,6 +480,131 @@ export const trxSA = pumaSchema.table("Target_trx_sa", {
 export const trxSARelations = relations(trxSA, ({ one }) => ({
 	kabupaten: one(kabupatens, {
 		fields: [trxSA.kabupatenId],
+		references: [kabupatens.id],
+	}),
+}));
+
+export const trxNewSales = pumaSchema.table("Target_trx_new_sales", {
+	id: varchar("id", { length: 100 }).primaryKey(),
+	kabupatenId: varchar("id_kabupaten", { length: 100 }).notNull(),
+	m1: decimal("m1", { precision: 18, scale: 7 }),
+	m2: decimal("m2", { precision: 18, scale: 7 }),
+	m3: decimal("m3", { precision: 18, scale: 7 }),
+	m4: decimal("m4", { precision: 18, scale: 7 }),
+	m5: decimal("m5", { precision: 18, scale: 7 }),
+	m6: decimal("m6", { precision: 18, scale: 7 }),
+	m7: decimal("m7", { precision: 18, scale: 7 }),
+	m8: decimal("m8", { precision: 18, scale: 7 }),
+	m9: decimal("m9", { precision: 18, scale: 7 }),
+	m10: decimal("m10", { precision: 18, scale: 7 }),
+	m11: decimal("m11", { precision: 18, scale: 7 }),
+	m12: decimal("m12", { precision: 18, scale: 7 }),
+	year: varchar({ length: 5 }).notNull(),
+});
+
+export const trxNewSalesRelations = relations(trxNewSales, ({ one }) => ({
+	kabupaten: one(kabupatens, {
+		fields: [trxNewSales.kabupatenId],
+		references: [kabupatens.id],
+	}),
+}));
+
+export const trxNewSalesPrabayar = pumaSchema.table("Target_trx_new_sales_prabayar", {
+	id: varchar("id", { length: 100 }).primaryKey(),
+	kabupatenId: varchar("id_kabupaten", { length: 100 }).notNull(),
+	m1: decimal("m1", { precision: 18, scale: 7 }),
+	m2: decimal("m2", { precision: 18, scale: 7 }),
+	m3: decimal("m3", { precision: 18, scale: 7 }),
+	m4: decimal("m4", { precision: 18, scale: 7 }),
+	m5: decimal("m5", { precision: 18, scale: 7 }),
+	m6: decimal("m6", { precision: 18, scale: 7 }),
+	m7: decimal("m7", { precision: 18, scale: 7 }),
+	m8: decimal("m8", { precision: 18, scale: 7 }),
+	m9: decimal("m9", { precision: 18, scale: 7 }),
+	m10: decimal("m10", { precision: 18, scale: 7 }),
+	m11: decimal("m11", { precision: 18, scale: 7 }),
+	m12: decimal("m12", { precision: 18, scale: 7 }),
+	year: varchar({ length: 5 }).notNull(),
+});
+
+export const trxNewSalesPrabayarRelations = relations(trxNewSalesPrabayar, ({ one }) => ({
+	kabupaten: one(kabupatens, {
+		fields: [trxNewSalesPrabayar.kabupatenId],
+		references: [kabupatens.id],
+	}),
+}));
+
+export const trxNewSalesByu = pumaSchema.table("Target_trx_new_sales_byu", {
+	id: varchar("id", { length: 100 }).primaryKey(),
+	kabupatenId: varchar("id_kabupaten", { length: 100 }).notNull(),
+	m1: decimal("m1", { precision: 18, scale: 7 }),
+	m2: decimal("m2", { precision: 18, scale: 7 }),
+	m3: decimal("m3", { precision: 18, scale: 7 }),
+	m4: decimal("m4", { precision: 18, scale: 7 }),
+	m5: decimal("m5", { precision: 18, scale: 7 }),
+	m6: decimal("m6", { precision: 18, scale: 7 }),
+	m7: decimal("m7", { precision: 18, scale: 7 }),
+	m8: decimal("m8", { precision: 18, scale: 7 }),
+	m9: decimal("m9", { precision: 18, scale: 7 }),
+	m10: decimal("m10", { precision: 18, scale: 7 }),
+	m11: decimal("m11", { precision: 18, scale: 7 }),
+	m12: decimal("m12", { precision: 18, scale: 7 }),
+	year: varchar({ length: 5 }).notNull(),
+});
+
+export const trxNewSalesByuRelations = relations(trxNewSalesByu, ({ one }) => ({
+	kabupaten: one(kabupatens, {
+		fields: [trxNewSalesByu.kabupatenId],
+		references: [kabupatens.id],
+	}),
+}));
+
+export const redeemPVByu = pumaSchema.table("Target_redeem_pv_byu", {
+	id: varchar("id", { length: 100 }).primaryKey(),
+	kabupatenId: varchar("id_kabupaten", { length: 100 }).notNull(),
+	m1: decimal("m1", { precision: 18, scale: 7 }),
+	m2: decimal("m2", { precision: 18, scale: 7 }),
+	m3: decimal("m3", { precision: 18, scale: 7 }),
+	m4: decimal("m4", { precision: 18, scale: 7 }),
+	m5: decimal("m5", { precision: 18, scale: 7 }),
+	m6: decimal("m6", { precision: 18, scale: 7 }),
+	m7: decimal("m7", { precision: 18, scale: 7 }),
+	m8: decimal("m8", { precision: 18, scale: 7 }),
+	m9: decimal("m9", { precision: 18, scale: 7 }),
+	m10: decimal("m10", { precision: 18, scale: 7 }),
+	m11: decimal("m11", { precision: 18, scale: 7 }),
+	m12: decimal("m12", { precision: 18, scale: 7 }),
+	year: varchar({ length: 5 }).notNull(),
+});
+
+export const redeemPVByuRelations = relations(redeemPVByu, ({ one }) => ({
+	kabupaten: one(kabupatens, {
+		fields: [redeemPVByu.kabupatenId],
+		references: [kabupatens.id],
+	}),
+}));
+
+export const redeemPVPrabayar = pumaSchema.table("Target_redeem_pv_prabayar", {
+	id: varchar("id", { length: 100 }).primaryKey(),
+	kabupatenId: varchar("id_kabupaten", { length: 100 }).notNull(),
+	m1: decimal("m1", { precision: 18, scale: 7 }),
+	m2: decimal("m2", { precision: 18, scale: 7 }),
+	m3: decimal("m3", { precision: 18, scale: 7 }),
+	m4: decimal("m4", { precision: 18, scale: 7 }),
+	m5: decimal("m5", { precision: 18, scale: 7 }),
+	m6: decimal("m6", { precision: 18, scale: 7 }),
+	m7: decimal("m7", { precision: 18, scale: 7 }),
+	m8: decimal("m8", { precision: 18, scale: 7 }),
+	m9: decimal("m9", { precision: 18, scale: 7 }),
+	m10: decimal("m10", { precision: 18, scale: 7 }),
+	m11: decimal("m11", { precision: 18, scale: 7 }),
+	m12: decimal("m12", { precision: 18, scale: 7 }),
+	year: varchar({ length: 5 }).notNull(),
+});
+
+export const redeemPVPrabayarRelations = relations(redeemPVPrabayar, ({ one }) => ({
+	kabupaten: one(kabupatens, {
+		fields: [redeemPVPrabayar.kabupatenId],
 		references: [kabupatens.id],
 	}),
 }));

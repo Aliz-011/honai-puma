@@ -16,6 +16,7 @@ import {
 } from "@/db/schema";
 import { zValidator } from "@/lib/validator-wrapper";
 import { dynamicRevenueSATable } from "@/db/schema5";
+import { MySqlRawQueryResult } from "drizzle-orm/mysql2";
 
 const app = new Hono()
     .get('/',
@@ -1339,8 +1340,8 @@ const app = new Hono()
 
             // /var/lib/backup_mysql_2025/
             const regionalsMap = new Map();
-            const [currYtdRevenue] = currYtdRev
-            const [prevYtdRevenue] = prevYtdRev
+            const [currYtdRevenue] = currYtdRev as MySqlRawQueryResult as unknown as [CurrYtDRevenue[], any]
+            const [prevYtdRevenue] = prevYtdRev as MySqlRawQueryResult as unknown as [PrevYtDRevenue[], any]
 
             targetRevenue.forEach((row) => {
                 const regionalName = row.region;
@@ -3134,8 +3135,8 @@ const app = new Hono()
 
             // /var/lib/backup_mysql_2025/
             const regionalsMap = new Map();
-            const [currYtdRevenue] = currYtdRev
-            const [prevYtdRevenue] = prevYtdRev
+            const [currYtdRevenue] = currYtdRev as MySqlRawQueryResult as unknown as [CurrYtDRevenue[], any]
+            const [prevYtdRevenue] = prevYtdRev as MySqlRawQueryResult as unknown as [PrevYtDRevenue[], any]
 
             targetRevenue.forEach((row) => {
                 const regionalName = row.region;
@@ -4915,8 +4916,8 @@ const app = new Hono()
             ])
 
             const regionalsMap = new Map();
-            const [currYtdRevenue] = currYtdRev
-            const [prevYtdRevenue] = prevYtdRev
+            const [currYtdRevenue] = currYtdRev as MySqlRawQueryResult as unknown as [CurrYtDRevenue[], any]
+            const [prevYtdRevenue] = prevYtdRev as MySqlRawQueryResult as unknown as [PrevYtDRevenue[], any]
 
             targetRevenue.forEach((row) => {
                 const regionalName = row.region;

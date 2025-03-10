@@ -10,6 +10,9 @@ import revenueCVM from '@/modules/revenue-cvm/api/route'
 import revenueSA from '@/modules/revenue-sa/api/route'
 import payingSubs from "@/modules/paying-subs/api/route"
 import trxSA from "@/modules/trx-sa/api/route"
+import trxNewSales from "@/modules/trx-new-sales/api/route"
+import redeemPV from "@/modules/redeem-pv/api/route"
+import payingLOS from '@/modules/paying-los/api/route'
 
 const app = new Hono().basePath("/api");
 
@@ -29,7 +32,10 @@ const routes = app
   .route('/revenue-cvm', revenueCVM)
   .route('/revenue-sa', revenueSA)
   .route('/paying-subs', payingSubs)
+  .route('/paying-los', payingLOS)
   .route('/trx-sa', trxSA)
+  .route('/trx-new-sales', trxNewSales)
+  .route('/redeem-pv', redeemPV)
 
 export const GET = handle(app);
 export type AppType = typeof routes;

@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { z } from 'zod'
-import { and, inArray, asc, between, eq, sql, not } from "drizzle-orm";
+import { and, inArray, asc, between, eq, sql, not, gte, lte } from "drizzle-orm";
 import { subMonths, subDays, format, subYears, endOfMonth, startOfMonth } from 'date-fns'
 
 import { db, db2 } from "@/db";
@@ -17,6 +17,7 @@ import {
 import { dynamicResumeRevenuePumaTable } from "@/db/schema2";
 import { zValidator } from "@/lib/validator-wrapper";
 import { index } from "drizzle-orm/mysql-core";
+import { MySqlRawQueryResult } from "drizzle-orm/mysql2";
 
 const app = new Hono()
   .get("/", zValidator('query', z.object({ date: z.string().optional() })),
@@ -281,10 +282,13 @@ END
           kabupaten: currGrossPrabayarRev.kabupaten,
           rev: currGrossPrabayarRev.rev,
         })
-        .from(currGrossPrabayarRev)
+        .from(currGrossPrabayarRev, { useIndex: index('mtd_dt').on(currGrossPrabayarRev.mtdDt).using('btree') })
         .where(and(
           inArray(currGrossPrabayarRev.branch, ['AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA']),
-          between(currGrossPrabayarRev.mtdDt, firstDayOfCurrMonth, currDate)
+          and(
+            gte(currGrossPrabayarRev.mtdDt, firstDayOfCurrMonth),
+            lte(currGrossPrabayarRev.mtdDt, currDate)
+          )
         ))
         .as('sq2')
 
@@ -497,18 +501,21 @@ END
           kabupaten: prevMonthGrossPrabayarRev.kabupaten,
           rev: prevMonthGrossPrabayarRev.rev,
         })
-        .from(prevMonthGrossPrabayarRev)
+        .from(prevMonthGrossPrabayarRev, { useIndex: index('mtd_dt').on(prevMonthGrossPrabayarRev.mtdDt).using('btree') })
         .where(
           and(
             inArray(prevMonthGrossPrabayarRev.branch, ['AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA']),
-            between(prevMonthGrossPrabayarRev.mtdDt, firstDayOfPrevMonth, prevDate)
+            and(
+              gte(prevMonthGrossPrabayarRev.mtdDt, firstDayOfPrevMonth),
+              lte(prevMonthGrossPrabayarRev.mtdDt, prevDate)
+            )
           )
         )
         .as('sq3')
 
       const sq4 = db2
         .select({
-          regionName: sql<string>`CASE WHEN ${prevYearCurrMonthGrossPrabayarRev.regionSales} IN ('PUMA', 'MALUKU DAN PAPUA') THEN 'PUMA' END`.as('regionaName'),
+          regionName: sql<string>`CASE WHEN ${prevYearCurrMonthGrossPrabayarRev.regionSales} IN ('PUMA', 'MALUKU DAN PAPUA') THEN 'PUMA' END`.as('regionName'),
           branchName: sql<string>`
 CASE
  WHEN ${prevYearCurrMonthGrossPrabayarRev.kabupaten} IN (
@@ -715,10 +722,13 @@ END
           kabupaten: prevYearCurrMonthGrossPrabayarRev.kabupaten,
           rev: prevYearCurrMonthGrossPrabayarRev.rev,
         })
-        .from(prevYearCurrMonthGrossPrabayarRev)
+        .from(prevYearCurrMonthGrossPrabayarRev, { useIndex: index('mtd_dt').on(prevYearCurrMonthGrossPrabayarRev.mtdDt).using('btree') })
         .where(and(
           inArray(prevYearCurrMonthGrossPrabayarRev.branch, ['AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA']),
-          between(prevYearCurrMonthGrossPrabayarRev.mtdDt, firstDayOfPrevYearCurrMonth, prevYearCurrDate)
+          and(
+            gte(prevYearCurrMonthGrossPrabayarRev.mtdDt, firstDayOfPrevYearCurrMonth),
+            lte(prevYearCurrMonthGrossPrabayarRev.mtdDt, prevYearCurrDate)
+          )
         ))
         .as('sq4')
 
@@ -805,7 +815,7 @@ END
 
       const queryCurrYtd = currYtdGrossRev.map(table => `
           SELECT
-              region_sales as region,
+              CASE WHEN region_sales IN ('MALUKU DAN PAPUA', 'PUMA') THEN 'PUMA' END as region,
               CASE
                   WHEN upper(kabupaten) IN (
                       'AMBON',
@@ -1007,11 +1017,11 @@ END
               kabupaten,
               rev
           FROM ${table}
-          WHERE region_sales IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
+          WHERE branch IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
 
       const queryPrevYtd = prevYtdGrossRev.map(table => `
           SELECT
-              region_sales as region,
+              CASE WHEN region_sales IN ('MALUKU DAN PAPUA', 'PUMA') THEN 'PUMA' END as region,
               CASE
                   WHEN upper(kabupaten) IN (
                       'AMBON',
@@ -1213,7 +1223,7 @@ END
               kabupaten,
               rev
           FROM ${table}
-          WHERE region_sales IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
+          WHERE branch IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
 
       const sq = `
                   WITH sq AS (
@@ -1231,7 +1241,6 @@ END
                       SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                       SUM(SUM(rev)) OVER (PARTITION BY region) AS currYtdRegionalRev
                   FROM sq
-                  WHERE kabupaten NOT IN ('TMP')
                   GROUP BY 1, 2, 3, 4, 5
                       `
 
@@ -1251,7 +1260,6 @@ END
                       SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                       SUM(SUM(rev)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                   FROM sq5
-                  WHERE kabupaten NOT IN ('TMP')
                   GROUP BY 1, 2, 3, 4, 5
                       `
 
@@ -1266,8 +1274,8 @@ END
 
       // /var/lib/backup_mysql_2025/
       const regionalsMap = new Map();
-      const [currYtdRevenue] = currYtdRev
-      const [prevYtdRevenue] = prevYtdRev
+      const [currYtdRevenue] = currYtdRev as MySqlRawQueryResult as unknown as [CurrYtDRevenue[], any]
+      const [prevYtdRevenue] = prevYtdRev as MySqlRawQueryResult as unknown as [PrevYtDRevenue[], any]
 
       targetRevenue.forEach((row) => {
         const regionalName = row.region;
@@ -1991,12 +1999,14 @@ END
           kabupaten: currGrossPrabayarRev.kabupaten,
           rev: currGrossPrabayarRev.rev,
         })
-        .from(currGrossPrabayarRev)
+        .from(currGrossPrabayarRev, { useIndex: index('mtd_dt').on(currGrossPrabayarRev.mtdDt) })
         .where(and(
           not(eq(currGrossPrabayarRev.brand, 'ByU')),
           and(
-            inArray(currGrossPrabayarRev.branch, ['AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA']),
-            between(currGrossPrabayarRev.mtdDt, firstDayOfCurrMonth, currDate)
+            inArray(currGrossPrabayarRev.branch, ['AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA']), and(
+              gte(currGrossPrabayarRev.mtdDt, firstDayOfCurrMonth),
+              lte(currGrossPrabayarRev.mtdDt, currDate)
+            )
           )
         ))
         .as('sq2')
@@ -2210,12 +2220,15 @@ END
           kabupaten: prevMonthGrossPrabayarRev.kabupaten,
           rev: prevMonthGrossPrabayarRev.rev,
         })
-        .from(prevMonthGrossPrabayarRev)
+        .from(prevMonthGrossPrabayarRev, { useIndex: index('mtd_dt').on(prevMonthGrossPrabayarRev.mtdDt) })
         .where(and(
           not(eq(prevMonthGrossPrabayarRev.brand, 'ByU')),
           and(
             inArray(prevMonthGrossPrabayarRev.branch, ['AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA']),
-            between(prevMonthGrossPrabayarRev.mtdDt, firstDayOfPrevMonth, prevDate)
+            and(
+              gte(prevMonthGrossPrabayarRev.mtdDt, firstDayOfPrevMonth),
+              lte(prevMonthGrossPrabayarRev.mtdDt, prevDate)
+            )
           )
         ))
         .as('sq3')
@@ -2429,12 +2442,14 @@ END
           kabupaten: prevYearCurrMonthGrossPrabayarRev.kabupaten,
           rev: prevYearCurrMonthGrossPrabayarRev.rev,
         })
-        .from(prevYearCurrMonthGrossPrabayarRev)
+        .from(prevYearCurrMonthGrossPrabayarRev, { useIndex: index('mtd_dt').on(prevYearCurrMonthGrossPrabayarRev.mtdDt) })
         .where(and(
           not(eq(prevYearCurrMonthGrossPrabayarRev.brand, 'ByU')),
           and(
-            inArray(prevYearCurrMonthGrossPrabayarRev.branch, ['AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA']),
-            between(prevYearCurrMonthGrossPrabayarRev.mtdDt, firstDayOfPrevYearCurrMonth, prevYearCurrDate)
+            inArray(prevYearCurrMonthGrossPrabayarRev.branch, ['AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA']), and(
+              gte(prevYearCurrMonthGrossPrabayarRev.mtdDt, firstDayOfPrevYearCurrMonth),
+              lte(prevYearCurrMonthGrossPrabayarRev.mtdDt, prevYearCurrDate)
+            )
           )
         ))
         .as('sq4')
@@ -2522,7 +2537,7 @@ END
 
       const queryCurrYtd = currYtdGrossPrabayarRev.map(table => `
           SELECT
-              region_sales as region,
+              CASE WHEN region_sales IN ('MALUKU DAN PAPUA', 'PUMA') THEN 'PUMA' END as region,
               CASE
                   WHEN upper(kabupaten) IN (
                       'AMBON',
@@ -2724,11 +2739,11 @@ END
               kabupaten,
               rev
           FROM ${table}
-          WHERE brand <> 'ByU' AND region_sales IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
+          WHERE brand <> 'ByU' AND branch IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
 
       const queryPrevYtd = prevYtdGrossPrabayarRev.map(table => `
           SELECT
-              region_sales as region,
+              CASE WHEN region_sales IN ('MALUKU DAN PAPUA', 'PUMA') THEN 'PUMA' END as region,
               CASE
                   WHEN upper(kabupaten) IN (
                       'AMBON',
@@ -2930,7 +2945,7 @@ END
               kabupaten,
               rev
           FROM ${table}
-          WHERE brand <> 'ByU' AND region_sales IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
+          WHERE brand <> 'ByU' AND branch IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
 
       const sq = `
                   WITH sq AS (
@@ -2948,7 +2963,6 @@ END
                       SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                       SUM(SUM(rev)) OVER (PARTITION BY region) AS currYtdRegionalRev
                   FROM sq
-                  WHERE kabupaten NOT IN ('TMP')
                   GROUP BY 1, 2, 3, 4, 5
                       `
 
@@ -2968,7 +2982,6 @@ END
                       SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                       SUM(SUM(rev)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                   FROM sq5
-                  WHERE kabupaten NOT IN ('TMP')
                   GROUP BY 1, 2, 3, 4, 5
                       `
 
@@ -2983,8 +2996,8 @@ END
 
       // /var/lib/backup_mysql_2025/
       const regionalsMap = new Map();
-      const [currYtdRevenue] = currYtdRev
-      const [prevYtdRevenue] = prevYtdRev
+      const [currYtdRevenue] = currYtdRev as MySqlRawQueryResult as unknown as [CurrYtDRevenue[], any]
+      const [prevYtdRevenue] = prevYtdRev as MySqlRawQueryResult as unknown as [PrevYtDRevenue[], any]
 
       targetRevenue.forEach((row) => {
         const regionalName = row.region;
@@ -3501,7 +3514,7 @@ END
 
       const queryCurrYtd = currYtdGrossPrabayarRev.map(table => `
         SELECT
-            region_sales as region,
+            CASE WHEN region_sales IN ('MALUKU DAN PAPUA', 'PUMA') THEN 'PUMA' END as region,
             CASE
                 WHEN upper(kabupaten) IN (
                     'AMBON',
@@ -3703,11 +3716,11 @@ END
             kabupaten,
             rev
         FROM ${table}
-        WHERE brand = 'ByU' AND region_sales IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
+        WHERE brand = 'ByU' AND branch IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
 
       const queryPrevYtd = prevYtdGrossPrabayarRev.map(table => `
         SELECT
-            region_sales as region,
+            CASE WHEN region_sales IN ('MALUKU DAN PAPUA', 'PUMA') THEN 'PUMA' END as region,
             CASE
                 WHEN upper(kabupaten) IN (
                     'AMBON',
@@ -3909,7 +3922,7 @@ END
             kabupaten,
             rev
         FROM ${table}
-        WHERE brand = 'ByU' AND region_sales IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
+        WHERE brand = 'ByU' AND branch IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
 
       const sq = `
                 WITH sq AS (
@@ -3927,7 +3940,6 @@ END
                     SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                     SUM(SUM(rev)) OVER (PARTITION BY region) AS currYtdRegionalRev
                 FROM sq
-                WHERE kabupaten NOT IN ('TMP')
                 GROUP BY 1, 2, 3, 4, 5
                     `
 
@@ -3947,7 +3959,6 @@ END
                     SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                     SUM(SUM(rev)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                 FROM sq5
-                WHERE kabupaten NOT IN ('TMP')
                 GROUP BY 1, 2, 3, 4, 5
                     `
 
@@ -4165,7 +4176,10 @@ END
           eq(currGrossPrabayarRev.brand, 'ByU'),
           and(
             inArray(currGrossPrabayarRev.branch, ['AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA']),
-            between(currGrossPrabayarRev.mtdDt, firstDayOfCurrMonth, currDate)
+            and(
+              gte(currGrossPrabayarRev.mtdDt, firstDayOfCurrMonth),
+              lte(currGrossPrabayarRev.mtdDt, currDate)
+            )
           )
         ))
         .as('sq2')
@@ -4384,7 +4398,10 @@ END
           eq(prevMonthGrossPrabayarRev.brand, 'ByU'),
           and(
             inArray(prevMonthGrossPrabayarRev.branch, ['AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA']),
-            between(prevMonthGrossPrabayarRev.mtdDt, firstDayOfPrevMonth, prevDate)
+            and(
+              gte(prevMonthGrossPrabayarRev.mtdDt, firstDayOfPrevMonth),
+              lte(prevMonthGrossPrabayarRev.mtdDt, prevDate)
+            )
           )
         ))
         .as('sq3')
@@ -4603,7 +4620,10 @@ END
           eq(prevYearCurrMonthGrossPrabayarRev.brand, 'ByU'),
           and(
             inArray(prevYearCurrMonthGrossPrabayarRev.branch, ['AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA']),
-            between(prevYearCurrMonthGrossPrabayarRev.mtdDt, firstDayOfPrevYearCurrMonth, prevYearCurrDate)
+            and(
+              gte(prevYearCurrMonthGrossPrabayarRev.mtdDt, firstDayOfPrevYearCurrMonth),
+              lte(prevYearCurrMonthGrossPrabayarRev.mtdDt, prevYearCurrDate)
+            )
           )
         ))
         .as('sq4')
@@ -4700,8 +4720,8 @@ END
 
       // /var/lib/backup_mysql_2025/
       const regionalsMap = new Map();
-      const [currYtdRevenue] = currYtdRev
-      const [prevYtdRevenue] = prevYtdRev
+      const [currYtdRevenue] = currYtdRev as MySqlRawQueryResult as unknown as [CurrYtDRevenue[], any]
+      const [prevYtdRevenue] = prevYtdRev as MySqlRawQueryResult as unknown as [PrevYtDRevenue[], any]
 
       targetRevenue.forEach((row) => {
         const regionalName = row.region;
@@ -4999,7 +5019,7 @@ END
         kabupaten.prevYearCurrMonthRevenue = Number(row.prevYearCurrMonthKabupatenRev)
       })
 
-      currYtdRevenue.forEach((row: any) => {
+      currYtdRevenue.forEach((row) => {
         const regionalName = row.region;
         const branchName = row.branch;
         const subbranchName = row.subbranch;
@@ -5073,7 +5093,7 @@ END
         kabupaten.currYtdRevenue = Number(row.currYtdKabupatenRev)
       })
 
-      prevYtdRevenue.forEach((row: any) => {
+      prevYtdRevenue.forEach((row) => {
         const regionalName = row.region;
         const branchName = row.branch;
         const subbranchName = row.subbranch;

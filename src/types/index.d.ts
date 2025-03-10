@@ -51,3 +51,28 @@ type Regional = {
     prevYearCurrMonthRevenue: number;
     branches: Branch[];
 };
+
+interface CurrYtDRevenue {
+    region: string;
+    branch: string;
+    subbranch: string;
+    cluster: string;
+    kabupaten: string;
+    currYtdKabupatenRev: number;
+    currYtdClusterRev: number
+    currYtdSubbranchRev: number
+    currYtdBranchRev: number
+    currYtdRegionalRev: number
+}
+interface PrevYtDRevenue {
+    region: string;
+    branch: string;
+    subbranch: string;
+    cluster: string;
+    kabupaten: string;
+    prevYtdKabupatenRev: number;
+    prevYtdClusterRev: number
+    prevYtdSubbranchRev: number
+    prevYtdBranchRev: number
+    prevYtdRegionalRev: number
+}

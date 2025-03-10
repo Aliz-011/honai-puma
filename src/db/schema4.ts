@@ -1,11 +1,11 @@
-import { mysqlSchema, varchar, decimal, index } from "drizzle-orm/mysql-core";
-import { relations } from "drizzle-orm";
+import { mysqlSchema, varchar, index } from "drizzle-orm/mysql-core";
 
 export const hadoopNewSchema = mysqlSchema("hadoop_new");
 
 export const dynamicMergeNewSalesPumaTable = (year: string, month: string) => {
     return hadoopNewSchema.table(`merge_new_sales_puma_${year}${month}`, {
         mtdDt: varchar("mtd_dt", { length: 24 }).notNull(),
+        msisdn: varchar({ length: 14 }),
         cat: varchar("cat", { length: 10 }).notNull(),
         brand: varchar({ length: 40 }).notNull(),
         regionSales: varchar("region_sales", { length: 50 }).notNull(),
@@ -23,7 +23,6 @@ export const dynamicMergeNewSalesPumaTable = (year: string, month: string) => {
         contentId: varchar("content_id", { length: 50 }).notNull(),
         rev: varchar("rev", { length: 22 }).notNull(),
         trx: varchar("trx", { length: 22 }).notNull(),
-        subs: varchar("subs", { length: 22 }).notNull(),
     }, (t) => [
         index("mtd_dt").on(t.mtdDt).using('btree'),
         index("kabupaten").on(t.kabupaten).using('btree')

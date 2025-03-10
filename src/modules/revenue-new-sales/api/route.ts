@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import { z } from 'zod'
-import { and, asc, between, eq, not, notInArray, sql } from "drizzle-orm";
-import { MySqlDialect, union } from 'drizzle-orm/mysql-core'
+import { and, asc, between, eq, gte, lte, not, sql } from "drizzle-orm";
+import { index } from 'drizzle-orm/mysql-core'
+import { MySqlRawQueryResult } from "drizzle-orm/mysql2";
 import { subMonths, subDays, format, subYears, endOfMonth, startOfMonth } from 'date-fns'
 
 import { db, db4 } from "@/db";
@@ -729,13 +730,20 @@ const app = new Hono()
         END
                         `.as('clusterName'),
                     cityName: currRevNewSales.kabupaten,
-                    rev: currRevNewSales.rev,
-                    mtdDt: currRevNewSales.mtdDt
+                    rev: currRevNewSales.rev
                 })
-                .from(currRevNewSales)
+                .from(currRevNewSales, {
+                    useIndex: [
+                        index('mtd_dt').on(currRevNewSales.mtdDt),
+                        index('kabupaten').on(currRevNewSales.kabupaten)
+                    ]
+                })
                 .where(and(
-                    notInArray(currRevNewSales.kabupaten, ['TMP']),
-                    between(currRevNewSales.mtdDt, firstDayOfCurrMonth, currDate)
+                    not(eq(currRevNewSales.kabupaten, 'TMP')),
+                    and(
+                        gte(currRevNewSales.mtdDt, firstDayOfCurrMonth),
+                        lte(currRevNewSales.mtdDt, currDate)
+                    )
                 ))
                 .as('sq2')
 
@@ -946,13 +954,20 @@ const app = new Hono()
         END
                         `.as('clusterName'),
                     cityName: prevMonthRevNewSales.kabupaten,
-                    rev: prevMonthRevNewSales.rev,
-                    mtdDt: prevMonthRevNewSales.mtdDt
+                    rev: prevMonthRevNewSales.rev
                 })
-                .from(prevMonthRevNewSales)
+                .from(prevMonthRevNewSales, {
+                    useIndex: [
+                        index('mtd_dt').on(prevMonthRevNewSales.mtdDt),
+                        index('kabupaten').on(prevMonthRevNewSales.kabupaten)
+                    ]
+                })
                 .where(and(
-                    notInArray(prevMonthRevNewSales.kabupaten, ['TMP']),
-                    between(prevMonthRevNewSales.mtdDt, firstDayOfPrevMonth, prevDate)
+                    not(eq(prevMonthRevNewSales.kabupaten, 'TMP')),
+                    and(
+                        gte(prevMonthRevNewSales.mtdDt, firstDayOfPrevMonth),
+                        lte(prevMonthRevNewSales.mtdDt, prevDate)
+                    )
                 ))
                 .as('sq3')
 
@@ -1163,13 +1178,20 @@ const app = new Hono()
         END
                         `.as('clusterName'),
                     cityName: prevYearCurrMonthRevNewSales.kabupaten,
-                    rev: prevYearCurrMonthRevNewSales.rev,
-                    mtdDt: prevYearCurrMonthRevNewSales.mtdDt
+                    rev: prevYearCurrMonthRevNewSales.rev
                 })
-                .from(prevYearCurrMonthRevNewSales)
+                .from(prevYearCurrMonthRevNewSales, {
+                    useIndex: [
+                        index('mtd_dt').on(prevYearCurrMonthRevNewSales.mtdDt),
+                        index('kabupaten').on(prevYearCurrMonthRevNewSales.kabupaten)
+                    ]
+                })
                 .where(and(
-                    notInArray(prevYearCurrMonthRevNewSales.kabupaten, ['TMP']),
-                    between(prevYearCurrMonthRevNewSales.mtdDt, firstDayOfPrevYearCurrMonth, prevYearCurrDate)
+                    not(eq(prevYearCurrMonthRevNewSales.kabupaten, 'TMP')),
+                    and(
+                        gte(prevYearCurrMonthRevNewSales.mtdDt, firstDayOfPrevYearCurrMonth),
+                        lte(prevYearCurrMonthRevNewSales.mtdDt, prevYearCurrDate)
+                    )
                 ))
                 .as('sq4')
 
@@ -1267,8 +1289,8 @@ const app = new Hono()
 
             // /var/lib/backup_mysql_2025/
             const regionalsMap = new Map();
-            const [currYtdRevenue] = currYtdRev
-            const [prevYtdRevenue] = prevYtdRev
+            const [currYtdRevenue] = currYtdRev as MySqlRawQueryResult as unknown as [CurrYtDRevenue[], any]
+            const [prevYtdRevenue] = prevYtdRev as MySqlRawQueryResult as unknown as [PrevYtDRevenue[], any]
 
             targetRevenue.forEach((row) => {
                 const regionalName = row.region;
@@ -1986,9 +2008,8 @@ const app = new Hono()
                         ELSE NULL
                     END as cluster,
                     kabupaten,
-                    brand,
                     rev
-                FROM ${table}`).join(' UNION ALL ')
+                FROM ${table} WHERE kabupaten <> 'TMP' AND brand <> 'ByU'`).join(' UNION ALL ')
 
             const queryPrevYtd = prevYtdRevNewSales.map(table => `
                 SELECT
@@ -2192,9 +2213,8 @@ const app = new Hono()
                         ELSE NULL
                     END as cluster,
                     kabupaten,
-                    brand,
                     rev
-                FROM ${table}`).join(' UNION ALL ')
+                FROM ${table} WHERE kabupaten <> 'TMP' AND brand <> 'ByU'`).join(' UNION ALL ')
 
             const sq = `
                 WITH sq AS (
@@ -2212,7 +2232,6 @@ const app = new Hono()
                     SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                     SUM(SUM(rev)) OVER (PARTITION BY region) AS currYtdRegionalRev
                 FROM sq
-                WHERE kabupaten NOT IN ('TMP') AND brand <> 'ByU'
                 GROUP BY 1, 2, 3, 4, 5
                     `
 
@@ -2232,7 +2251,6 @@ const app = new Hono()
                     SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                     SUM(SUM(rev)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                 FROM sq5
-                WHERE kabupaten NOT IN ('TMP') AND brand <> 'ByU'
                 GROUP BY 1, 2, 3, 4, 5
                     `
 
@@ -2443,14 +2461,13 @@ const app = new Hono()
     END
                     `.as('clusterName'),
                     cityName: currRevNewSales.kabupaten,
-                    rev: currRevNewSales.rev,
-                    mtdDt: currRevNewSales.mtdDt
+                    rev: currRevNewSales.rev
                 })
                 .from(currRevNewSales)
                 .where(and(
                     not(eq(currRevNewSales.brand, 'ByU')),
                     and(
-                        notInArray(currRevNewSales.kabupaten, ['TMP']),
+                        not(eq(currRevNewSales.kabupaten, 'TMP')),
                         between(currRevNewSales.mtdDt, firstDayOfCurrMonth, currDate)
                     )
                 ))
@@ -2663,14 +2680,13 @@ const app = new Hono()
     END
                     `.as('clusterName'),
                     cityName: prevMonthRevNewSales.kabupaten,
-                    rev: prevMonthRevNewSales.rev,
-                    mtdDt: prevMonthRevNewSales.mtdDt
+                    rev: prevMonthRevNewSales.rev
                 })
                 .from(prevMonthRevNewSales)
                 .where(and(
                     not(eq(prevMonthRevNewSales.brand, 'ByU')),
                     and(
-                        notInArray(prevMonthRevNewSales.kabupaten, ['TMP']),
+                        not(eq(prevMonthRevNewSales.kabupaten, 'TMP')),
                         between(prevMonthRevNewSales.mtdDt, firstDayOfPrevMonth, prevDate)
                     )
                 ))
@@ -2884,13 +2900,12 @@ const app = new Hono()
                     `.as('clusterName'),
                     cityName: prevYearCurrMonthRevNewSales.kabupaten,
                     rev: prevYearCurrMonthRevNewSales.rev,
-                    mtdDt: prevYearCurrMonthRevNewSales.mtdDt
                 })
                 .from(prevYearCurrMonthRevNewSales)
                 .where(and(
                     not(eq(prevYearCurrMonthRevNewSales.brand, 'ByU')),
                     and(
-                        notInArray(prevYearCurrMonthRevNewSales.kabupaten, ['TMP']),
+                        not(eq(prevYearCurrMonthRevNewSales.kabupaten, 'TMP')),
                         between(prevYearCurrMonthRevNewSales.mtdDt, firstDayOfPrevYearCurrMonth, prevYearCurrDate)
                     )
                 ))
@@ -2990,8 +3005,8 @@ const app = new Hono()
 
             // /var/lib/backup_mysql_2025/
             const regionalsMap = new Map();
-            const [currYtdRevenue] = currYtdRev
-            const [prevYtdRevenue] = prevYtdRev
+            const [currYtdRevenue] = currYtdRev as MySqlRawQueryResult as unknown as [CurrYtDRevenue[], any]
+            const [prevYtdRevenue] = prevYtdRev as MySqlRawQueryResult as unknown as [PrevYtDRevenue[], any]
 
             targetRevenue.forEach((row) => {
                 const regionalName = row.region;

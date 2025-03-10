@@ -2,7 +2,7 @@ import { mysqlSchema, varchar, decimal, index, date } from "drizzle-orm/mysql-co
 
 export const upikBerkas = mysqlSchema("upik_berkas");
 
-export const dynamicRevenueSATable = (year: string, month: string) => {
+export const dynamicRedeemPVTable = (year: string, month: string) => {
     return upikBerkas.table(`claudia_enable_${year}${month}`, {
         eventDate: varchar('event_date', { length: 20 }),
         usedMsisdn: varchar('used_msisdn', { length: 20 }),

@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { z } from 'zod'
-import { and, asc, between, eq, isNotNull, like, notInArray, sql } from "drizzle-orm";
+import { and, asc, between, eq, gte, isNotNull, like, lte, not, notInArray, sql } from "drizzle-orm";
 import { subMonths, subDays, format, subYears, endOfMonth, startOfMonth } from 'date-fns'
 
 import { db, db2 } from "@/db";
@@ -15,6 +15,8 @@ import {
 } from "@/db/schema";
 import { zValidator } from "@/lib/validator-wrapper";
 import { dynamicRevenueCVMTable } from "@/db/schema2";
+import { MySqlRawQueryResult } from "drizzle-orm/mysql2";
+import { index } from "drizzle-orm/mysql-core";
 
 const app = new Hono()
     .get("/", zValidator('query', z.object({ date: z.string().optional() })),
@@ -277,15 +279,22 @@ CASE
 END
                 `.as('clusterName'),
                     cityName: currRevCVM.city,
-                    rev: currRevCVM.revenue,
-                    trxDate: currRevCVM.trxDate
+                    rev: currRevCVM.revenue
                 })
-                .from(currRevCVM)
+                .from(currRevCVM, {
+                    useIndex: [
+                        index('trx_date').on(currRevCVM.trxDate).using('btree'),
+                        index('city').on(currRevCVM.city).using('btree')
+                    ]
+                })
                 .where(and(
-                    notInArray(currRevCVM.city, ['TMP']),
+                    not(eq(currRevCVM.city, 'TMP')),
                     and(
                         like(currRevCVM.packageGroup, '%CVM%'),
-                        between(currRevCVM.trxDate, firstDayOfCurrMonth, currDate)
+                        and(
+                            gte(currRevCVM.trxDate, firstDayOfCurrMonth),
+                            lte(currRevCVM.trxDate, currDate)
+                        )
                     )
                 ))
                 .as('sq2')
@@ -497,15 +506,22 @@ CASE
 END
                 `.as('clusterName'),
                     cityName: prevMonthRevCVM.city,
-                    rev: prevMonthRevCVM.revenue,
-                    trxDate: prevMonthRevCVM.trxDate
+                    rev: prevMonthRevCVM.revenue
                 })
-                .from(prevMonthRevCVM)
+                .from(prevMonthRevCVM, {
+                    useIndex: [
+                        index('trx_date').on(prevMonthRevCVM.trxDate).using('btree'),
+                        index('city').on(prevMonthRevCVM.city).using('btree')
+                    ]
+                })
                 .where(and(
-                    notInArray(prevMonthRevCVM.city, ['TMP']),
+                    not(eq(prevMonthRevCVM.city, 'TMP')),
                     and(
                         like(prevMonthRevCVM.packageGroup, '%CVM%'),
-                        between(prevMonthRevCVM.trxDate, firstDayOfPrevMonth, prevDate)
+                        and(
+                            gte(prevMonthRevCVM.trxDate, firstDayOfPrevMonth),
+                            lte(prevMonthRevCVM.trxDate, prevDate)
+                        )
                     )
                 ))
                 .as('sq3')
@@ -717,15 +733,22 @@ CASE
 END
                 `.as('clusterName'),
                     cityName: prevYearCurrMonthRevCVM.city,
-                    rev: prevYearCurrMonthRevCVM.revenue,
-                    trxDate: prevYearCurrMonthRevCVM.trxDate
+                    rev: prevYearCurrMonthRevCVM.revenue
                 })
-                .from(prevYearCurrMonthRevCVM)
+                .from(prevYearCurrMonthRevCVM, {
+                    useIndex: [
+                        index('trx_date').on(prevYearCurrMonthRevCVM.trxDate).using('btree'),
+                        index('city').on(prevYearCurrMonthRevCVM.city).using('btree')
+                    ]
+                })
                 .where(and(
-                    notInArray(prevYearCurrMonthRevCVM.city, ['TMP']),
+                    not(eq(prevYearCurrMonthRevCVM.city, 'TMP')),
                     and(
                         like(prevYearCurrMonthRevCVM.packageGroup, '%CVM%'),
-                        between(prevYearCurrMonthRevCVM.trxDate, firstDayOfPrevYearCurrMonth, prevYearCurrDate)
+                        and(
+                            gte(prevYearCurrMonthRevCVM.trxDate, firstDayOfPrevYearCurrMonth),
+                            lte(prevYearCurrMonthRevCVM.trxDate, prevYearCurrDate)
+                        )
                     )
                 ))
                 .as('sq4')
@@ -754,7 +777,7 @@ END
                     clusters.cluster,
                     kabupatens.kabupaten
                 )
-                .orderBy(asc(regionals.regional), asc(branches.branchNew), asc(subbranches.subbranchNew), asc(clusters.cluster), asc(kabupatens.kabupaten))
+                .orderBy(asc(regionals.regional), asc(branches.branchNew))
                 .prepare()
 
             //  QUERY UNTUK MENDAPAT CURRENT MONTH REVENUE (Mtd)
@@ -1016,7 +1039,7 @@ END
                     city as kabupaten,
                     revenue as rev
                 FROM ${table}
-                WHERE package_group LIKE '%CVM%'`).join(' UNION ALL ')
+                WHERE package_group LIKE '%CVM%' AND city <> 'TMP'`).join(' UNION ALL ')
 
             const queryPrevYtd = prevYtdCVMRev.map(table => `
                 SELECT
@@ -1222,7 +1245,7 @@ END
                     city as kabupaten,
                     revenue as rev
                 FROM ${table}
-                WHERE package_group LIKE '%CVM%'`).join(' UNION ALL ')
+                WHERE package_group LIKE '%CVM%' AND city <> 'TMP'`).join(' UNION ALL ')
 
             const sq = `
                 WITH sq AS (
@@ -1240,7 +1263,6 @@ END
                     SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                     SUM(SUM(rev)) OVER (PARTITION BY region) AS currYtdRegionalRev
                 FROM sq
-                WHERE kabupaten NOT IN ('TMP')
                 GROUP BY 1, 2, 3, 4, 5
                     `
 
@@ -1260,7 +1282,6 @@ END
                     SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                     SUM(SUM(rev)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                 FROM sq5
-                WHERE kabupaten NOT IN ('TMP')
                 GROUP BY 1, 2, 3, 4, 5
                     `
 
@@ -1274,8 +1295,8 @@ END
             ])
 
             const regionalsMap = new Map();
-            const [currYtdRevenue] = currYtdRev
-            const [prevYtdRevenue] = prevYtdRev
+            const [currYtdRevenue] = currYtdRev as MySqlRawQueryResult as unknown as [CurrYtDRevenue[], any]
+            const [prevYtdRevenue] = prevYtdRev as MySqlRawQueryResult as unknown as [PrevYtDRevenue[], any]
 
             targetRevenue.forEach((row) => {
                 const regionalName = row.region;
