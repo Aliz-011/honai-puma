@@ -1,9 +1,11 @@
 import { client } from "@/lib/client"
-import { useQuery } from "@tanstack/react-query"
+import { QueryClient, useQuery } from "@tanstack/react-query"
 
 type QueryParams = { date?: Date }
 
 export const useGetRevenueSAPrabayar = ({ date }: QueryParams) => {
+    const queryClient = new QueryClient()
+
     const query = useQuery({
         queryKey: ['revenue-sa-prabayar', { date }],
         queryFn: async () => {
@@ -17,7 +19,13 @@ export const useGetRevenueSAPrabayar = ({ date }: QueryParams) => {
 
             return data
         },
-        retry: 2
+        gcTime: 60 * 1000 * 10, // 10 Minutes
+        staleTime: 12 * 60 * 1000 * 60, // 12 Hours
+        retry: 2,
+        placeholderData: () => {
+            return queryClient
+                .getQueryData(['revenue-sa-prabayar', { date }])
+        }
     })
 
     return query

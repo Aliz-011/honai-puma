@@ -15,7 +15,7 @@ export const useGetAreas = () => {
 
             return data
         },
-        staleTime: 24 * 60 * 1000 * 60, // 24 Hours
+        staleTime: 30 * 24 * 60 * 1000 * 60, // 24 Hours
     })
 
     return query
