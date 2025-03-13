@@ -18,7 +18,8 @@ export const useGetRevenueCVM = ({ date }: QueryParams) => {
             return data
         },
         gcTime: 60 * 1000 * 10, // 10 Minutes
-        staleTime: 12 * 60 * 1000 * 60 // 12 Hours
+        staleTime: 12 * 60 * 1000 * 60, // 12 Hours
+        retry: 2
     })
 
     return query

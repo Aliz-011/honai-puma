@@ -2,15 +2,15 @@
 
 import React from 'react'
 import { subMonths, intlFormat, subDays, format, endOfMonth, subYears, getDaysInMonth } from "date-fns";
-import { Download } from 'lucide-react';
+import { ArrowDown, ArrowUp, Download } from 'lucide-react';
+import { QueryObserverResult, RefetchOptions } from '@tanstack/react-query';
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table'
 import { Skeleton } from '@/components/common/skeleton';
 import ComponentCard from '@/components/common/ComponentCard';
 import { TableNotFound } from '@/components/table-not-found';
-import { Tooltip } from '@/components/common/tooltip';
 
-import { cn, exportToExcel, formatToBillion, formatToIDR, formatToPercentage, getGrowthColor, getAchGrowthColor } from '@/lib/utils';
+import { cn, exportToExcel, formatToBillion, formatToPercentage, getGrowthColor, getAchGrowthColor } from '@/lib/utils';
 import { useSelectBranch } from '@/hooks/use-select-branch';
 import { useSelectSubbranch } from '@/hooks/use-select-subbranch';
 import { useSelectCluster } from '@/hooks/use-select-cluster';
@@ -22,33 +22,38 @@ type Params = {
     latestUpdatedData: number;
     isLoading?: boolean;
     title: string;
+    refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<Regional[], Error>>
 }
 
-export const TableData = ({ latestUpdatedData, selectedDate, title, data: revenues, isLoading }: Params) => {
+export const TableData = ({ latestUpdatedData, selectedDate, title, data: revenues, isLoading, refetch }: Params) => {
+    const [sortField, setSortField] = React.useState<string | null>(null);
+    const [sortDirection, setSortDirection] = React.useState('asc');
+
     const { branch: selectedBranch } = useSelectBranch()
     const { subbranch: selectedSubbranch } = useSelectSubbranch()
     const { cluster: selectedCluster } = useSelectCluster()
     const { kabupaten: selectedKabupaten } = useSelectKabupaten()
 
     const compactDate = subDays(selectedDate, latestUpdatedData) // today - 2 days
-    const lastDayOfSelectedMonth = endOfMonth(compactDate);
-    const isEndOfMonth = compactDate.getDate() === lastDayOfSelectedMonth.getDate();
+    const lastDayOfSelectedMonth = endOfMonth(selectedDate);
+    const isEndOfMonth = selectedDate.getDate() === lastDayOfSelectedMonth.getDate();
 
     // Last days of months
-    const daysInCurrMonth = isEndOfMonth ? getDaysInMonth(compactDate) : getDaysInMonth(selectedDate)
-    const currDate = parseInt(format(compactDate, 'd'))
+    // const daysInCurrMonth = isEndOfMonth ? getDaysInMonth(compactDate) : getDaysInMonth(selectedDate)
+    const daysInCurrMonth = getDaysInMonth(selectedDate)
+    const currDate = parseInt(format(selectedDate, 'd'))
 
-    const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : compactDate;
-    const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(compactDate, 1)) : subMonths(compactDate, 1);
-    const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(compactDate, 1)) : subYears(compactDate, 1);
+    const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : selectedDate;
+    const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(selectedDate, 1)) : subMonths(selectedDate, 1);
+    const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(selectedDate, 1)) : subYears(selectedDate, 1);
 
     if (isLoading) {
         return (
-            <div className="max-w-full overflow-x-auto remove-scrollbar">
-                <div className="min-w-[1200px]">
+            <div className="w-[1104px] overflow-x-auto remove-scrollbar">
+                <div className="w-full">
                     <div className="flex flex-col space-y-3">
                         <Skeleton className="h-4 w-[200px]" />
-                        <Skeleton className="h-[275px] w-[1200px] rounded-xl" />
+                        <Skeleton className="h-[275px] w-[1104px] rounded-xl" />
                     </div>
                 </div>
             </div>
@@ -56,12 +61,70 @@ export const TableData = ({ latestUpdatedData, selectedDate, title, data: revenu
     }
 
     if (!revenues) {
-        return <TableNotFound date={selectedDate} daysBehind={3} tableName={title} />
+        return <TableNotFound date={selectedDate} daysBehind={3} tableName={title} refetch={refetch} />
     }
 
     const handleDownload = () => {
         exportToExcel(revenues, title, selectedDate, compactDate)
     }
+
+    const handleSort = (field: string) => {
+        if (field === sortField) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortDirection('asc');
+        }
+    };
+
+    const getValueByField = (item: any, field: string) => {
+        switch (field) {
+            case 'target': return item.currMonthTarget || 0;
+            case 'currMonthRevenue': return item.currMonthRevenue || 0;
+            case 'prevMonthRevenue': return item.prevMonthRevenue || 0;
+            case 'prevYearCurrMonthRevenue': return item.prevYearCurrMonthRevenue || 0;
+            case 'currYtdRevenue': return item.currYtdRevenue || 0;
+            case 'prevYtdRevenue': return item.prevYtdRevenue || 0;
+            case 'achFM': return (item.currMonthRevenue / item.currMonthTarget * 100) || 0;
+            case 'achDRR': return ((item.currMonthRevenue / currDate) * daysInCurrMonth) / item.currMonthTarget * 100 || 0;
+            case 'mom': return ((item.currMonthRevenue - item.prevMonthRevenue) / item.prevMonthRevenue * 100) || 0;
+            case 'yoy': return ((item.currMonthRevenue - item.prevYearCurrMonthRevenue) / item.prevYearCurrMonthRevenue * 100) || 0;
+            case 'ytd': return ((item.currYtdRevenue - item.prevYtdRevenue) / item.prevYtdRevenue * 100) || 0;
+            default: return 0;
+        }
+    };
+
+    const sortCollection = (collection: any) => {
+        if (!sortField) return collection;
+
+        return [...collection].toSorted((a, b) => {
+            const aValue = getValueByField(a, sortField);
+            const bValue = getValueByField(b, sortField);
+
+            // For other numeric fields, sort normally
+            return sortDirection === 'asc'
+                ? aValue - bValue
+                : bValue - aValue;
+        });
+    };
+
+    const applySorting = (revenues: Regional[]) => {
+        if (!sortField) return revenues;
+
+        return revenues.map(regional => ({
+            ...regional,
+            branches: sortCollection(regional.branches).map((branch: Branch) => ({
+                ...branch,
+                subbranches: sortCollection(branch.subbranches).map((subbranch: Subbranch) => ({
+                    ...subbranch,
+                    clusters: sortCollection(subbranch.clusters).map((cluster: Cluster) => ({
+                        ...cluster,
+                        kabupatens: sortCollection(cluster.kabupatens)
+                    }))
+                }))
+            }))
+        }));
+    };
 
     const filteredRevenues = revenues.map(regional => ({
         ...regional,
@@ -82,6 +145,14 @@ export const TableData = ({ latestUpdatedData, selectedDate, title, data: revenu
                     }))
             }))
     }))
+
+    const sortedRevenues = applySorting(filteredRevenues);
+
+    // Sort indicator component
+    const SortIndicator = ({ field }: { field: string }) => {
+        if (sortField !== field) return null;
+        return <button>{sortDirection === 'asc' ? <ArrowUp className='size-4' /> : <ArrowDown className='size-4' />}</button>;
+    };
 
     return (
         <div className="w-fit overflow-x-auto remove-scrollbar">
@@ -110,10 +181,10 @@ export const TableData = ({ latestUpdatedData, selectedDate, title, data: revenu
                             </TableCell>
                         </TableRow>
                         <TableRow>
-                            <TableCell isHeader className="font-medium border-r dark:border-r-gray-500 bg-blue-500 text-white text-theme-xs p-0.5 border border-gray-300 text-center whitespace-nowrap">
+                            <TableCell isHeader className="font-medium border-r dark:border-r-gray-700 bg-blue-500 text-white text-theme-xs p-0.5 border-gray-300 text-center whitespace-nowrap">
                                 Target
                             </TableCell>
-                            <TableCell isHeader className="px-0.5 py-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
+                            <TableCell onClick={() => handleSort('currMonthRevenue')} isHeader className="px-0.5 py-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
                                 {intlFormat(
                                     endOfCurrMonth,
                                     {
@@ -122,7 +193,7 @@ export const TableData = ({ latestUpdatedData, selectedDate, title, data: revenu
                                     { locale: "id-ID" }
                                 )}
                             </TableCell>
-                            <TableCell isHeader className="px-0.5 py-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
+                            <TableCell onClick={() => handleSort('prevMonthRevenue')} isHeader className="px-0.5 py-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
                                 {intlFormat(
                                     endOfPrevMonth,
                                     {
@@ -131,7 +202,7 @@ export const TableData = ({ latestUpdatedData, selectedDate, title, data: revenu
                                     { locale: "id-ID" }
                                 )}
                             </TableCell>
-                            <TableCell isHeader className="px-0.5 py-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
+                            <TableCell onClick={() => handleSort('prevYearCurrMonthRevenue')} isHeader className="px-0.5 py-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
                                 {intlFormat(
                                     endOfPrevYearSameMonth,
                                     {
@@ -140,26 +211,26 @@ export const TableData = ({ latestUpdatedData, selectedDate, title, data: revenu
                                     { locale: "id-ID" }
                                 )}
                             </TableCell>
-                            <TableCell isHeader className="px-0.5 py-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
+                            <TableCell onClick={() => handleSort('currYtdRevenue')} isHeader className="px-0.5 py-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
                                 YtD {selectedDate.getFullYear()}
                             </TableCell>
-                            <TableCell isHeader className="px-0.5 py-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
+                            <TableCell onClick={() => handleSort('prevYtdRevenue')} isHeader className="px-0.5 py-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
                                 YtD {selectedDate.getFullYear() - 1}
                             </TableCell>
-                            <TableCell isHeader className="px-0.5 py-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
-                                Ach FM
+                            <TableCell onClick={() => handleSort('achFM')} isHeader className="p-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
+                                <div className='flex items-center gap-x-1 justify-center'>Ach FM <SortIndicator field="achFM" /></div>
                             </TableCell>
-                            <TableCell isHeader className="px-0.5 py-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
-                                Ach DRR
+                            <TableCell onClick={() => handleSort('achDRR')} isHeader className="p-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
+                                <div className='flex items-center gap-x-1 justify-center'>Ach DRR <SortIndicator field="achDRR" /></div>
                             </TableCell>
-                            <TableCell isHeader className="px-0.5 py-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
-                                MoM
+                            <TableCell onClick={() => handleSort('mom')} isHeader className="p-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
+                                <div className='flex items-center gap-x-1 justify-center'>MoM <SortIndicator field="mom" /></div>
                             </TableCell>
-                            <TableCell isHeader className="px-0.5 py-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
-                                YoY
+                            <TableCell onClick={() => handleSort('yoy')} isHeader className="p-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
+                                <div className='flex items-center gap-x-1 justify-center'>YoY <SortIndicator field="yoy" /></div>
                             </TableCell>
-                            <TableCell isHeader className="px-0.5 py-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
-                                YtD
+                            <TableCell onClick={() => handleSort('ytd')} isHeader className="p-1 whitespace-nowrap font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
+                                <div className='flex items-center gap-x-1 justify-center'>YtD <SortIndicator field="ytd" /></div>
                             </TableCell>
 
                         </TableRow>
@@ -171,41 +242,29 @@ export const TableData = ({ latestUpdatedData, selectedDate, title, data: revenu
                                 Regional
                             </TableCell>
                         </TableRow>
-                        {filteredRevenues.map((regional, regionalIndex) => (
+                        {sortedRevenues.map((regional, regionalIndex) => (
                             <React.Fragment key={regionalIndex}>
                                 <TableRow>
                                     <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-start font-normal text-theme-xs dark:text-white dark:border-gray-800 ">
                                         {regional.name}
                                     </TableCell>
                                     <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                        <Tooltip message={formatToIDR(regional.currMonthTarget)}>
-                                            <span className='text-end'>{formatToBillion(regional.currMonthTarget)}</span>
-                                        </Tooltip>
+                                        <span className='text-end'>{formatToBillion(regional.currMonthTarget)}</span>
                                     </TableCell>
                                     <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                        <Tooltip message={formatToIDR(regional.currMonthRevenue)}>
-                                            <span className='text-end'>{formatToBillion(regional.currMonthRevenue)}</span>
-                                        </Tooltip>
+                                        <span className='text-end'>{formatToBillion(regional.currMonthRevenue)}</span>
                                     </TableCell>
                                     <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                        <Tooltip message={formatToIDR(regional.prevMonthRevenue)}>
-                                            <span className='text-end'>{formatToBillion(regional.prevMonthRevenue)}</span>
-                                        </Tooltip>
+                                        <span className='text-end'>{formatToBillion(regional.prevMonthRevenue)}</span>
                                     </TableCell>
                                     <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                        <Tooltip message={formatToIDR(regional.prevYearCurrMonthRevenue)}>
-                                            <span>{formatToBillion(regional.prevYearCurrMonthRevenue)}</span>
-                                        </Tooltip>
+                                        <span>{formatToBillion(regional.prevYearCurrMonthRevenue)}</span>
                                     </TableCell>
                                     <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                        <Tooltip message={formatToIDR(regional.currYtdRevenue)}>
-                                            <span>{formatToBillion(regional.currYtdRevenue)}</span>
-                                        </Tooltip>
+                                        <span>{formatToBillion(regional.currYtdRevenue)}</span>
                                     </TableCell>
                                     <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                        <Tooltip message={formatToIDR(regional.prevYtdRevenue)}>
-                                            <span>{formatToBillion(regional.prevYtdRevenue)}</span>
-                                        </Tooltip>
+                                        <span>{formatToBillion(regional.prevYtdRevenue)}</span>
                                     </TableCell>
                                     {/* ACH FM */}
                                     <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
@@ -252,34 +311,22 @@ export const TableData = ({ latestUpdatedData, selectedDate, title, data: revenu
                                                 {branch.name}
                                             </TableCell>
                                             <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                <Tooltip message={formatToIDR(branch.currMonthTarget)}>
-                                                    <span>{formatToBillion(branch.currMonthTarget)}</span>
-                                                </Tooltip>
+                                                <span>{formatToBillion(branch.currMonthTarget)}</span>
                                             </TableCell>
                                             <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                <Tooltip message={formatToIDR(branch.currMonthRevenue)}>
-                                                    <span>{formatToBillion(branch.currMonthRevenue)}</span>
-                                                </Tooltip>
+                                                <span>{formatToBillion(branch.currMonthRevenue)}</span>
                                             </TableCell>
                                             <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                <Tooltip message={formatToIDR(branch.prevMonthRevenue)}>
-                                                    <span>{formatToBillion(branch.prevMonthRevenue)}</span>
-                                                </Tooltip>
+                                                <span>{formatToBillion(branch.prevMonthRevenue)}</span>
                                             </TableCell>
                                             <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                <Tooltip message={formatToIDR(branch.prevYearCurrMonthRevenue)}>
-                                                    <span>{formatToBillion(branch.prevYearCurrMonthRevenue)}</span>
-                                                </Tooltip>
+                                                <span>{formatToBillion(branch.prevYearCurrMonthRevenue)}</span>
                                             </TableCell>
                                             <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                <Tooltip message={formatToIDR(branch.currYtdRevenue)}>
-                                                    <span>{formatToBillion(branch.currYtdRevenue)}</span>
-                                                </Tooltip>
+                                                <span>{formatToBillion(branch.currYtdRevenue)}</span>
                                             </TableCell>
                                             <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                <Tooltip message={formatToIDR(branch.prevYtdRevenue)}>
-                                                    <span>{formatToBillion(branch.prevYtdRevenue)}</span>
-                                                </Tooltip>
+                                                <span>{formatToBillion(branch.prevYtdRevenue)}</span>
                                             </TableCell>
                                             {/* ACH FM */}
                                             <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
@@ -329,34 +376,22 @@ export const TableData = ({ latestUpdatedData, selectedDate, title, data: revenu
                                                     {subbranch.name}
                                                 </TableCell>
                                                 <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                    <Tooltip message={formatToIDR(subbranch.currMonthTarget)}>
-                                                        <span>{formatToBillion(subbranch.currMonthTarget)}</span>
-                                                    </Tooltip>
+                                                    <span>{formatToBillion(subbranch.currMonthTarget)}</span>
                                                 </TableCell>
                                                 <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                    <Tooltip message={formatToIDR(subbranch.currMonthRevenue)}>
-                                                        <span>{formatToBillion(subbranch.currMonthRevenue)}</span>
-                                                    </Tooltip>
+                                                    <span>{formatToBillion(subbranch.currMonthRevenue)}</span>
                                                 </TableCell>
                                                 <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                    <Tooltip message={formatToIDR(subbranch.prevMonthRevenue)}>
-                                                        <span>{formatToBillion(subbranch.prevMonthRevenue)}</span>
-                                                    </Tooltip>
+                                                    <span>{formatToBillion(subbranch.prevMonthRevenue)}</span>
                                                 </TableCell>
                                                 <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                    <Tooltip message={formatToIDR(subbranch.prevYearCurrMonthRevenue)}>
-                                                        <span>{formatToBillion(subbranch.prevYearCurrMonthRevenue)}</span>
-                                                    </Tooltip>
+                                                    <span>{formatToBillion(subbranch.prevYearCurrMonthRevenue)}</span>
                                                 </TableCell>
                                                 <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                    <Tooltip message={formatToIDR(subbranch.currYtdRevenue)}>
-                                                        <span>{formatToBillion(subbranch.currYtdRevenue)}</span>
-                                                    </Tooltip>
+                                                    <span>{formatToBillion(subbranch.currYtdRevenue)}</span>
                                                 </TableCell>
                                                 <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                    <Tooltip message={formatToIDR(subbranch.prevYtdRevenue)}>
-                                                        <span>{formatToBillion(subbranch.prevYtdRevenue)}</span>
-                                                    </Tooltip>
+                                                    <span>{formatToBillion(subbranch.prevYtdRevenue)}</span>
                                                 </TableCell>
                                                 {/* ACH FM */}
                                                 <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
@@ -406,34 +441,22 @@ export const TableData = ({ latestUpdatedData, selectedDate, title, data: revenu
                                                         {cluster.name}
                                                     </TableCell>
                                                     <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                        <Tooltip message={formatToIDR(cluster.currMonthTarget)}>
-                                                            <span>{formatToBillion(cluster.currMonthTarget)}</span>
-                                                        </Tooltip>
+                                                        <span>{formatToBillion(cluster.currMonthTarget)}</span>
                                                     </TableCell>
                                                     <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                        <Tooltip message={formatToIDR(cluster.currMonthRevenue)}>
-                                                            <span>{formatToBillion(cluster.currMonthRevenue)}</span>
-                                                        </Tooltip>
+                                                        <span>{formatToBillion(cluster.currMonthRevenue)}</span>
                                                     </TableCell>
                                                     <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                        <Tooltip message={formatToIDR(cluster.prevMonthRevenue)}>
-                                                            <span>{formatToBillion(cluster.prevMonthRevenue)}</span>
-                                                        </Tooltip>
+                                                        <span>{formatToBillion(cluster.prevMonthRevenue)}</span>
                                                     </TableCell>
                                                     <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                        <Tooltip message={formatToIDR(cluster.prevYearCurrMonthRevenue)}>
-                                                            <span>{formatToBillion(cluster.prevYearCurrMonthRevenue)}</span>
-                                                        </Tooltip>
+                                                        <span>{formatToBillion(cluster.prevYearCurrMonthRevenue)}</span>
                                                     </TableCell>
                                                     <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                        <Tooltip message={formatToIDR(cluster.currYtdRevenue)}>
-                                                            <span>{formatToBillion(cluster.currYtdRevenue)}</span>
-                                                        </Tooltip>
+                                                        <span>{formatToBillion(cluster.currYtdRevenue)}</span>
                                                     </TableCell>
                                                     <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                        <Tooltip message={formatToIDR(cluster.prevYtdRevenue)}>
-                                                            <span>{formatToBillion(cluster.prevYtdRevenue)}</span>
-                                                        </Tooltip>
+                                                        <span>{formatToBillion(cluster.prevYtdRevenue)}</span>
                                                     </TableCell>
                                                     {/* ACH FM */}
                                                     <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
@@ -484,34 +507,22 @@ export const TableData = ({ latestUpdatedData, selectedDate, title, data: revenu
                                                             {kabupaten.name}
                                                         </TableCell>
                                                         <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                            <Tooltip message={formatToIDR(kabupaten.currMonthTarget)}>
-                                                                <span>{formatToBillion(kabupaten.currMonthTarget)}</span>
-                                                            </Tooltip>
+                                                            <span>{formatToBillion(kabupaten.currMonthTarget)}</span>
                                                         </TableCell>
                                                         <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                            <Tooltip message={formatToIDR(kabupaten.currMonthRevenue)}>
-                                                                <span>{formatToBillion(kabupaten.currMonthRevenue)}</span>
-                                                            </Tooltip>
+                                                            <span>{formatToBillion(kabupaten.currMonthRevenue)}</span>
                                                         </TableCell>
                                                         <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                            <Tooltip message={formatToIDR(kabupaten.prevMonthRevenue)}>
-                                                                <span>{formatToBillion(kabupaten.prevMonthRevenue)}</span>
-                                                            </Tooltip>
+                                                            <span>{formatToBillion(kabupaten.prevMonthRevenue)}</span>
                                                         </TableCell>
                                                         <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                            <Tooltip message={formatToIDR(kabupaten.prevYearCurrMonthRevenue)}>
-                                                                <span>{formatToBillion(kabupaten.prevYearCurrMonthRevenue)}</span>
-                                                            </Tooltip>
+                                                            <span>{formatToBillion(kabupaten.prevYearCurrMonthRevenue)}</span>
                                                         </TableCell>
                                                         <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                            <Tooltip message={formatToIDR(kabupaten.currYtdRevenue)}>
-                                                                <span>{formatToBillion(kabupaten.currYtdRevenue)}</span>
-                                                            </Tooltip>
+                                                            <span>{formatToBillion(kabupaten.currYtdRevenue)}</span>
                                                         </TableCell>
                                                         <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">
-                                                            <Tooltip message={formatToIDR(kabupaten.prevYtdRevenue)}>
-                                                                <span>{formatToBillion(kabupaten.prevYtdRevenue)}</span>
-                                                            </Tooltip>
+                                                            <span>{formatToBillion(kabupaten.prevYtdRevenue)}</span>
                                                         </TableCell>
                                                         {/* ACH FM */}
                                                         <TableCell className="px-1 py-0.5 border-r last:border-r-0 text-end text-theme-xs dark:text-white dark:border-gray-800 tabular-nums">

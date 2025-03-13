@@ -2,7 +2,6 @@
 
 import React from 'react'
 import DatePicker from 'react-datepicker'
-import { subMonths } from 'date-fns'
 
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -16,8 +15,9 @@ import { useSelectSubbranch } from '@/hooks/use-select-subbranch'
 import { useSelectCluster } from '@/hooks/use-select-cluster'
 import { useSelectKabupaten } from '@/hooks/use-select-kabupaten'
 import { Skeleton } from './common/skeleton'
+import { subDays } from 'date-fns';
 
-export const Filters = () => {
+export const Filters = ({ daysBehind }: { daysBehind: number }) => {
     const { data: areas, isLoading: isLoadingRegion } = useGetAreas()
     const { date: selectedDate, setDate: setSelectedDate } = useSelectDate()
     const { region: selectedRegion, setSelectedRegion } = useSelectRegion()
@@ -127,7 +127,7 @@ export const Filters = () => {
     };
 
     return (
-        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4'>
             <div>
                 <Label>Tanggal</Label>
                 <DatePicker
@@ -135,7 +135,7 @@ export const Filters = () => {
                     renderMonthContent={renderMonthContent}
                     onChange={(date) => handleDateChange(date)}
                     dateFormat="yyyy-MM-dd"
-                    maxDate={new Date(new Date().getFullYear(), 11, 31)}
+                    maxDate={subDays(new Date(), daysBehind)}
                     className="w-full text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     calendarClassName="shadow-lg border-0"
                     customInput={
@@ -143,12 +143,7 @@ export const Filters = () => {
                     }
                     wrapperClassName="w-full"
                     showPopperArrow={false}
-                    dayClassName={(date) =>
-                        date.getDate() === selectedDate?.getDate() &&
-                            date.getMonth() === selectedDate?.getMonth()
-                            ? "bg-blue-500 text-white rounded-full p-1 hover:bg-blue-600"
-                            : "hover:bg-gray-100 rounded-full p-1"
-                    }
+                    showDateSelect
                 />
             </div>
             <div>

@@ -25,11 +25,6 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
-    icon: <GridIcon />,
-    name: 'Home',
-    path: '/'
-  },
-  {
     icon: <BoxCubeIcon />,
     name: 'Revenue Gross',
     subItems: [
@@ -80,6 +75,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: 'Revenue Redeem PV All', path: '/redeem-pv', },
       { name: 'Revenue Redeem PV Prabayar', path: '/redeem-pv-prabayar', },
+      { name: 'Revenue Redeem PV ByU', path: '/redeem-pv-byu' },
     ]
   },
   {
@@ -112,31 +108,12 @@ const navItems: NavItem[] = [
 ];
 
 const othersItems: NavItem[] = [
-  {
-    icon: <PieChartIcon />,
-    name: "Charts",
-    subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: false },
-      { name: "Bar Chart", path: "/bar-chart", pro: false },
-    ],
-  },
-  {
-    icon: <BoxCubeIcon />,
-    name: "UI Elements",
-    subItems: [
-      { name: "Alerts", path: "/alerts", pro: false },
-      { name: "Avatar", path: "/avatars", pro: false },
-      { name: "Badge", path: "/badge", pro: false },
-      { name: "Buttons", path: "/buttons", pro: false },
-      { name: "Images", path: "/images", pro: false },
-      { name: "Videos", path: "/videos", pro: false },
-    ],
-  },
 ];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
+  const [isNavigating, setIsNavigating] = useState(false)
 
   const renderMenuItems = (
     navItems: NavItem[],
@@ -181,8 +158,17 @@ const AppSidebar: React.FC = () => {
             nav.path && (
               <Link
                 href={nav.path}
+                prefetch
+                onClick={(e) => {
+                  if (isNavigating) {
+                    e.preventDefault()
+                    return;
+                  }
+
+                  setIsNavigating(true)
+                }}
                 className={`menu-item group ${isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
-                  }`}
+                  } ${isNavigating ? 'opacity-50 pointer-events-none' : ''}`}
               >
                 <span
                   className={`${isActive(nav.path)
@@ -339,8 +325,8 @@ const AppSidebar: React.FC = () => {
       >
         <Link href="/">
           {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              <Image
+            <div className="flex items-center gap-x-2">
+              {/* <Image
                 className="dark:hidden"
                 src="/images/logo/logo.svg"
                 alt="Logo"
@@ -353,8 +339,15 @@ const AppSidebar: React.FC = () => {
                 alt="Logo"
                 width={150}
                 height={40}
+              /> */}
+              <Image
+                src='/images/logo/logo-icon.svg'
+                alt="logo"
+                width={32}
+                height={32}
               />
-            </>
+              <h1 className="text-xl font-semibold dark:text-white">Honai</h1>
+            </div>
           ) : (
             <Image
               src="/images/logo/logo-icon.svg"
@@ -370,7 +363,7 @@ const AppSidebar: React.FC = () => {
           <div className="flex flex-col gap-4">
             <div>
               <h2
-                className={`mb-4 text-xs uppercase font-semibold flex leading-[20px] text-black ${!isExpanded && !isHovered
+                className={`mb-4 text-xs uppercase font-semibold dark:text-gray-400 flex leading-[20px] ${!isExpanded && !isHovered
                   ? "lg:justify-center"
                   : "justify-start"
                   }`}

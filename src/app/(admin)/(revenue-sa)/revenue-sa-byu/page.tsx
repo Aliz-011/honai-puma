@@ -1,24 +1,25 @@
-import { Metadata } from "next";
+'use client'
 
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import { Filters } from "@/components/filters";
-import { TableData } from "./table-data";
+import { TableData } from "@/components/data-table";
 
-export const metadata: Metadata = {
-    title: "Revenue SA ByU 2025 | Honai PUMA",
-    description: "Target Revenue SA 2025 Telkomsel untuk area PUMA",
-};
+import { useSelectDate } from "@/hooks/use-select-date";
+import { useGetRevenueSAByu } from "@/modules/revenue-sa/hooks/use-get-revenue-sa-byu";
 
-const RevenueSAPage = () => {
+const RevenueSAByUPage = () => {
+    const { date: selectedDate } = useSelectDate()
+    const { data: revenues, isLoading: isLoadingRevenue, isRefetching, refetch } = useGetRevenueSAByu({ date: selectedDate })
+
     return (
         <div>
             <PageBreadcrumb pageTitle="Revenue SA ByU" />
             <div className="overflow-hidden min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] space-y-8">
-                <Filters />
-                <TableData />
+                <Filters daysBehind={3} />
+                <TableData data={revenues} latestUpdatedData={2} refetch={refetch} selectedDate={selectedDate} title="Revenue SA ByU" isLoading={isLoadingRevenue || isRefetching} />
             </div>
         </div>
     )
 }
 
-export default RevenueSAPage
+export default RevenueSAByUPage

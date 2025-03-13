@@ -1,25 +1,25 @@
-import { Metadata } from "next";
+'use client'
 
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import { TableData } from "@/components/data-table";
 import { Filters } from "@/components/filters";
-import { TableData } from "./table-data";
+import { useSelectDate } from "@/hooks/use-select-date";
+import { useGetRevenueGrossPrabayar } from "@/modules/revenue-gross/hooks/use-get-revenue-prabayar";
 
-export const metadata: Metadata = {
-  title: "Revenue Gross Prabayar 2025 | Honai PUMA",
-  description: "Target Revenue Gross 2025 Telkomsel untuk area PUMA",
-};
+const RevenueGrossPrabayarPage = () => {
+  const { date: selectedDate } = useSelectDate()
+  const { data: revenues, isLoading: isLoadingRevenue, isRefetching, refetch } = useGetRevenueGrossPrabayar({ date: selectedDate })
 
-const RevenueGrossPage = () => {
   return (
     <div>
       <PageBreadcrumb pageTitle="Revenue Gross Prabayar" />
       <div className="overflow-hidden min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] space-y-4">
-        <Filters />
+        <Filters daysBehind={2} />
 
-        <TableData />
+        <TableData data={revenues} latestUpdatedData={2} isLoading={isLoadingRevenue || isRefetching} selectedDate={selectedDate} title="Revenue Gross Prabayar" refetch={refetch} />
       </div>
     </div>
   )
 }
 
-export default RevenueGrossPage
+export default RevenueGrossPrabayarPage

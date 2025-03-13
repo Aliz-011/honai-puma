@@ -1,21 +1,23 @@
-import { Metadata } from "next";
+'use client'
 
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import { TableData } from "@/components/data-table";
 import { Filters } from "@/components/filters";
-import { TableData } from "./table-data";
 
-export const metadata: Metadata = {
-    title: "Revenue Redeem PV 2025 | Honai PUMA",
-    description: "Target Revenue Redeem PV 2025 Telkomsel untuk area PUMA",
-};
+import { useSelectDate } from "@/hooks/use-select-date";
+import { useGetRedeemPV } from "@/modules/redeem-pv/hooks/use-get-redeem-pv";
+
 
 const RevenueRedeemPVPage = () => {
+    const { date } = useSelectDate()
+    const { data, isLoading, isRefetching, refetch } = useGetRedeemPV({ date })
+
     return (
         <div>
             <PageBreadcrumb pageTitle="Revenue Redeem PV" />
             <div className="overflow-hidden min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] space-y-4">
-                <Filters />
-                <TableData />
+                <Filters daysBehind={3} />
+                <TableData data={data} selectedDate={date} latestUpdatedData={3} title="Revenue Redeem PV All" isLoading={isLoading || isRefetching} refetch={refetch} />
             </div>
         </div>
     )

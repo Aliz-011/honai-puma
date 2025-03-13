@@ -1,24 +1,25 @@
-import { Metadata } from "next";
+'use client'
 
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import { TableData } from "@/components/data-table";
 import { Filters } from "@/components/filters";
-import { TableData } from "./table-data";
 
-export const metadata: Metadata = {
-    title: "Paying Subs 2025 | Honai PUMA",
-    description: "Target Revenue SA 2025 Telkomsel untuk area PUMA",
-};
+import { useSelectDate } from "@/hooks/use-select-date";
+import { useGetPayingSubs } from "@/modules/paying-subs/hooks/use-get-paying-subs";
 
-const RevenueSAPage = () => {
+const PayingSubsPage = () => {
+    const { date: selectedDate } = useSelectDate()
+    const { data: revenues, isLoading: isLoadingRevenue, refetch, isRefetching } = useGetPayingSubs({ date: selectedDate })
+
     return (
         <div>
             <PageBreadcrumb pageTitle="Paying Subs" />
             <div className="overflow-hidden min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] space-y-4">
-                <Filters />
-                <TableData />
+                <Filters daysBehind={3} />
+                <TableData data={revenues} latestUpdatedData={3} selectedDate={selectedDate} isLoading={isLoadingRevenue || isRefetching} title="Paying Subs" refetch={refetch} />
             </div>
         </div>
     )
 }
 
-export default RevenueSAPage
+export default PayingSubsPage

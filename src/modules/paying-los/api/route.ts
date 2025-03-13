@@ -6,7 +6,7 @@ import { zValidator } from "@/lib/validator-wrapper";
 import { branches, clusters, kabupatens, payingLOS_01, payingLOS_01_Prabayar, regionals, subbranches } from "@/db/schema";
 import { dynamicCbProfileTable } from "@/db/schema2";
 import { db, db2 } from "@/db";
-import { and, asc, eq, inArray, not, notInArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, not, sql } from "drizzle-orm";
 import { MySqlRawQueryResult } from "drizzle-orm/mysql2";
 
 const app = new Hono()
@@ -22,13 +22,13 @@ const app = new Hono()
             // VARIABLE TANGGAL UNTUK IMPORT TABEL SECARA DINAMIS
             const latestDataDate = subDays(selectedDate, 2);
 
-            const currMonth = format(latestDataDate, 'MM')
-            const currYear = format(latestDataDate, 'yyyy')
-            const latestMonth = parseInt(format(latestDataDate, 'M'), 10)
+            const currMonth = format(selectedDate, 'MM')
+            const currYear = format(selectedDate, 'yyyy')
+            const latestMonth = parseInt(format(selectedDate, 'M'), 10)
             const isPrevMonthLastYear = currMonth === '01'
-            const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(latestDataDate, 1), 'MM')
-            const prevMonthYear = isPrevMonthLastYear ? format(subYears(latestDataDate, 1), 'yyyy') : format(latestDataDate, 'yyyy')
-            const prevYear = format(subYears(latestDataDate, 1), 'yyyy')
+            const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(selectedDate, 1), 'MM')
+            const prevMonthYear = isPrevMonthLastYear ? format(subYears(selectedDate, 1), 'yyyy') : format(selectedDate, 'yyyy')
+            const prevYear = format(subYears(selectedDate, 1), 'yyyy')
 
             // TABEL DINAMIS
             const currRevSubs = dynamicCbProfileTable(currYear, currMonth)
@@ -1721,13 +1721,13 @@ END
             // VARIABLE TANGGAL UNTUK IMPORT TABEL SECARA DINAMIS
             const latestDataDate = subDays(selectedDate, 2);
 
-            const currMonth = format(latestDataDate, 'MM')
-            const currYear = format(latestDataDate, 'yyyy')
-            const latestMonth = parseInt(format(latestDataDate, 'M'), 10)
+            const currMonth = format(selectedDate, 'MM')
+            const currYear = format(selectedDate, 'yyyy')
+            const latestMonth = parseInt(format(selectedDate, 'M'), 10)
             const isPrevMonthLastYear = currMonth === '01'
-            const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(latestDataDate, 1), 'MM')
-            const prevMonthYear = isPrevMonthLastYear ? format(subYears(latestDataDate, 1), 'yyyy') : format(latestDataDate, 'yyyy')
-            const prevYear = format(subYears(latestDataDate, 1), 'yyyy')
+            const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(selectedDate, 1), 'MM')
+            const prevMonthYear = isPrevMonthLastYear ? format(subYears(selectedDate, 1), 'yyyy') : format(selectedDate, 'yyyy')
+            const prevYear = format(subYears(selectedDate, 1), 'yyyy')
 
             // TABEL DINAMIS
             const currRevSubs = dynamicCbProfileTable(currYear, currMonth)
@@ -2434,7 +2434,6 @@ END
                     clusters.cluster,
                     kabupatens.kabupaten
                 )
-                .orderBy(asc(regionals.regional))
                 .prepare()
 
             //  QUERY UNTUK MENDAPAT CURRENT MONTH REVENUE (Mtd)
@@ -2696,7 +2695,7 @@ END
                     kabupaten,
                     COUNT(DISTINCT msisdn) as trx
                 FROM ${table}
-                WHERE branch IN ('AMBON', 'SORONG', 'JAYAPURA', 'TIMIKA') AND flag_RGB = 'RGB' AND flag_LoS = 'SALES N' AND brand <> 'kartuHALO' GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
+                WHERE branch IN ('AMBON', 'SORONG', 'JAYAPURA', 'TIMIKA') AND flag_RGB = 'RGB' AND flag_LoS = 'SALES N' AND brand <> 'kartuHALO' AND kabupaten <> 'TMP' GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
 
             const queryPrevYtd = prevYtdTrxSubs.map(table => `
                 SELECT
@@ -2902,7 +2901,7 @@ END
                     kabupaten,
                     COUNT(DISTINCT msisdn) as trx
                 FROM ${table}
-                WHERE branch IN ('AMBON', 'SORONG', 'JAYAPURA', 'TIMIKA') AND flag_RGB = 'RGB' AND flag_LoS = 'SALES N' AND brand <> 'kartuHALO' GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
+                WHERE branch IN ('AMBON', 'SORONG', 'JAYAPURA', 'TIMIKA') AND flag_RGB = 'RGB' AND flag_LoS = 'SALES N' AND brand <> 'kartuHALO' AND kabupaten <> 'TMP' GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
 
             const sq = `
                 WITH sq AS (
@@ -2920,7 +2919,6 @@ END
                     SUM(SUM(trx)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                     SUM(SUM(trx)) OVER (PARTITION BY region) AS currYtdRegionalRev
                 FROM sq
-                WHERE kabupaten NOT IN ('TMP')
                 GROUP BY 1, 2, 3, 4, 5
                     `
 
@@ -2940,7 +2938,6 @@ END
                     SUM(SUM(trx)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                     SUM(SUM(trx)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                 FROM sq5
-                WHERE kabupaten NOT IN ('TMP')
                 GROUP BY 1, 2, 3, 4, 5
                     `
 

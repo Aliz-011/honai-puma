@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { subMonths, intlFormat, subDays, format, endOfMonth, subYears, getDaysInMonth } from "date-fns";
+import { Download } from 'lucide-react';
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table'
 import { useSelectDate } from '@/hooks/use-select-date';
@@ -16,8 +17,6 @@ import { useSelectKabupaten } from '@/hooks/use-select-kabupaten';
 import { TableNotFound } from '@/components/table-not-found';
 import { Tooltip } from '@/components/common/tooltip';
 import { useGetRevenueSAPrabayar } from '@/modules/revenue-sa/hooks/use-get-revenue-sa-prabayar';
-import Button from '@/components/ui/button/Button';
-import { Download } from 'lucide-react';
 
 export const TableData = () => {
     const { date: selectedDate } = useSelectDate()

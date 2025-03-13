@@ -32,13 +32,13 @@ const app = new Hono()
       // VARIABLE TANGGAL UNTUK IMPORT TABEL SECARA DINAMIS
       const latestDataDate = subDays(selectedDate, 2); // - 2 days
 
-      const currMonth = format(latestDataDate, 'MM')
-      const currYear = format(latestDataDate, 'yyyy')
-      const latestMonth = parseInt(format(latestDataDate, 'M'), 10)
+      const currMonth = format(selectedDate, 'MM')
+      const currYear = format(selectedDate, 'yyyy')
+      const latestMonth = parseInt(format(selectedDate, 'M'), 10)
       const isPrevMonthLastYear = currMonth === '01'
-      const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(latestDataDate, 1), 'MM')
-      const prevMonthYear = isPrevMonthLastYear ? format(subYears(latestDataDate, 1), 'yyyy') : format(latestDataDate, 'yyyy')
-      const prevYear = format(subYears(latestDataDate, 1), 'yyyy')
+      const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(selectedDate, 1), 'MM')
+      const prevMonthYear = isPrevMonthLastYear ? format(subYears(selectedDate, 1), 'yyyy') : format(selectedDate, 'yyyy')
+      const prevYear = format(subYears(selectedDate, 1), 'yyyy')
 
       // TABEL DINAMIS
       const currGrossPrabayarRev = dynamicResumeRevenuePumaTable(currYear, currMonth)
@@ -57,17 +57,17 @@ const app = new Hono()
 
       // VARIABLE TANGGAL
       // Get the last day of the selected month
-      const lastDayOfSelectedMonth = endOfMonth(latestDataDate);
-      const isEndOfMonth = latestDataDate.getDate() === lastDayOfSelectedMonth.getDate();
+      const lastDayOfSelectedMonth = endOfMonth(selectedDate);
+      const isEndOfMonth = selectedDate.getDate() === lastDayOfSelectedMonth.getDate();
 
-      const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : latestDataDate;
-      const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(latestDataDate, 1)) : subMonths(latestDataDate, 1);
-      const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(latestDataDate, 1)) : subYears(latestDataDate, 1);
+      const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : selectedDate;
+      const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(selectedDate, 1)) : subMonths(selectedDate, 1);
+      const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(selectedDate, 1)) : subYears(selectedDate, 1);
 
       // get the first day and last day of the selected month dynamically
-      const firstDayOfCurrMonth = format(startOfMonth(latestDataDate), 'yyyy-MM-dd')
-      const firstDayOfPrevMonth = format(startOfMonth(subMonths(latestDataDate, 1)), 'yyyy-MM-dd')
-      const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(latestDataDate, 1)), 'yyyy-MM-dd')
+      const firstDayOfCurrMonth = format(startOfMonth(selectedDate), 'yyyy-MM-dd')
+      const firstDayOfPrevMonth = format(startOfMonth(subMonths(selectedDate, 1)), 'yyyy-MM-dd')
+      const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(selectedDate, 1)), 'yyyy-MM-dd')
 
       const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
       const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
@@ -1749,13 +1749,13 @@ END
       // VARIABLE TANGGAL UNTUK IMPORT TABEL SECARA DINAMIS
       const latestDataDate = subDays(selectedDate, 2); // - 2 days
 
-      const currMonth = format(latestDataDate, 'MM')
-      const currYear = format(latestDataDate, 'yyyy')
-      const latestMonth = parseInt(format(latestDataDate, 'M'), 10)
+      const currMonth = format(selectedDate, 'MM')
+      const currYear = format(selectedDate, 'yyyy')
+      const latestMonth = parseInt(format(selectedDate, 'M'), 10)
       const isPrevMonthLastYear = currMonth === '01'
-      const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(latestDataDate, 1), 'MM')
-      const prevMonthYear = isPrevMonthLastYear ? format(subYears(latestDataDate, 1), 'yyyy') : format(latestDataDate, 'yyyy')
-      const prevYear = format(subYears(latestDataDate, 1), 'yyyy')
+      const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(selectedDate, 1), 'MM')
+      const prevMonthYear = isPrevMonthLastYear ? format(subYears(selectedDate, 1), 'yyyy') : format(selectedDate, 'yyyy')
+      const prevYear = format(subYears(selectedDate, 1), 'yyyy')
 
       // TABEL DINAMIS
       const currGrossPrabayarRev = dynamicResumeRevenuePumaTable(currYear, currMonth)
@@ -1774,17 +1774,17 @@ END
 
       // VARIABLE TANGGAL
       // Get the last day of the selected month
-      const lastDayOfSelectedMonth = endOfMonth(latestDataDate);
-      const isEndOfMonth = latestDataDate.getDate() === lastDayOfSelectedMonth.getDate();
+      const lastDayOfSelectedMonth = endOfMonth(selectedDate);
+      const isEndOfMonth = selectedDate.getDate() === lastDayOfSelectedMonth.getDate();
 
-      const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : latestDataDate;
-      const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(latestDataDate, 1)) : subMonths(latestDataDate, 1);
-      const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(latestDataDate, 1)) : subYears(latestDataDate, 1);
+      const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : selectedDate;
+      const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(selectedDate, 1)) : subMonths(selectedDate, 1);
+      const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(selectedDate, 1)) : subYears(selectedDate, 1);
 
       // get the first day and last day of the selected month dynamically
-      const firstDayOfCurrMonth = format(startOfMonth(latestDataDate), 'yyyy-MM-dd')
-      const firstDayOfPrevMonth = format(startOfMonth(subMonths(latestDataDate, 1)), 'yyyy-MM-dd')
-      const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(latestDataDate, 1)), 'yyyy-MM-dd')
+      const firstDayOfCurrMonth = format(startOfMonth(selectedDate), 'yyyy-MM-dd')
+      const firstDayOfPrevMonth = format(startOfMonth(subMonths(selectedDate, 1)), 'yyyy-MM-dd')
+      const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(selectedDate, 1)), 'yyyy-MM-dd')
 
       const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
       const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
@@ -3471,13 +3471,13 @@ END
       // VARIABLE TANGGAL UNTUK IMPORT TABEL SECARA DINAMIS
       const latestDataDate = subDays(selectedDate, 2); // - 2 days
 
-      const currMonth = format(latestDataDate, 'MM')
-      const currYear = format(latestDataDate, 'yyyy')
-      const latestMonth = parseInt(format(latestDataDate, 'M'), 10)
+      const currMonth = format(selectedDate, 'MM')
+      const currYear = format(selectedDate, 'yyyy')
+      const latestMonth = parseInt(format(selectedDate, 'M'), 10)
       const isPrevMonthLastYear = currMonth === '01'
-      const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(latestDataDate, 1), 'MM')
-      const prevMonthYear = isPrevMonthLastYear ? format(subYears(latestDataDate, 1), 'yyyy') : format(latestDataDate, 'yyyy')
-      const prevYear = format(subYears(latestDataDate, 1), 'yyyy')
+      const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(selectedDate, 1), 'MM')
+      const prevMonthYear = isPrevMonthLastYear ? format(subYears(selectedDate, 1), 'yyyy') : format(selectedDate, 'yyyy')
+      const prevYear = format(subYears(selectedDate, 1), 'yyyy')
 
       // TABEL DINAMIS
       const currGrossPrabayarRev = dynamicResumeRevenuePumaTable(currYear, currMonth)
@@ -3496,17 +3496,17 @@ END
 
       // VARIABLE TANGGAL
       // Get the last day of the selected month
-      const lastDayOfSelectedMonth = endOfMonth(latestDataDate);
-      const isEndOfMonth = latestDataDate.getDate() === lastDayOfSelectedMonth.getDate();
+      const lastDayOfSelectedMonth = endOfMonth(selectedDate);
+      const isEndOfMonth = selectedDate.getDate() === lastDayOfSelectedMonth.getDate();
 
-      const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : latestDataDate;
-      const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(latestDataDate, 1)) : subMonths(latestDataDate, 1);
-      const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(latestDataDate, 1)) : subYears(latestDataDate, 1);
+      const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : selectedDate;
+      const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(selectedDate, 1)) : subMonths(selectedDate, 1);
+      const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(selectedDate, 1)) : subYears(selectedDate, 1);
 
       // get the first day and last day of the selected month dynamically
-      const firstDayOfCurrMonth = format(startOfMonth(latestDataDate), 'yyyy-MM-dd')
-      const firstDayOfPrevMonth = format(startOfMonth(subMonths(latestDataDate, 1)), 'yyyy-MM-dd')
-      const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(latestDataDate, 1)), 'yyyy-MM-dd')
+      const firstDayOfCurrMonth = format(startOfMonth(selectedDate), 'yyyy-MM-dd')
+      const firstDayOfPrevMonth = format(startOfMonth(subMonths(selectedDate, 1)), 'yyyy-MM-dd')
+      const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(selectedDate, 1)), 'yyyy-MM-dd')
 
       const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
       const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
@@ -4171,7 +4171,7 @@ END
           kabupaten: currGrossPrabayarRev.kabupaten,
           rev: currGrossPrabayarRev.rev,
         })
-        .from(currGrossPrabayarRev)
+        .from(currGrossPrabayarRev, { useIndex: index('mtd_dt').on(currGrossPrabayarRev.mtdDt).using('btree') })
         .where(and(
           eq(currGrossPrabayarRev.brand, 'ByU'),
           and(
@@ -4393,7 +4393,7 @@ END
           kabupaten: prevMonthGrossPrabayarRev.kabupaten,
           rev: prevMonthGrossPrabayarRev.rev,
         })
-        .from(prevMonthGrossPrabayarRev)
+        .from(prevMonthGrossPrabayarRev, { useIndex: index('mtd_dt').on(prevMonthGrossPrabayarRev.mtdDt).using('btree') })
         .where(and(
           eq(prevMonthGrossPrabayarRev.brand, 'ByU'),
           and(
@@ -4615,7 +4615,7 @@ END
           kabupaten: prevYearCurrMonthGrossPrabayarRev.kabupaten,
           rev: prevYearCurrMonthGrossPrabayarRev.rev,
         })
-        .from(prevYearCurrMonthGrossPrabayarRev)
+        .from(prevYearCurrMonthGrossPrabayarRev, { useIndex: index('mtd_dt').on(prevYearCurrMonthGrossPrabayarRev.mtdDt).using('btree') })
         .where(and(
           eq(prevYearCurrMonthGrossPrabayarRev.brand, 'ByU'),
           and(

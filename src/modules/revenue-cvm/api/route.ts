@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { z } from 'zod'
-import { and, asc, between, eq, gte, isNotNull, like, lte, not, notInArray, sql } from "drizzle-orm";
+import { and, asc, between, eq, gte, isNotNull, like, lte, not, notInArray, sql, sum } from "drizzle-orm";
 import { subMonths, subDays, format, subYears, endOfMonth, startOfMonth } from 'date-fns'
 
 import { db, db2 } from "@/db";
@@ -17,6 +17,7 @@ import { zValidator } from "@/lib/validator-wrapper";
 import { dynamicRevenueCVMTable } from "@/db/schema2";
 import { MySqlRawQueryResult } from "drizzle-orm/mysql2";
 import { index } from "drizzle-orm/mysql-core";
+import { dynamicChannelTable } from "@/db/schema7";
 
 const app = new Hono()
     .get("/", zValidator('query', z.object({ date: z.string().optional() })),
@@ -31,13 +32,13 @@ const app = new Hono()
             // VARIABLE TANGGAL UNTUK IMPORT TABEL SECARA DINAMIS
             const latestDataDate = subDays(selectedDate, 3);
 
-            const currMonth = format(latestDataDate, 'MM')
-            const currYear = format(latestDataDate, 'yyyy')
-            const latestMonth = parseInt(format(latestDataDate, 'M'), 10)
+            const currMonth = format(selectedDate, 'MM')
+            const currYear = format(selectedDate, 'yyyy')
+            const latestMonth = parseInt(format(selectedDate, 'M'), 10)
             const isPrevMonthLastYear = currMonth === '01'
-            const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(latestDataDate, 1), 'MM')
-            const prevMonthYear = isPrevMonthLastYear ? format(subYears(latestDataDate, 1), 'yyyy') : format(latestDataDate, 'yyyy')
-            const prevYear = format(subYears(latestDataDate, 1), 'yyyy')
+            const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(selectedDate, 1), 'MM')
+            const prevMonthYear = isPrevMonthLastYear ? format(subYears(selectedDate, 1), 'yyyy') : format(selectedDate, 'yyyy')
+            const prevYear = format(subYears(selectedDate, 1), 'yyyy')
 
             // TABEL `bba_broadband_daily_`
             const currRevCVM = dynamicRevenueCVMTable(currYear, currMonth)
@@ -56,17 +57,17 @@ const app = new Hono()
 
             // VARIABLE TANGGAL
             // Get the last day of the selected month
-            const lastDayOfSelectedMonth = endOfMonth(latestDataDate);
-            const isEndOfMonth = latestDataDate.getDate() === lastDayOfSelectedMonth.getDate();
+            const lastDayOfSelectedMonth = endOfMonth(selectedDate);
+            const isEndOfMonth = selectedDate.getDate() === lastDayOfSelectedMonth.getDate();
 
-            const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : latestDataDate;
-            const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(latestDataDate, 1)) : subMonths(latestDataDate, 1);
-            const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(latestDataDate, 1)) : subYears(latestDataDate, 1);
+            const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : selectedDate;
+            const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(selectedDate, 1)) : subMonths(selectedDate, 1);
+            const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(selectedDate, 1)) : subYears(selectedDate, 1);
 
             // get the first day and last day of the selected month dynamically
-            const firstDayOfCurrMonth = format(startOfMonth(latestDataDate), 'yyyy-MM-dd')
-            const firstDayOfPrevMonth = format(startOfMonth(subMonths(latestDataDate, 1)), 'yyyy-MM-dd')
-            const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(latestDataDate, 1)), 'yyyy-MM-dd')
+            const firstDayOfCurrMonth = format(startOfMonth(selectedDate), 'yyyy-MM-dd')
+            const firstDayOfPrevMonth = format(startOfMonth(subMonths(selectedDate, 1)), 'yyyy-MM-dd')
+            const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(selectedDate, 1)), 'yyyy-MM-dd')
 
             const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
@@ -1765,23 +1766,27 @@ END
             const month = (subDays(selectedDate, 3).getMonth() + 1).toString()
 
             // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
-            const monthColumn = `m${month}` as keyof typeof revenueCVM.$inferSelect
+            const monthColumn = `m${month}` as keyof typeof revenueCVMOutlet.$inferSelect
 
             // VARIABLE TANGGAL UNTUK IMPORT TABEL SECARA DINAMIS
             const latestDataDate = subDays(selectedDate, 3);
 
-            const currMonth = format(latestDataDate, 'MM')
-            const currYear = format(latestDataDate, 'yyyy')
-            const latestMonth = parseInt(format(latestDataDate, 'M'), 10)
+            const currMonth = format(selectedDate, 'MM')
+            const currYear = format(selectedDate, 'yyyy')
+            const latestMonth = parseInt(format(selectedDate, 'M'), 10)
             const isPrevMonthLastYear = currMonth === '01'
-            const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(latestDataDate, 1), 'MM')
-            const prevMonthYear = isPrevMonthLastYear ? format(subYears(latestDataDate, 1), 'yyyy') : format(latestDataDate, 'yyyy')
-            const prevYear = format(subYears(latestDataDate, 1), 'yyyy')
+            const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(selectedDate, 1), 'MM')
+            const prevMonthYear = isPrevMonthLastYear ? format(subYears(selectedDate, 1), 'yyyy') : format(selectedDate, 'yyyy')
+            const prevYear = format(subYears(selectedDate, 1), 'yyyy')
 
-            // TABEL `bba_broadband_daily_`
+            // TABEL `bba_broadband_daily_` DAN `report_package_activation_`
             const currRevCVMOutlet = dynamicRevenueCVMTable(currYear, currMonth)
             const prevMonthRevCVMOutlet = dynamicRevenueCVMTable(prevMonthYear, prevMonth)
             const prevYearCurrMonthRevCVMOutlet = dynamicRevenueCVMTable(prevYear, currMonth)
+            const currMonthChannelRev = dynamicChannelTable(currYear, currMonth)
+            const prevMonthChannelRev = dynamicChannelTable(prevMonthYear, prevMonth)
+            const prevYearSameMonthChannelRev = dynamicChannelTable(prevYear, currMonth)
+
             const currYtdCVMRev = [];
             for (let month = 1; month <= latestMonth; month++) {
                 const monthStr = month.toString().padStart(2, '0')
@@ -1795,680 +1800,679 @@ END
 
             // VARIABLE TANGGAL
             // Get the last day of the selected month
-            const lastDayOfSelectedMonth = endOfMonth(latestDataDate);
-            const isEndOfMonth = latestDataDate.getDate() === lastDayOfSelectedMonth.getDate();
+            const lastDayOfSelectedMonth = endOfMonth(selectedDate);
+            const isEndOfMonth = selectedDate.getDate() === lastDayOfSelectedMonth.getDate();
 
-            const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : latestDataDate;
-            const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(latestDataDate, 1)) : subMonths(latestDataDate, 1);
-            const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(latestDataDate, 1)) : subYears(latestDataDate, 1);
+            const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : selectedDate;
+            const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(selectedDate, 1)) : subMonths(selectedDate, 1);
+            const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(selectedDate, 1)) : subYears(selectedDate, 1);
 
             // get the first day and last day of the selected month dynamically
-            const firstDayOfCurrMonth = format(startOfMonth(latestDataDate), 'yyyy-MM-dd')
-            const firstDayOfPrevMonth = format(startOfMonth(subMonths(latestDataDate, 1)), 'yyyy-MM-dd')
-            const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(latestDataDate, 1)), 'yyyy-MM-dd')
+            const firstDayOfCurrMonth = format(startOfMonth(selectedDate), 'yyyy-MM-dd')
+            const firstDayOfPrevMonth = format(startOfMonth(subMonths(selectedDate, 1)), 'yyyy-MM-dd')
+            const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(selectedDate, 1)), 'yyyy-MM-dd')
 
             const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
             const prevYearCurrDate = format(endOfPrevYearSameMonth, 'yyyy-MM-dd');
 
+            const sixtwo = '62'
+
             const sq2 = db2
                 .select({
-                    regionName: currRevCVMOutlet.region,
+                    regionName: sql<string>`'PUMA'`.as('regionName'),
                     branchName: sql<string>`
-CASE
- WHEN ${currRevCVMOutlet.city} IN (
-     'AMBON',
-     'KOTA AMBON',
-     'MALUKU TENGAH',
-     'SERAM BAGIAN TIMUR',
-     'KEPULAUAN ARU',
-     'KOTA TUAL',
-     'MALUKU BARAT DAYA',
-     'MALUKU TENGGARA',
-     'MALUKU TENGGARA BARAT',
-     'BURU',
-     'BURU SELATAN',
-     'SERAM BAGIAN BARAT',
-     'KEPULAUAN TANIMBAR'
- ) THEN 'AMBON'
- WHEN ${currRevCVMOutlet.city} IN (
-     'KOTA JAYAPURA',
-     'JAYAPURA',
-     'KEEROM',
-     'MAMBERAMO RAYA',
-     'SARMI',
-     'BIAK',
-     'BIAK NUMFOR',
-     'KEPULAUAN YAPEN',
-     'SUPIORI',
-     'WAROPEN',
-     'JAYAWIJAYA',
-     'LANNY JAYA',
-     'MAMBERAMO TENGAH',
-     'NDUGA',
-     'PEGUNUNGAN BINTANG',
-     'TOLIKARA',
-     'YAHUKIMO',
-     'YALIMO'
- ) THEN 'JAYAPURA'
- WHEN ${currRevCVMOutlet.city} IN (
-     'MANOKWARI',
-     'FAKFAK',
-     'FAK FAK',
-     'KAIMANA',
-     'MANOKWARI SELATAN',
-     'PEGUNUNGAN ARFAK',
-     'TELUK BINTUNI',
-     'TELUK WONDAMA',
-     'KOTA SORONG',
-     'MAYBRAT',
-     'RAJA AMPAT',
-     'SORONG',
-     'SORONG SELATAN',
-     'TAMBRAUW'
- ) THEN 'SORONG'
- WHEN ${currRevCVMOutlet.city} IN (
-     'ASMAT',
-     'BOVEN DIGOEL',
-     'MAPPI',
-     'MERAUKE',
-     'INTAN JAYA',
-     'MIMIKA',
-     'PUNCAK',
-     'PUNCAK JAYA',
-     'TIMIKA',
-     'DEIYAI',
-     'DOGIYAI',
-     'NABIRE',
-     'PANIAI'
- ) THEN 'TIMIKA'
- ELSE NULL
-END
-                `.as('branchName'),
+            CASE
+             WHEN ${currRevCVMOutlet.city} IN (
+                 'AMBON',
+                 'KOTA AMBON',
+                 'MALUKU TENGAH',
+                 'SERAM BAGIAN TIMUR',
+                 'KEPULAUAN ARU',
+                 'KOTA TUAL',
+                 'MALUKU BARAT DAYA',
+                 'MALUKU TENGGARA',
+                 'MALUKU TENGGARA BARAT',
+                 'BURU',
+                 'BURU SELATAN',
+                 'SERAM BAGIAN BARAT',
+                 'KEPULAUAN TANIMBAR'
+             ) THEN 'AMBON'
+             WHEN ${currRevCVMOutlet.city} IN (
+                 'KOTA JAYAPURA',
+                 'JAYAPURA',
+                 'KEEROM',
+                 'MAMBERAMO RAYA',
+                 'SARMI',
+                 'BIAK',
+                 'BIAK NUMFOR',
+                 'KEPULAUAN YAPEN',
+                 'SUPIORI',
+                 'WAROPEN',
+                 'JAYAWIJAYA',
+                 'LANNY JAYA',
+                 'MAMBERAMO TENGAH',
+                 'NDUGA',
+                 'PEGUNUNGAN BINTANG',
+                 'TOLIKARA',
+                 'YAHUKIMO',
+                 'YALIMO'
+             ) THEN 'JAYAPURA'
+             WHEN ${currRevCVMOutlet.city} IN (
+                 'MANOKWARI',
+                 'FAKFAK',
+                 'FAK FAK',
+                 'KAIMANA',
+                 'MANOKWARI SELATAN',
+                 'PEGUNUNGAN ARFAK',
+                 'TELUK BINTUNI',
+                 'TELUK WONDAMA',
+                 'KOTA SORONG',
+                 'MAYBRAT',
+                 'RAJA AMPAT',
+                 'SORONG',
+                 'SORONG SELATAN',
+                 'TAMBRAUW'
+             ) THEN 'SORONG'
+             WHEN ${currRevCVMOutlet.city} IN (
+                 'ASMAT',
+                 'BOVEN DIGOEL',
+                 'MAPPI',
+                 'MERAUKE',
+                 'INTAN JAYA',
+                 'MIMIKA',
+                 'PUNCAK',
+                 'PUNCAK JAYA',
+                 'TIMIKA',
+                 'DEIYAI',
+                 'DOGIYAI',
+                 'NABIRE',
+                 'PANIAI'
+             ) THEN 'TIMIKA'
+             ELSE NULL
+            END
+                            `.as('branchName'),
                     subbranchName: sql<string>`
-CASE
- WHEN ${currRevCVMOutlet.city} IN (
-     'AMBON',
-     'KOTA AMBON',
-     'MALUKU TENGAH',
-     'SERAM BAGIAN TIMUR'
- ) THEN 'AMBON'
- WHEN ${currRevCVMOutlet.city} IN (
-     'KEPULAUAN ARU',
-     'KOTA TUAL',
-     'MALUKU BARAT DAYA',
-     'MALUKU TENGGARA',
-     'MALUKU TENGGARA BARAT',
-     'KEPULAUAN TANIMBAR'
- ) THEN 'KEPULAUAN AMBON'
- WHEN ${currRevCVMOutlet.city} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BURU'
- WHEN ${currRevCVMOutlet.city} IN ('KOTA JAYAPURA') THEN 'JAYAPURA'
- WHEN ${currRevCVMOutlet.city} IN (
-     'JAYAPURA',
-     'KEEROM',
-     'MAMBERAMO RAYA',
-     'SARMI',
-     'BIAK',
-     'BIAK NUMFOR',
-     'KEPULAUAN YAPEN',
-     'SUPIORI',
-     'WAROPEN',
-     'JAYAWIJAYA',
-     'LANNY JAYA',
-     'MAMBERAMO TENGAH',
-     'NDUGA',
-     'PEGUNUNGAN BINTANG',
-     'TOLIKARA',
-     'YAHUKIMO',
-     'YALIMO'
- ) THEN 'SENTANI'
- WHEN ${currRevCVMOutlet.city} IN ('MANOKWARI') THEN 'MANOKWARI'
- WHEN ${currRevCVMOutlet.city} IN (
-     'FAKFAK',
-     'FAK FAK',
-     'KAIMANA',
-     'MANOKWARI SELATAN',
-     'PEGUNUNGAN ARFAK',
-     'TELUK BINTUNI',
-     'TELUK WONDAMA'
- ) THEN 'MANOKWARI OUTER'
- WHEN ${currRevCVMOutlet.city} IN (
-     'KOTA SORONG',
-     'MAYBRAT',
-     'RAJA AMPAT',
-     'SORONG',
-     'SORONG SELATAN',
-     'TAMBRAUW'
- ) THEN 'SORONG RAJA AMPAT'
- WHEN ${currRevCVMOutlet.city} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'MERAUKE'
- WHEN ${currRevCVMOutlet.city} IN (
-     'INTAN JAYA',
-     'MIMIKA',
-     'PUNCAK',
-     'PUNCAK JAYA',
-     'TIMIKA'
- ) THEN 'MIMIKA'
- WHEN ${currRevCVMOutlet.city} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
- ELSE NULL
-END
-                `.as('subbranchName'),
+            CASE
+             WHEN ${currRevCVMOutlet.city} IN (
+                 'AMBON',
+                 'KOTA AMBON',
+                 'MALUKU TENGAH',
+                 'SERAM BAGIAN TIMUR'
+             ) THEN 'AMBON'
+             WHEN ${currRevCVMOutlet.city} IN (
+                 'KEPULAUAN ARU',
+                 'KOTA TUAL',
+                 'MALUKU BARAT DAYA',
+                 'MALUKU TENGGARA',
+                 'MALUKU TENGGARA BARAT',
+                 'KEPULAUAN TANIMBAR'
+             ) THEN 'KEPULAUAN AMBON'
+             WHEN ${currRevCVMOutlet.city} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BURU'
+             WHEN ${currRevCVMOutlet.city} IN ('KOTA JAYAPURA') THEN 'JAYAPURA'
+             WHEN ${currRevCVMOutlet.city} IN (
+                 'JAYAPURA',
+                 'KEEROM',
+                 'MAMBERAMO RAYA',
+                 'SARMI',
+                 'BIAK',
+                 'BIAK NUMFOR',
+                 'KEPULAUAN YAPEN',
+                 'SUPIORI',
+                 'WAROPEN',
+                 'JAYAWIJAYA',
+                 'LANNY JAYA',
+                 'MAMBERAMO TENGAH',
+                 'NDUGA',
+                 'PEGUNUNGAN BINTANG',
+                 'TOLIKARA',
+                 'YAHUKIMO',
+                 'YALIMO'
+             ) THEN 'SENTANI'
+             WHEN ${currRevCVMOutlet.city} IN ('MANOKWARI') THEN 'MANOKWARI'
+             WHEN ${currRevCVMOutlet.city} IN (
+                 'FAKFAK',
+                 'FAK FAK',
+                 'KAIMANA',
+                 'MANOKWARI SELATAN',
+                 'PEGUNUNGAN ARFAK',
+                 'TELUK BINTUNI',
+                 'TELUK WONDAMA'
+             ) THEN 'MANOKWARI OUTER'
+             WHEN ${currRevCVMOutlet.city} IN (
+                 'KOTA SORONG',
+                 'MAYBRAT',
+                 'RAJA AMPAT',
+                 'SORONG',
+                 'SORONG SELATAN',
+                 'TAMBRAUW'
+             ) THEN 'SORONG RAJA AMPAT'
+             WHEN ${currRevCVMOutlet.city} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'MERAUKE'
+             WHEN ${currRevCVMOutlet.city} IN (
+                 'INTAN JAYA',
+                 'MIMIKA',
+                 'PUNCAK',
+                 'PUNCAK JAYA',
+                 'TIMIKA'
+             ) THEN 'MIMIKA'
+             WHEN ${currRevCVMOutlet.city} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
+             ELSE NULL
+            END
+                            `.as('subbranchName'),
                     clusterName: sql<string>`
-CASE
- WHEN ${currRevCVMOutlet.city} IN (
-     'KOTA AMBON',
-     'MALUKU TENGAH',
-     'SERAM BAGIAN TIMUR'
- ) THEN 'AMBON'
- WHEN ${currRevCVMOutlet.city} IN (
-     'KEPULAUAN ARU',
-     'KOTA TUAL',
-     'MALUKU BARAT DAYA',
-     'MALUKU TENGGARA',
-     'MALUKU TENGGARA BARAT',
-     'KEPULAUAN TANIMBAR'
- ) THEN 'KEPULAUAN TUAL'
- WHEN ${currRevCVMOutlet.city} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BARAT BURU'
- WHEN ${currRevCVMOutlet.city} IN ('KOTA JAYAPURA') THEN 'KOTA JAYAPURA'
- WHEN ${currRevCVMOutlet.city} IN ('JAYAPURA', 'KEEROM', 'MAMBERAMO RAYA', 'SARMI') THEN 'JAYAPURA OUTER'
- WHEN ${currRevCVMOutlet.city} IN (
-     'BIAK',
-     'BIAK NUMFOR',
-     'KEPULAUAN YAPEN',
-     'SUPIORI',
-     'WAROPEN'
- ) THEN 'NEW BIAK NUMFOR'
- WHEN ${currRevCVMOutlet.city} IN (
-     'JAYAWIJAYA',
-     'LANNY JAYA',
-     'MAMBERAMO TENGAH',
-     'NDUGA',
-     'PEGUNUNGAN BINTANG',
-     'TOLIKARA',
-     'YAHUKIMO',
-     'YALIMO'
- ) THEN 'PAPUA PEGUNUNGAN'
- WHEN ${currRevCVMOutlet.city} IN ('MANOKWARI') THEN 'MANOKWARI'
- WHEN ${currRevCVMOutlet.city} IN (
-     'FAKFAK',
-     'FAK FAK',
-     'KAIMANA',
-     'MANOKWARI SELATAN',
-     'PEGUNUNGAN ARFAK',
-     'TELUK BINTUNI',
-     'TELUK WONDAMA'
- ) THEN 'MANOKWARI OUTER'
- WHEN ${currRevCVMOutlet.city} IN (
-     'KOTA SORONG',
-     'MAYBRAT',
-     'RAJA AMPAT',
-     'SORONG',
-     'SORONG SELATAN',
-     'TAMBRAUW'
- ) THEN 'NEW SORONG RAJA AMPAT'
- WHEN ${currRevCVMOutlet.city} IN (
-     'INTAN JAYA',
-     'MIMIKA',
-     'PUNCAK',
-     'PUNCAK JAYA',
-     'TIMIKA'
- ) THEN 'MIMIKA PUNCAK'
- WHEN ${currRevCVMOutlet.city} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
- WHEN ${currRevCVMOutlet.city} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'NEW MERAUKE'
- ELSE NULL
-END
-                `.as('clusterName'),
+            CASE
+             WHEN ${currRevCVMOutlet.city} IN (
+                 'KOTA AMBON',
+                 'MALUKU TENGAH',
+                 'SERAM BAGIAN TIMUR'
+             ) THEN 'AMBON'
+             WHEN ${currRevCVMOutlet.city} IN (
+                 'KEPULAUAN ARU',
+                 'KOTA TUAL',
+                 'MALUKU BARAT DAYA',
+                 'MALUKU TENGGARA',
+                 'MALUKU TENGGARA BARAT',
+                 'KEPULAUAN TANIMBAR'
+             ) THEN 'KEPULAUAN TUAL'
+             WHEN ${currRevCVMOutlet.city} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BARAT BURU'
+             WHEN ${currRevCVMOutlet.city} IN ('KOTA JAYAPURA') THEN 'KOTA JAYAPURA'
+             WHEN ${currRevCVMOutlet.city} IN ('JAYAPURA', 'KEEROM', 'MAMBERAMO RAYA', 'SARMI') THEN 'JAYAPURA OUTER'
+             WHEN ${currRevCVMOutlet.city} IN (
+                 'BIAK',
+                 'BIAK NUMFOR',
+                 'KEPULAUAN YAPEN',
+                 'SUPIORI',
+                 'WAROPEN'
+             ) THEN 'NEW BIAK NUMFOR'
+             WHEN ${currRevCVMOutlet.city} IN (
+                 'JAYAWIJAYA',
+                 'LANNY JAYA',
+                 'MAMBERAMO TENGAH',
+                 'NDUGA',
+                 'PEGUNUNGAN BINTANG',
+                 'TOLIKARA',
+                 'YAHUKIMO',
+                 'YALIMO'
+             ) THEN 'PAPUA PEGUNUNGAN'
+             WHEN ${currRevCVMOutlet.city} IN ('MANOKWARI') THEN 'MANOKWARI'
+             WHEN ${currRevCVMOutlet.city} IN (
+                 'FAKFAK',
+                 'FAK FAK',
+                 'KAIMANA',
+                 'MANOKWARI SELATAN',
+                 'PEGUNUNGAN ARFAK',
+                 'TELUK BINTUNI',
+                 'TELUK WONDAMA'
+             ) THEN 'MANOKWARI OUTER'
+             WHEN ${currRevCVMOutlet.city} IN (
+                 'KOTA SORONG',
+                 'MAYBRAT',
+                 'RAJA AMPAT',
+                 'SORONG',
+                 'SORONG SELATAN',
+                 'TAMBRAUW'
+             ) THEN 'NEW SORONG RAJA AMPAT'
+             WHEN ${currRevCVMOutlet.city} IN (
+                 'INTAN JAYA',
+                 'MIMIKA',
+                 'PUNCAK',
+                 'PUNCAK JAYA',
+                 'TIMIKA'
+             ) THEN 'MIMIKA PUNCAK'
+             WHEN ${currRevCVMOutlet.city} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
+             WHEN ${currRevCVMOutlet.city} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'NEW MERAUKE'
+             ELSE NULL
+            END
+                            `.as('clusterName'),
                     cityName: currRevCVMOutlet.city,
-                    rev: currRevCVMOutlet.revenue,
-                    trxDate: currRevCVMOutlet.trxDate
+                    price: currMonthChannelRev.price,
+                    trx: sql<number>`COUNT(${currMonthChannelRev.bSharp})`.as('trx')
                 })
                 .from(currRevCVMOutlet)
+                .innerJoin(currMonthChannelRev, sql`${currRevCVMOutlet.msisdn} = CONCAT('62', SUBSTRING(${currMonthChannelRev.bSharp}, 2))`)
                 .where(and(
-                    notInArray(currRevCVMOutlet.city, ['TMP']),
-                    and(
-                        like(currRevCVMOutlet.packageGroup, '%CVM%'),
-                        between(currRevCVMOutlet.trxDate, firstDayOfCurrMonth, currDate)
-                    )
+                    not(eq(currRevCVMOutlet.city, 'TMP')),
+                    between(currMonthChannelRev.trxDate, firstDayOfCurrMonth, currDate)
                 ))
+                .groupBy(sql`1,2,3,4,5`)
                 .as('sq2')
 
             const sq3 = db2
                 .select({
-                    regionName: prevMonthRevCVMOutlet.region,
+                    regionName: sql<string>`'PUMA'`.as('regionName'),
                     branchName: sql<string>`
-CASE
- WHEN ${prevMonthRevCVMOutlet.city} IN (
-     'AMBON',
-     'KOTA AMBON',
-     'MALUKU TENGAH',
-     'SERAM BAGIAN TIMUR',
-     'KEPULAUAN ARU',
-     'KOTA TUAL',
-     'MALUKU BARAT DAYA',
-     'MALUKU TENGGARA',
-     'MALUKU TENGGARA BARAT',
-     'BURU',
-     'BURU SELATAN',
-     'SERAM BAGIAN BARAT',
-     'KEPULAUAN TANIMBAR'
- ) THEN 'AMBON'
- WHEN ${prevMonthRevCVMOutlet.city} IN (
-     'KOTA JAYAPURA',
-     'JAYAPURA',
-     'KEEROM',
-     'MAMBERAMO RAYA',
-     'SARMI',
-     'BIAK',
-     'BIAK NUMFOR',
-     'KEPULAUAN YAPEN',
-     'SUPIORI',
-     'WAROPEN',
-     'JAYAWIJAYA',
-     'LANNY JAYA',
-     'MAMBERAMO TENGAH',
-     'NDUGA',
-     'PEGUNUNGAN BINTANG',
-     'TOLIKARA',
-     'YAHUKIMO',
-     'YALIMO'
- ) THEN 'JAYAPURA'
- WHEN ${prevMonthRevCVMOutlet.city} IN (
-     'MANOKWARI',
-     'FAKFAK',
-     'FAK FAK',
-     'KAIMANA',
-     'MANOKWARI SELATAN',
-     'PEGUNUNGAN ARFAK',
-     'TELUK BINTUNI',
-     'TELUK WONDAMA',
-     'KOTA SORONG',
-     'MAYBRAT',
-     'RAJA AMPAT',
-     'SORONG',
-     'SORONG SELATAN',
-     'TAMBRAUW'
- ) THEN 'SORONG'
- WHEN ${prevMonthRevCVMOutlet.city} IN (
-     'ASMAT',
-     'BOVEN DIGOEL',
-     'MAPPI',
-     'MERAUKE',
-     'INTAN JAYA',
-     'MIMIKA',
-     'PUNCAK',
-     'PUNCAK JAYA',
-     'TIMIKA',
-     'DEIYAI',
-     'DOGIYAI',
-     'NABIRE',
-     'PANIAI'
- ) THEN 'TIMIKA'
- ELSE NULL
-END
-                `.as('branchName'),
+            CASE
+             WHEN ${prevMonthRevCVMOutlet.city} IN (
+                 'AMBON',
+                 'KOTA AMBON',
+                 'MALUKU TENGAH',
+                 'SERAM BAGIAN TIMUR',
+                 'KEPULAUAN ARU',
+                 'KOTA TUAL',
+                 'MALUKU BARAT DAYA',
+                 'MALUKU TENGGARA',
+                 'MALUKU TENGGARA BARAT',
+                 'BURU',
+                 'BURU SELATAN',
+                 'SERAM BAGIAN BARAT',
+                 'KEPULAUAN TANIMBAR'
+             ) THEN 'AMBON'
+             WHEN ${prevMonthRevCVMOutlet.city} IN (
+                 'KOTA JAYAPURA',
+                 'JAYAPURA',
+                 'KEEROM',
+                 'MAMBERAMO RAYA',
+                 'SARMI',
+                 'BIAK',
+                 'BIAK NUMFOR',
+                 'KEPULAUAN YAPEN',
+                 'SUPIORI',
+                 'WAROPEN',
+                 'JAYAWIJAYA',
+                 'LANNY JAYA',
+                 'MAMBERAMO TENGAH',
+                 'NDUGA',
+                 'PEGUNUNGAN BINTANG',
+                 'TOLIKARA',
+                 'YAHUKIMO',
+                 'YALIMO'
+             ) THEN 'JAYAPURA'
+             WHEN ${prevMonthRevCVMOutlet.city} IN (
+                 'MANOKWARI',
+                 'FAKFAK',
+                 'FAK FAK',
+                 'KAIMANA',
+                 'MANOKWARI SELATAN',
+                 'PEGUNUNGAN ARFAK',
+                 'TELUK BINTUNI',
+                 'TELUK WONDAMA',
+                 'KOTA SORONG',
+                 'MAYBRAT',
+                 'RAJA AMPAT',
+                 'SORONG',
+                 'SORONG SELATAN',
+                 'TAMBRAUW'
+             ) THEN 'SORONG'
+             WHEN ${prevMonthRevCVMOutlet.city} IN (
+                 'ASMAT',
+                 'BOVEN DIGOEL',
+                 'MAPPI',
+                 'MERAUKE',
+                 'INTAN JAYA',
+                 'MIMIKA',
+                 'PUNCAK',
+                 'PUNCAK JAYA',
+                 'TIMIKA',
+                 'DEIYAI',
+                 'DOGIYAI',
+                 'NABIRE',
+                 'PANIAI'
+             ) THEN 'TIMIKA'
+             ELSE NULL
+            END
+                            `.as('branchName'),
                     subbranchName: sql<string>`
-CASE
- WHEN ${prevMonthRevCVMOutlet.city} IN (
-     'AMBON',
-     'KOTA AMBON',
-     'MALUKU TENGAH',
-     'SERAM BAGIAN TIMUR'
- ) THEN 'AMBON'
- WHEN ${prevMonthRevCVMOutlet.city} IN (
-     'KEPULAUAN ARU',
-     'KOTA TUAL',
-     'MALUKU BARAT DAYA',
-     'MALUKU TENGGARA',
-     'MALUKU TENGGARA BARAT',
-     'KEPULAUAN TANIMBAR'
- ) THEN 'KEPULAUAN AMBON'
- WHEN ${prevMonthRevCVMOutlet.city} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BURU'
- WHEN ${prevMonthRevCVMOutlet.city} IN ('KOTA JAYAPURA') THEN 'JAYAPURA'
- WHEN ${prevMonthRevCVMOutlet.city} IN (
-     'JAYAPURA',
-     'KEEROM',
-     'MAMBERAMO RAYA',
-     'SARMI',
-     'BIAK',
-     'BIAK NUMFOR',
-     'KEPULAUAN YAPEN',
-     'SUPIORI',
-     'WAROPEN',
-     'JAYAWIJAYA',
-     'LANNY JAYA',
-     'MAMBERAMO TENGAH',
-     'NDUGA',
-     'PEGUNUNGAN BINTANG',
-     'TOLIKARA',
-     'YAHUKIMO',
-     'YALIMO'
- ) THEN 'SENTANI'
- WHEN ${prevMonthRevCVMOutlet.city} IN ('MANOKWARI') THEN 'MANOKWARI'
- WHEN ${prevMonthRevCVMOutlet.city} IN (
-     'FAKFAK',
-     'FAK FAK',
-     'KAIMANA',
-     'MANOKWARI SELATAN',
-     'PEGUNUNGAN ARFAK',
-     'TELUK BINTUNI',
-     'TELUK WONDAMA'
- ) THEN 'MANOKWARI OUTER'
- WHEN ${prevMonthRevCVMOutlet.city} IN (
-     'KOTA SORONG',
-     'MAYBRAT',
-     'RAJA AMPAT',
-     'SORONG',
-     'SORONG SELATAN',
-     'TAMBRAUW'
- ) THEN 'SORONG RAJA AMPAT'
- WHEN ${prevMonthRevCVMOutlet.city} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'MERAUKE'
- WHEN ${prevMonthRevCVMOutlet.city} IN (
-     'INTAN JAYA',
-     'MIMIKA',
-     'PUNCAK',
-     'PUNCAK JAYA',
-     'TIMIKA'
- ) THEN 'MIMIKA'
- WHEN ${prevMonthRevCVMOutlet.city} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
- ELSE NULL
-END
-                `.as('subbranchName'),
+            CASE
+             WHEN ${prevMonthRevCVMOutlet.city} IN (
+                 'AMBON',
+                 'KOTA AMBON',
+                 'MALUKU TENGAH',
+                 'SERAM BAGIAN TIMUR'
+             ) THEN 'AMBON'
+             WHEN ${prevMonthRevCVMOutlet.city} IN (
+                 'KEPULAUAN ARU',
+                 'KOTA TUAL',
+                 'MALUKU BARAT DAYA',
+                 'MALUKU TENGGARA',
+                 'MALUKU TENGGARA BARAT',
+                 'KEPULAUAN TANIMBAR'
+             ) THEN 'KEPULAUAN AMBON'
+             WHEN ${prevMonthRevCVMOutlet.city} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BURU'
+             WHEN ${prevMonthRevCVMOutlet.city} IN ('KOTA JAYAPURA') THEN 'JAYAPURA'
+             WHEN ${prevMonthRevCVMOutlet.city} IN (
+                 'JAYAPURA',
+                 'KEEROM',
+                 'MAMBERAMO RAYA',
+                 'SARMI',
+                 'BIAK',
+                 'BIAK NUMFOR',
+                 'KEPULAUAN YAPEN',
+                 'SUPIORI',
+                 'WAROPEN',
+                 'JAYAWIJAYA',
+                 'LANNY JAYA',
+                 'MAMBERAMO TENGAH',
+                 'NDUGA',
+                 'PEGUNUNGAN BINTANG',
+                 'TOLIKARA',
+                 'YAHUKIMO',
+                 'YALIMO'
+             ) THEN 'SENTANI'
+             WHEN ${prevMonthRevCVMOutlet.city} IN ('MANOKWARI') THEN 'MANOKWARI'
+             WHEN ${prevMonthRevCVMOutlet.city} IN (
+                 'FAKFAK',
+                 'FAK FAK',
+                 'KAIMANA',
+                 'MANOKWARI SELATAN',
+                 'PEGUNUNGAN ARFAK',
+                 'TELUK BINTUNI',
+                 'TELUK WONDAMA'
+             ) THEN 'MANOKWARI OUTER'
+             WHEN ${prevMonthRevCVMOutlet.city} IN (
+                 'KOTA SORONG',
+                 'MAYBRAT',
+                 'RAJA AMPAT',
+                 'SORONG',
+                 'SORONG SELATAN',
+                 'TAMBRAUW'
+             ) THEN 'SORONG RAJA AMPAT'
+             WHEN ${prevMonthRevCVMOutlet.city} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'MERAUKE'
+             WHEN ${prevMonthRevCVMOutlet.city} IN (
+                 'INTAN JAYA',
+                 'MIMIKA',
+                 'PUNCAK',
+                 'PUNCAK JAYA',
+                 'TIMIKA'
+             ) THEN 'MIMIKA'
+             WHEN ${prevMonthRevCVMOutlet.city} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
+             ELSE NULL
+            END
+                            `.as('subbranchName'),
                     clusterName: sql<string>`
-CASE
- WHEN ${prevMonthRevCVMOutlet.city} IN (
-     'KOTA AMBON',
-     'MALUKU TENGAH',
-     'SERAM BAGIAN TIMUR'
- ) THEN 'AMBON'
- WHEN ${prevMonthRevCVMOutlet.city} IN (
-     'KEPULAUAN ARU',
-     'KOTA TUAL',
-     'MALUKU BARAT DAYA',
-     'MALUKU TENGGARA',
-     'MALUKU TENGGARA BARAT',
-     'KEPULAUAN TANIMBAR'
- ) THEN 'KEPULAUAN TUAL'
- WHEN ${prevMonthRevCVMOutlet.city} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BARAT BURU'
- WHEN ${prevMonthRevCVMOutlet.city} IN ('KOTA JAYAPURA') THEN 'KOTA JAYAPURA'
- WHEN ${prevMonthRevCVMOutlet.city} IN ('JAYAPURA', 'KEEROM', 'MAMBERAMO RAYA', 'SARMI') THEN 'JAYAPURA OUTER'
- WHEN ${prevMonthRevCVMOutlet.city} IN (
-     'BIAK',
-     'BIAK NUMFOR',
-     'KEPULAUAN YAPEN',
-     'SUPIORI',
-     'WAROPEN'
- ) THEN 'NEW BIAK NUMFOR'
- WHEN ${prevMonthRevCVMOutlet.city} IN (
-     'JAYAWIJAYA',
-     'LANNY JAYA',
-     'MAMBERAMO TENGAH',
-     'NDUGA',
-     'PEGUNUNGAN BINTANG',
-     'TOLIKARA',
-     'YAHUKIMO',
-     'YALIMO'
- ) THEN 'PAPUA PEGUNUNGAN'
- WHEN ${prevMonthRevCVMOutlet.city} IN ('MANOKWARI') THEN 'MANOKWARI'
- WHEN ${prevMonthRevCVMOutlet.city} IN (
-     'FAKFAK',
-     'FAK FAK',
-     'KAIMANA',
-     'MANOKWARI SELATAN',
-     'PEGUNUNGAN ARFAK',
-     'TELUK BINTUNI',
-     'TELUK WONDAMA'
- ) THEN 'MANOKWARI OUTER'
- WHEN ${prevMonthRevCVMOutlet.city} IN (
-     'KOTA SORONG',
-     'MAYBRAT',
-     'RAJA AMPAT',
-     'SORONG',
-     'SORONG SELATAN',
-     'TAMBRAUW'
- ) THEN 'NEW SORONG RAJA AMPAT'
- WHEN ${prevMonthRevCVMOutlet.city} IN (
-     'INTAN JAYA',
-     'MIMIKA',
-     'PUNCAK',
-     'PUNCAK JAYA',
-     'TIMIKA'
- ) THEN 'MIMIKA PUNCAK'
- WHEN ${prevMonthRevCVMOutlet.city} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
- WHEN ${prevMonthRevCVMOutlet.city} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'NEW MERAUKE'
- ELSE NULL
-END
-                `.as('clusterName'),
+            CASE
+             WHEN ${prevMonthRevCVMOutlet.city} IN (
+                 'KOTA AMBON',
+                 'MALUKU TENGAH',
+                 'SERAM BAGIAN TIMUR'
+             ) THEN 'AMBON'
+             WHEN ${prevMonthRevCVMOutlet.city} IN (
+                 'KEPULAUAN ARU',
+                 'KOTA TUAL',
+                 'MALUKU BARAT DAYA',
+                 'MALUKU TENGGARA',
+                 'MALUKU TENGGARA BARAT',
+                 'KEPULAUAN TANIMBAR'
+             ) THEN 'KEPULAUAN TUAL'
+             WHEN ${prevMonthRevCVMOutlet.city} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BARAT BURU'
+             WHEN ${prevMonthRevCVMOutlet.city} IN ('KOTA JAYAPURA') THEN 'KOTA JAYAPURA'
+             WHEN ${prevMonthRevCVMOutlet.city} IN ('JAYAPURA', 'KEEROM', 'MAMBERAMO RAYA', 'SARMI') THEN 'JAYAPURA OUTER'
+             WHEN ${prevMonthRevCVMOutlet.city} IN (
+                 'BIAK',
+                 'BIAK NUMFOR',
+                 'KEPULAUAN YAPEN',
+                 'SUPIORI',
+                 'WAROPEN'
+             ) THEN 'NEW BIAK NUMFOR'
+             WHEN ${prevMonthRevCVMOutlet.city} IN (
+                 'JAYAWIJAYA',
+                 'LANNY JAYA',
+                 'MAMBERAMO TENGAH',
+                 'NDUGA',
+                 'PEGUNUNGAN BINTANG',
+                 'TOLIKARA',
+                 'YAHUKIMO',
+                 'YALIMO'
+             ) THEN 'PAPUA PEGUNUNGAN'
+             WHEN ${prevMonthRevCVMOutlet.city} IN ('MANOKWARI') THEN 'MANOKWARI'
+             WHEN ${prevMonthRevCVMOutlet.city} IN (
+                 'FAKFAK',
+                 'FAK FAK',
+                 'KAIMANA',
+                 'MANOKWARI SELATAN',
+                 'PEGUNUNGAN ARFAK',
+                 'TELUK BINTUNI',
+                 'TELUK WONDAMA'
+             ) THEN 'MANOKWARI OUTER'
+             WHEN ${prevMonthRevCVMOutlet.city} IN (
+                 'KOTA SORONG',
+                 'MAYBRAT',
+                 'RAJA AMPAT',
+                 'SORONG',
+                 'SORONG SELATAN',
+                 'TAMBRAUW'
+             ) THEN 'NEW SORONG RAJA AMPAT'
+             WHEN ${prevMonthRevCVMOutlet.city} IN (
+                 'INTAN JAYA',
+                 'MIMIKA',
+                 'PUNCAK',
+                 'PUNCAK JAYA',
+                 'TIMIKA'
+             ) THEN 'MIMIKA PUNCAK'
+             WHEN ${prevMonthRevCVMOutlet.city} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
+             WHEN ${prevMonthRevCVMOutlet.city} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'NEW MERAUKE'
+             ELSE NULL
+            END
+                            `.as('clusterName'),
                     cityName: prevMonthRevCVMOutlet.city,
-                    rev: prevMonthRevCVMOutlet.revenue,
-                    trxDate: prevMonthRevCVMOutlet.trxDate
+                    price: prevMonthChannelRev.price,
+                    trx: sql<number>`COUNT(${prevMonthChannelRev.bSharp})`.as('trx')
                 })
                 .from(prevMonthRevCVMOutlet)
+                .innerJoin(prevMonthChannelRev, sql`${prevMonthRevCVMOutlet.msisdn} = CONCAT('62', SUBSTRING(${prevMonthChannelRev.bSharp}, 2))`)
                 .where(and(
-                    notInArray(prevMonthRevCVMOutlet.city, ['TMP']),
-                    and(
-                        like(prevMonthRevCVMOutlet.packageGroup, '%CVM%'),
-                        between(prevMonthRevCVMOutlet.trxDate, firstDayOfPrevMonth, prevDate)
-                    )
+                    not(eq(prevMonthRevCVMOutlet.city, 'TMP')),
+                    between(prevMonthChannelRev.trxDate, firstDayOfPrevMonth, prevDate)
                 ))
+                .groupBy(sql`1,2,3,4,5`)
                 .as('sq3')
 
             const sq4 = db2
                 .select({
-                    regionName: prevYearCurrMonthRevCVMOutlet.region,
+                    regionName: sql<string>`'PUMA'`.as('regionName'),
                     branchName: sql<string>`
-CASE
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
-     'AMBON',
-     'KOTA AMBON',
-     'MALUKU TENGAH',
-     'SERAM BAGIAN TIMUR',
-     'KEPULAUAN ARU',
-     'KOTA TUAL',
-     'MALUKU BARAT DAYA',
-     'MALUKU TENGGARA',
-     'MALUKU TENGGARA BARAT',
-     'BURU',
-     'BURU SELATAN',
-     'SERAM BAGIAN BARAT',
-     'KEPULAUAN TANIMBAR'
- ) THEN 'AMBON'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
-     'KOTA JAYAPURA',
-     'JAYAPURA',
-     'KEEROM',
-     'MAMBERAMO RAYA',
-     'SARMI',
-     'BIAK',
-     'BIAK NUMFOR',
-     'KEPULAUAN YAPEN',
-     'SUPIORI',
-     'WAROPEN',
-     'JAYAWIJAYA',
-     'LANNY JAYA',
-     'MAMBERAMO TENGAH',
-     'NDUGA',
-     'PEGUNUNGAN BINTANG',
-     'TOLIKARA',
-     'YAHUKIMO',
-     'YALIMO'
- ) THEN 'JAYAPURA'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
-     'MANOKWARI',
-     'FAKFAK',
-     'FAK FAK',
-     'KAIMANA',
-     'MANOKWARI SELATAN',
-     'PEGUNUNGAN ARFAK',
-     'TELUK BINTUNI',
-     'TELUK WONDAMA',
-     'KOTA SORONG',
-     'MAYBRAT',
-     'RAJA AMPAT',
-     'SORONG',
-     'SORONG SELATAN',
-     'TAMBRAUW'
- ) THEN 'SORONG'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
-     'ASMAT',
-     'BOVEN DIGOEL',
-     'MAPPI',
-     'MERAUKE',
-     'INTAN JAYA',
-     'MIMIKA',
-     'PUNCAK',
-     'PUNCAK JAYA',
-     'TIMIKA',
-     'DEIYAI',
-     'DOGIYAI',
-     'NABIRE',
-     'PANIAI'
- ) THEN 'TIMIKA'
- ELSE NULL
-END
-                `.as('branchName'),
+            CASE
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
+                 'AMBON',
+                 'KOTA AMBON',
+                 'MALUKU TENGAH',
+                 'SERAM BAGIAN TIMUR',
+                 'KEPULAUAN ARU',
+                 'KOTA TUAL',
+                 'MALUKU BARAT DAYA',
+                 'MALUKU TENGGARA',
+                 'MALUKU TENGGARA BARAT',
+                 'BURU',
+                 'BURU SELATAN',
+                 'SERAM BAGIAN BARAT',
+                 'KEPULAUAN TANIMBAR'
+             ) THEN 'AMBON'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
+                 'KOTA JAYAPURA',
+                 'JAYAPURA',
+                 'KEEROM',
+                 'MAMBERAMO RAYA',
+                 'SARMI',
+                 'BIAK',
+                 'BIAK NUMFOR',
+                 'KEPULAUAN YAPEN',
+                 'SUPIORI',
+                 'WAROPEN',
+                 'JAYAWIJAYA',
+                 'LANNY JAYA',
+                 'MAMBERAMO TENGAH',
+                 'NDUGA',
+                 'PEGUNUNGAN BINTANG',
+                 'TOLIKARA',
+                 'YAHUKIMO',
+                 'YALIMO'
+             ) THEN 'JAYAPURA'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
+                 'MANOKWARI',
+                 'FAKFAK',
+                 'FAK FAK',
+                 'KAIMANA',
+                 'MANOKWARI SELATAN',
+                 'PEGUNUNGAN ARFAK',
+                 'TELUK BINTUNI',
+                 'TELUK WONDAMA',
+                 'KOTA SORONG',
+                 'MAYBRAT',
+                 'RAJA AMPAT',
+                 'SORONG',
+                 'SORONG SELATAN',
+                 'TAMBRAUW'
+             ) THEN 'SORONG'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
+                 'ASMAT',
+                 'BOVEN DIGOEL',
+                 'MAPPI',
+                 'MERAUKE',
+                 'INTAN JAYA',
+                 'MIMIKA',
+                 'PUNCAK',
+                 'PUNCAK JAYA',
+                 'TIMIKA',
+                 'DEIYAI',
+                 'DOGIYAI',
+                 'NABIRE',
+                 'PANIAI'
+             ) THEN 'TIMIKA'
+             ELSE NULL
+            END
+                            `.as('branchName'),
                     subbranchName: sql<string>`
-CASE
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
-     'AMBON',
-     'KOTA AMBON',
-     'MALUKU TENGAH',
-     'SERAM BAGIAN TIMUR'
- ) THEN 'AMBON'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
-     'KEPULAUAN ARU',
-     'KOTA TUAL',
-     'MALUKU BARAT DAYA',
-     'MALUKU TENGGARA',
-     'MALUKU TENGGARA BARAT',
-     'KEPULAUAN TANIMBAR'
- ) THEN 'KEPULAUAN AMBON'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BURU'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('KOTA JAYAPURA') THEN 'JAYAPURA'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
-     'JAYAPURA',
-     'KEEROM',
-     'MAMBERAMO RAYA',
-     'SARMI',
-     'BIAK',
-     'BIAK NUMFOR',
-     'KEPULAUAN YAPEN',
-     'SUPIORI',
-     'WAROPEN',
-     'JAYAWIJAYA',
-     'LANNY JAYA',
-     'MAMBERAMO TENGAH',
-     'NDUGA',
-     'PEGUNUNGAN BINTANG',
-     'TOLIKARA',
-     'YAHUKIMO',
-     'YALIMO'
- ) THEN 'SENTANI'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('MANOKWARI') THEN 'MANOKWARI'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
-     'FAKFAK',
-     'FAK FAK',
-     'KAIMANA',
-     'MANOKWARI SELATAN',
-     'PEGUNUNGAN ARFAK',
-     'TELUK BINTUNI',
-     'TELUK WONDAMA'
- ) THEN 'MANOKWARI OUTER'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
-     'KOTA SORONG',
-     'MAYBRAT',
-     'RAJA AMPAT',
-     'SORONG',
-     'SORONG SELATAN',
-     'TAMBRAUW'
- ) THEN 'SORONG RAJA AMPAT'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'MERAUKE'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
-     'INTAN JAYA',
-     'MIMIKA',
-     'PUNCAK',
-     'PUNCAK JAYA',
-     'TIMIKA'
- ) THEN 'MIMIKA'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
- ELSE NULL
-END
-                `.as('subbranchName'),
+            CASE
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
+                 'AMBON',
+                 'KOTA AMBON',
+                 'MALUKU TENGAH',
+                 'SERAM BAGIAN TIMUR'
+             ) THEN 'AMBON'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
+                 'KEPULAUAN ARU',
+                 'KOTA TUAL',
+                 'MALUKU BARAT DAYA',
+                 'MALUKU TENGGARA',
+                 'MALUKU TENGGARA BARAT',
+                 'KEPULAUAN TANIMBAR'
+             ) THEN 'KEPULAUAN AMBON'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BURU'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('KOTA JAYAPURA') THEN 'JAYAPURA'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
+                 'JAYAPURA',
+                 'KEEROM',
+                 'MAMBERAMO RAYA',
+                 'SARMI',
+                 'BIAK',
+                 'BIAK NUMFOR',
+                 'KEPULAUAN YAPEN',
+                 'SUPIORI',
+                 'WAROPEN',
+                 'JAYAWIJAYA',
+                 'LANNY JAYA',
+                 'MAMBERAMO TENGAH',
+                 'NDUGA',
+                 'PEGUNUNGAN BINTANG',
+                 'TOLIKARA',
+                 'YAHUKIMO',
+                 'YALIMO'
+             ) THEN 'SENTANI'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('MANOKWARI') THEN 'MANOKWARI'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
+                 'FAKFAK',
+                 'FAK FAK',
+                 'KAIMANA',
+                 'MANOKWARI SELATAN',
+                 'PEGUNUNGAN ARFAK',
+                 'TELUK BINTUNI',
+                 'TELUK WONDAMA'
+             ) THEN 'MANOKWARI OUTER'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
+                 'KOTA SORONG',
+                 'MAYBRAT',
+                 'RAJA AMPAT',
+                 'SORONG',
+                 'SORONG SELATAN',
+                 'TAMBRAUW'
+             ) THEN 'SORONG RAJA AMPAT'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'MERAUKE'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
+                 'INTAN JAYA',
+                 'MIMIKA',
+                 'PUNCAK',
+                 'PUNCAK JAYA',
+                 'TIMIKA'
+             ) THEN 'MIMIKA'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
+             ELSE NULL
+            END
+                            `.as('subbranchName'),
                     clusterName: sql<string>`
-CASE
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
-     'KOTA AMBON',
-     'MALUKU TENGAH',
-     'SERAM BAGIAN TIMUR'
- ) THEN 'AMBON'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
-     'KEPULAUAN ARU',
-     'KOTA TUAL',
-     'MALUKU BARAT DAYA',
-     'MALUKU TENGGARA',
-     'MALUKU TENGGARA BARAT',
-     'KEPULAUAN TANIMBAR'
- ) THEN 'KEPULAUAN TUAL'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BARAT BURU'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('KOTA JAYAPURA') THEN 'KOTA JAYAPURA'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('JAYAPURA', 'KEEROM', 'MAMBERAMO RAYA', 'SARMI') THEN 'JAYAPURA OUTER'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
-     'BIAK',
-     'BIAK NUMFOR',
-     'KEPULAUAN YAPEN',
-     'SUPIORI',
-     'WAROPEN'
- ) THEN 'NEW BIAK NUMFOR'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
-     'JAYAWIJAYA',
-     'LANNY JAYA',
-     'MAMBERAMO TENGAH',
-     'NDUGA',
-     'PEGUNUNGAN BINTANG',
-     'TOLIKARA',
-     'YAHUKIMO',
-     'YALIMO'
- ) THEN 'PAPUA PEGUNUNGAN'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('MANOKWARI') THEN 'MANOKWARI'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
-     'FAKFAK',
-     'FAK FAK',
-     'KAIMANA',
-     'MANOKWARI SELATAN',
-     'PEGUNUNGAN ARFAK',
-     'TELUK BINTUNI',
-     'TELUK WONDAMA'
- ) THEN 'MANOKWARI OUTER'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
-     'KOTA SORONG',
-     'MAYBRAT',
-     'RAJA AMPAT',
-     'SORONG',
-     'SORONG SELATAN',
-     'TAMBRAUW'
- ) THEN 'NEW SORONG RAJA AMPAT'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
-     'INTAN JAYA',
-     'MIMIKA',
-     'PUNCAK',
-     'PUNCAK JAYA',
-     'TIMIKA'
- ) THEN 'MIMIKA PUNCAK'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
- WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'NEW MERAUKE'
- ELSE NULL
-END
-                `.as('clusterName'),
+            CASE
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
+                 'KOTA AMBON',
+                 'MALUKU TENGAH',
+                 'SERAM BAGIAN TIMUR'
+             ) THEN 'AMBON'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
+                 'KEPULAUAN ARU',
+                 'KOTA TUAL',
+                 'MALUKU BARAT DAYA',
+                 'MALUKU TENGGARA',
+                 'MALUKU TENGGARA BARAT',
+                 'KEPULAUAN TANIMBAR'
+             ) THEN 'KEPULAUAN TUAL'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BARAT BURU'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('KOTA JAYAPURA') THEN 'KOTA JAYAPURA'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('JAYAPURA', 'KEEROM', 'MAMBERAMO RAYA', 'SARMI') THEN 'JAYAPURA OUTER'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
+                 'BIAK',
+                 'BIAK NUMFOR',
+                 'KEPULAUAN YAPEN',
+                 'SUPIORI',
+                 'WAROPEN'
+             ) THEN 'NEW BIAK NUMFOR'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
+                 'JAYAWIJAYA',
+                 'LANNY JAYA',
+                 'MAMBERAMO TENGAH',
+                 'NDUGA',
+                 'PEGUNUNGAN BINTANG',
+                 'TOLIKARA',
+                 'YAHUKIMO',
+                 'YALIMO'
+             ) THEN 'PAPUA PEGUNUNGAN'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('MANOKWARI') THEN 'MANOKWARI'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
+                 'FAKFAK',
+                 'FAK FAK',
+                 'KAIMANA',
+                 'MANOKWARI SELATAN',
+                 'PEGUNUNGAN ARFAK',
+                 'TELUK BINTUNI',
+                 'TELUK WONDAMA'
+             ) THEN 'MANOKWARI OUTER'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
+                 'KOTA SORONG',
+                 'MAYBRAT',
+                 'RAJA AMPAT',
+                 'SORONG',
+                 'SORONG SELATAN',
+                 'TAMBRAUW'
+             ) THEN 'NEW SORONG RAJA AMPAT'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN (
+                 'INTAN JAYA',
+                 'MIMIKA',
+                 'PUNCAK',
+                 'PUNCAK JAYA',
+                 'TIMIKA'
+             ) THEN 'MIMIKA PUNCAK'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
+             WHEN ${prevYearCurrMonthRevCVMOutlet.city} IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'NEW MERAUKE'
+             ELSE NULL
+            END
+                            `.as('clusterName'),
                     cityName: prevYearCurrMonthRevCVMOutlet.city,
-                    rev: prevYearCurrMonthRevCVMOutlet.revenue,
-                    trxDate: prevYearCurrMonthRevCVMOutlet.trxDate
+                    price: prevYearSameMonthChannelRev.price,
+                    trx: sql<number>`COUNT(${prevYearSameMonthChannelRev.bSharp})`.as('trx')
                 })
                 .from(prevYearCurrMonthRevCVMOutlet)
+                .innerJoin(prevYearSameMonthChannelRev, sql`${prevYearCurrMonthRevCVMOutlet.msisdn} = CONCAT('62', SUBSTRING(${prevYearSameMonthChannelRev.bSharp}, 2))`)
                 .where(and(
-                    notInArray(prevYearCurrMonthRevCVMOutlet.city, ['TMP']),
-                    and(
-                        like(prevYearCurrMonthRevCVMOutlet.packageGroup, '%CVM%'),
-                        between(prevYearCurrMonthRevCVMOutlet.trxDate, firstDayOfPrevYearCurrMonth, prevYearCurrDate)
-                    )
+                    not(eq(prevYearCurrMonthRevCVMOutlet.city, 'TMP')),
+                    between(prevYearSameMonthChannelRev.trxDate, firstDayOfPrevYearCurrMonth, prevYearCurrDate)
                 ))
+                .groupBy(sql`1,2,3,4,5`)
                 .as('sq4')
 
             const p1 = db
@@ -2505,11 +2509,11 @@ END
                     subbranch: sql<string>`${sq2.subbranchName}`.as('subbranch'),
                     cluster: sql<string>`${sq2.clusterName}`.as('cluster'),
                     kabupaten: sql<string>`${sq2.cityName}`.as('kabupaten'),
-                    currMonthKabupatenRev: sql<number>`SUM(${sq2.rev})`.as('currMonthKabupatenRev'),
-                    currMonthClusterRev: sql<number>`SUM(SUM(${sq2.rev})) OVER (PARTITION BY ${sq2.regionName}, ${sq2.branchName}, ${sq2.subbranchName}, ${sq2.clusterName})`.as('currMonthClusterRev'),
-                    currMonthSubbranchRev: sql<number>`SUM(SUM(${sq2.rev})) OVER (PARTITION BY ${sq2.regionName}, ${sq2.branchName}, ${sq2.subbranchName})`.as('currMonthSubbranchRev'),
-                    currMonthBranchRev: sql<number>`SUM(SUM(${sq2.rev})) OVER (PARTITION BY ${sq2.regionName}, ${sq2.branchName})`.as('currMonthBranchRev'),
-                    currMonthRegionalRev: sql<number>`SUM(SUM(${sq2.rev})) OVER (PARTITION BY ${sq2.regionName})`.as('currMonthRegionalRev')
+                    currMonthKabupatenRev: sql<number>`SUM(${sq2.price} * ${sq2.trx})`.as('currMonthKabupatenRev'),
+                    currMonthClusterRev: sql<number>`SUM(SUM(${sq2.price} * ${sq2.trx})) OVER (PARTITION BY ${sq2.regionName}, ${sq2.branchName}, ${sq2.subbranchName}, ${sq2.clusterName})`.as('currMonthClusterRev'),
+                    currMonthSubbranchRev: sql<number>`SUM(SUM(${sq2.price} * ${sq2.trx})) OVER (PARTITION BY ${sq2.regionName}, ${sq2.branchName}, ${sq2.subbranchName})`.as('currMonthSubbranchRev'),
+                    currMonthBranchRev: sql<number>`SUM(SUM(${sq2.price} * ${sq2.trx})) OVER (PARTITION BY ${sq2.regionName}, ${sq2.branchName})`.as('currMonthBranchRev'),
+                    currMonthRegionalRev: sql<number>`SUM(SUM(${sq2.price} * ${sq2.trx})) OVER (PARTITION BY ${sq2.regionName})`.as('currMonthRegionalRev')
                 })
                 .from(sq2)
                 .groupBy(sql`1,2,3,4,5`)
@@ -2523,11 +2527,11 @@ END
                     subbranch: sql<string>`${sq3.subbranchName}`.as('subbranch'),
                     cluster: sql<string>`${sq3.clusterName}`.as('cluster'),
                     kabupaten: sql<string>`${sq3.cityName}`.as('kabupaten'),
-                    prevMonthKabupatenRev: sql<number>`SUM(${sq3.rev})`.as('currMonthKabupatenRev'),
-                    prevMonthClusterRev: sql<number>`SUM(SUM(${sq3.rev})) OVER (PARTITION BY ${sq3.regionName}, ${sq3.branchName}, ${sq3.subbranchName}, ${sq3.clusterName})`.as('currMonthClusterRev'),
-                    prevMonthSubbranchRev: sql<number>`SUM(SUM(${sq3.rev})) OVER (PARTITION BY ${sq3.regionName}, ${sq3.branchName}, ${sq3.subbranchName})`.as('currMonthSubbranchRev'),
-                    prevMonthBranchRev: sql<number>`SUM(SUM(${sq3.rev})) OVER (PARTITION BY ${sq3.regionName}, ${sq3.branchName})`.as('currMonthBranchRev'),
-                    prevMonthRegionalRev: sql<number>`SUM(SUM(${sq3.rev})) OVER (PARTITION BY ${sq3.regionName})`.as('currMonthRegionalRev')
+                    prevMonthKabupatenRev: sql<number>`SUM(${sq3.price} * ${sq3.trx})`.as('currMonthKabupatenRev'),
+                    prevMonthClusterRev: sql<number>`SUM(SUM(${sq3.price} * ${sq3.trx})) OVER (PARTITION BY ${sq3.regionName}, ${sq3.branchName}, ${sq3.subbranchName}, ${sq3.clusterName})`.as('currMonthClusterRev'),
+                    prevMonthSubbranchRev: sql<number>`SUM(SUM(${sq3.price} * ${sq3.trx})) OVER (PARTITION BY ${sq3.regionName}, ${sq3.branchName}, ${sq3.subbranchName})`.as('currMonthSubbranchRev'),
+                    prevMonthBranchRev: sql<number>`SUM(SUM(${sq3.price} * ${sq3.trx})) OVER (PARTITION BY ${sq3.regionName}, ${sq3.branchName})`.as('currMonthBranchRev'),
+                    prevMonthRegionalRev: sql<number>`SUM(SUM(${sq3.price} * ${sq3.trx})) OVER (PARTITION BY ${sq3.regionName})`.as('currMonthRegionalRev')
                 })
                 .from(sq3)
                 .groupBy(sql`1,2,3,4,5`)
@@ -2541,11 +2545,11 @@ END
                     subbranch: sql<string>`${sq4.subbranchName}`.as('subbranch'),
                     cluster: sql<string>`${sq4.clusterName}`.as('cluster'),
                     kabupaten: sql<string>`${sq4.cityName}`.as('kabupaten'),
-                    prevYearCurrMonthKabupatenRev: sql<number>`SUM(${sq4.rev})`.as('currMonthKabupatenRev'),
-                    prevYearCurrMonthClusterRev: sql<number>`SUM(SUM(${sq4.rev})) OVER (PARTITION BY ${sq4.regionName}, ${sq4.branchName}, ${sq4.subbranchName}, ${sq4.clusterName})`.as('currMonthClusterRev'),
-                    prevYearCurrMonthSubbranchRev: sql<number>`SUM(SUM(${sq4.rev})) OVER (PARTITION BY ${sq4.regionName}, ${sq4.branchName}, ${sq4.subbranchName})`.as('currMonthSubbranchRev'),
-                    prevYearCurrMonthBranchRev: sql<number>`SUM(SUM(${sq4.rev})) OVER (PARTITION BY ${sq4.regionName}, ${sq4.branchName})`.as('currMonthBranchRev'),
-                    prevYearCurrMonthRegionalRev: sql<number>`SUM(SUM(${sq4.rev})) OVER (PARTITION BY ${sq4.regionName})`.as('currMonthRegionalRev')
+                    prevYearCurrMonthKabupatenRev: sql<number>`SUM(${sq4.price} * ${sq4.trx})`.as('currMonthKabupatenRev'),
+                    prevYearCurrMonthClusterRev: sql<number>`SUM(SUM(${sq4.price} * ${sq4.trx})) OVER (PARTITION BY ${sq4.regionName}, ${sq4.branchName}, ${sq4.subbranchName}, ${sq4.clusterName})`.as('currMonthClusterRev'),
+                    prevYearCurrMonthSubbranchRev: sql<number>`SUM(SUM(${sq4.price} * ${sq4.trx})) OVER (PARTITION BY ${sq4.regionName}, ${sq4.branchName}, ${sq4.subbranchName})`.as('currMonthSubbranchRev'),
+                    prevYearCurrMonthBranchRev: sql<number>`SUM(SUM(${sq4.price} * ${sq4.trx})) OVER (PARTITION BY ${sq4.regionName}, ${sq4.branchName})`.as('currMonthBranchRev'),
+                    prevYearCurrMonthRegionalRev: sql<number>`SUM(SUM(${sq4.price} * ${sq4.trx})) OVER (PARTITION BY ${sq4.regionName})`.as('currMonthRegionalRev')
                 })
                 .from(sq4)
                 .groupBy(sql`1,2,3,4,5`)
@@ -2553,416 +2557,416 @@ END
 
             // QUERY UNTUK YtD 2025
             const queryCurrYtd = currYtdCVMRev.map(table => `
-                SELECT
-                    region as region,
-                    CASE
-                        WHEN upper(city) IN (
-                            'AMBON',
-                            'KOTA AMBON',
-                            'MALUKU TENGAH',
-                            'SERAM BAGIAN TIMUR',
-                            'KEPULAUAN ARU',
-                            'KOTA TUAL',
-                            'MALUKU BARAT DAYA',
-                            'MALUKU TENGGARA',
-                            'MALUKU TENGGARA BARAT',
-                            'BURU',
-                            'BURU SELATAN',
-                            'SERAM BAGIAN BARAT',
-                            'KEPULAUAN TANIMBAR'
-                        ) THEN 'AMBON'
-                        WHEN upper(city) IN (
-                            'KOTA JAYAPURA',
-                            'JAYAPURA',
-                            'KEEROM',
-                            'MAMBERAMO RAYA',
-                            'SARMI',
-                            'BIAK',
-                            'BIAK NUMFOR',
-                            'KEPULAUAN YAPEN',
-                            'SUPIORI',
-                            'WAROPEN',
-                            'JAYAWIJAYA',
-                            'LANNY JAYA',
-                            'MAMBERAMO TENGAH',
-                            'NDUGA',
-                            'PEGUNUNGAN BINTANG',
-                            'TOLIKARA',
-                            'YAHUKIMO',
-                            'YALIMO'
-                        ) THEN 'JAYAPURA'
-                        WHEN upper(city) IN (
-                            'MANOKWARI',
-                            'FAKFAK',
-                            'FAK FAK',
-                            'KAIMANA',
-                            'MANOKWARI SELATAN',
-                            'PEGUNUNGAN ARFAK',
-                            'TELUK BINTUNI',
-                            'TELUK WONDAMA',
-                            'KOTA SORONG',
-                            'MAYBRAT',
-                            'RAJA AMPAT',
-                            'SORONG',
-                            'SORONG SELATAN',
-                            'TAMBRAUW'
-                        ) THEN 'SORONG'
-                        WHEN upper(city) IN (
-                            'ASMAT',
-                            'BOVEN DIGOEL',
-                            'MAPPI',
-                            'MERAUKE',
-                            'INTAN JAYA',
-                            'MIMIKA',
-                            'PUNCAK',
-                            'PUNCAK JAYA',
-                            'TIMIKA',
-                            'DEIYAI',
-                            'DOGIYAI',
-                            'NABIRE',
-                            'PANIAI'
-                        ) THEN 'TIMIKA'
-                        ELSE NULL
-                    END as branch,
-                    CASE
-                        WHEN upper(city) IN (
-                            'AMBON',
-                            'KOTA AMBON',
-                            'MALUKU TENGAH',
-                            'SERAM BAGIAN TIMUR'
-                        ) THEN 'AMBON'
-                        WHEN upper(city) IN (
-                            'KEPULAUAN ARU',
-                            'KOTA TUAL',
-                            'MALUKU BARAT DAYA',
-                            'MALUKU TENGGARA',
-                            'MALUKU TENGGARA BARAT',
-                            'KEPULAUAN TANIMBAR'
-                        ) THEN 'KEPULAUAN AMBON'
-                        WHEN upper(city) IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BURU'
-                        WHEN upper(city) IN ('KOTA JAYAPURA') THEN 'JAYAPURA'
-                        WHEN upper(city) IN (
-                            'JAYAPURA',
-                            'KEEROM',
-                            'MAMBERAMO RAYA',
-                            'SARMI',
-                            'BIAK',
-                            'BIAK NUMFOR',
-                            'KEPULAUAN YAPEN',
-                            'SUPIORI',
-                            'WAROPEN',
-                            'JAYAWIJAYA',
-                            'LANNY JAYA',
-                            'MAMBERAMO TENGAH',
-                            'NDUGA',
-                            'PEGUNUNGAN BINTANG',
-                            'TOLIKARA',
-                            'YAHUKIMO',
-                            'YALIMO'
-                        ) THEN 'SENTANI'
-                        WHEN upper(city) IN ('MANOKWARI') THEN 'MANOKWARI'
-                        WHEN upper(city) IN (
-                            'FAKFAK',
-                            'FAK FAK',
-                            'KAIMANA',
-                            'MANOKWARI SELATAN',
-                            'PEGUNUNGAN ARFAK',
-                            'TELUK BINTUNI',
-                            'TELUK WONDAMA'
-                        ) THEN 'MANOKWARI OUTER'
-                        WHEN upper(city) IN (
-                            'KOTA SORONG',
-                            'MAYBRAT',
-                            'RAJA AMPAT',
-                            'SORONG',
-                            'SORONG SELATAN',
-                            'TAMBRAUW'
-                        ) THEN 'SORONG RAJA AMPAT'
-                        WHEN upper(city) IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'MERAUKE'
-                        WHEN upper(city) IN (
-                            'INTAN JAYA',
-                            'MIMIKA',
-                            'PUNCAK',
-                            'PUNCAK JAYA',
-                            'TIMIKA'
-                        ) THEN 'MIMIKA'
-                        WHEN upper(city) IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
-                        ELSE NULL
-                    END as subbranch,
-                    CASE
-                        WHEN upper(city) IN (
-                            'AMBON',
-                            'KOTA AMBON',
-                            'MALUKU TENGAH',
-                            'SERAM BAGIAN TIMUR'
-                        ) THEN 'AMBON'
-                        WHEN upper(city) IN (
-                            'KEPULAUAN ARU',
-                            'KOTA TUAL',
-                            'MALUKU BARAT DAYA',
-                            'MALUKU TENGGARA',
-                            'MALUKU TENGGARA BARAT',
-                            'KEPULAUAN TANIMBAR'
-                        ) THEN 'KEPULAUAN TUAL'
-                        WHEN upper(city) IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BARAT BURU'
-                        WHEN upper(city) IN ('KOTA JAYAPURA') THEN 'KOTA JAYAPURA'
-                        WHEN upper(city) IN ('JAYAPURA', 'KEEROM', 'MAMBERAMO RAYA', 'SARMI') THEN 'JAYAPURA OUTER'
-                        WHEN upper(city) IN (
-                            'BIAK',
-                            'BIAK NUMFOR',
-                            'KEPULAUAN YAPEN',
-                            'SUPIORI',
-                            'WAROPEN'
-                        ) THEN 'NEW BIAK NUMFOR'
-                        WHEN upper(city) IN (
-                            'JAYAWIJAYA',
-                            'LANNY JAYA',
-                            'MAMBERAMO TENGAH',
-                            'NDUGA',
-                            'PEGUNUNGAN BINTANG',
-                            'TOLIKARA',
-                            'YAHUKIMO',
-                            'YALIMO'
-                        ) THEN 'PAPUA PEGUNUNGAN'
-                        WHEN upper(city) IN ('MANOKWARI') THEN 'MANOKWARI'
-                        WHEN upper(city) IN (
-                            'FAKFAK',
-                            'FAK FAK',
-                            'KAIMANA',
-                            'MANOKWARI SELATAN',
-                            'PEGUNUNGAN ARFAK',
-                            'TELUK BINTUNI',
-                            'TELUK WONDAMA'
-                        ) THEN 'MANOKWARI OUTER'
-                        WHEN upper(city) IN (
-                            'KOTA SORONG',
-                            'MAYBRAT',
-                            'RAJA AMPAT',
-                            'SORONG',
-                            'SORONG SELATAN',
-                            'TAMBRAUW'
-                        ) THEN 'NEW SORONG RAJA AMPAT'
-                        WHEN upper(city) IN (
-                            'INTAN JAYA',
-                            'MIMIKA',
-                            'PUNCAK',
-                            'PUNCAK JAYA',
-                            'TIMIKA'
-                        ) THEN 'MIMIKA PUNCAK'
-                        WHEN upper(city) IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
-                        WHEN upper(city) IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'NEW MERAUKE'
-                        ELSE NULL
-                    END as cluster,
-                    city as kabupaten,
-                    rev
-                FROM ${table}
-                WHERE region IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
+                            SELECT
+                                region as region,
+                                CASE
+                                    WHEN upper(city) IN (
+                                        'AMBON',
+                                        'KOTA AMBON',
+                                        'MALUKU TENGAH',
+                                        'SERAM BAGIAN TIMUR',
+                                        'KEPULAUAN ARU',
+                                        'KOTA TUAL',
+                                        'MALUKU BARAT DAYA',
+                                        'MALUKU TENGGARA',
+                                        'MALUKU TENGGARA BARAT',
+                                        'BURU',
+                                        'BURU SELATAN',
+                                        'SERAM BAGIAN BARAT',
+                                        'KEPULAUAN TANIMBAR'
+                                    ) THEN 'AMBON'
+                                    WHEN upper(city) IN (
+                                        'KOTA JAYAPURA',
+                                        'JAYAPURA',
+                                        'KEEROM',
+                                        'MAMBERAMO RAYA',
+                                        'SARMI',
+                                        'BIAK',
+                                        'BIAK NUMFOR',
+                                        'KEPULAUAN YAPEN',
+                                        'SUPIORI',
+                                        'WAROPEN',
+                                        'JAYAWIJAYA',
+                                        'LANNY JAYA',
+                                        'MAMBERAMO TENGAH',
+                                        'NDUGA',
+                                        'PEGUNUNGAN BINTANG',
+                                        'TOLIKARA',
+                                        'YAHUKIMO',
+                                        'YALIMO'
+                                    ) THEN 'JAYAPURA'
+                                    WHEN upper(city) IN (
+                                        'MANOKWARI',
+                                        'FAKFAK',
+                                        'FAK FAK',
+                                        'KAIMANA',
+                                        'MANOKWARI SELATAN',
+                                        'PEGUNUNGAN ARFAK',
+                                        'TELUK BINTUNI',
+                                        'TELUK WONDAMA',
+                                        'KOTA SORONG',
+                                        'MAYBRAT',
+                                        'RAJA AMPAT',
+                                        'SORONG',
+                                        'SORONG SELATAN',
+                                        'TAMBRAUW'
+                                    ) THEN 'SORONG'
+                                    WHEN upper(city) IN (
+                                        'ASMAT',
+                                        'BOVEN DIGOEL',
+                                        'MAPPI',
+                                        'MERAUKE',
+                                        'INTAN JAYA',
+                                        'MIMIKA',
+                                        'PUNCAK',
+                                        'PUNCAK JAYA',
+                                        'TIMIKA',
+                                        'DEIYAI',
+                                        'DOGIYAI',
+                                        'NABIRE',
+                                        'PANIAI'
+                                    ) THEN 'TIMIKA'
+                                    ELSE NULL
+                                END as branch,
+                                CASE
+                                    WHEN upper(city) IN (
+                                        'AMBON',
+                                        'KOTA AMBON',
+                                        'MALUKU TENGAH',
+                                        'SERAM BAGIAN TIMUR'
+                                    ) THEN 'AMBON'
+                                    WHEN upper(city) IN (
+                                        'KEPULAUAN ARU',
+                                        'KOTA TUAL',
+                                        'MALUKU BARAT DAYA',
+                                        'MALUKU TENGGARA',
+                                        'MALUKU TENGGARA BARAT',
+                                        'KEPULAUAN TANIMBAR'
+                                    ) THEN 'KEPULAUAN AMBON'
+                                    WHEN upper(city) IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BURU'
+                                    WHEN upper(city) IN ('KOTA JAYAPURA') THEN 'JAYAPURA'
+                                    WHEN upper(city) IN (
+                                        'JAYAPURA',
+                                        'KEEROM',
+                                        'MAMBERAMO RAYA',
+                                        'SARMI',
+                                        'BIAK',
+                                        'BIAK NUMFOR',
+                                        'KEPULAUAN YAPEN',
+                                        'SUPIORI',
+                                        'WAROPEN',
+                                        'JAYAWIJAYA',
+                                        'LANNY JAYA',
+                                        'MAMBERAMO TENGAH',
+                                        'NDUGA',
+                                        'PEGUNUNGAN BINTANG',
+                                        'TOLIKARA',
+                                        'YAHUKIMO',
+                                        'YALIMO'
+                                    ) THEN 'SENTANI'
+                                    WHEN upper(city) IN ('MANOKWARI') THEN 'MANOKWARI'
+                                    WHEN upper(city) IN (
+                                        'FAKFAK',
+                                        'FAK FAK',
+                                        'KAIMANA',
+                                        'MANOKWARI SELATAN',
+                                        'PEGUNUNGAN ARFAK',
+                                        'TELUK BINTUNI',
+                                        'TELUK WONDAMA'
+                                    ) THEN 'MANOKWARI OUTER'
+                                    WHEN upper(city) IN (
+                                        'KOTA SORONG',
+                                        'MAYBRAT',
+                                        'RAJA AMPAT',
+                                        'SORONG',
+                                        'SORONG SELATAN',
+                                        'TAMBRAUW'
+                                    ) THEN 'SORONG RAJA AMPAT'
+                                    WHEN upper(city) IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'MERAUKE'
+                                    WHEN upper(city) IN (
+                                        'INTAN JAYA',
+                                        'MIMIKA',
+                                        'PUNCAK',
+                                        'PUNCAK JAYA',
+                                        'TIMIKA'
+                                    ) THEN 'MIMIKA'
+                                    WHEN upper(city) IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
+                                    ELSE NULL
+                                END as subbranch,
+                                CASE
+                                    WHEN upper(city) IN (
+                                        'AMBON',
+                                        'KOTA AMBON',
+                                        'MALUKU TENGAH',
+                                        'SERAM BAGIAN TIMUR'
+                                    ) THEN 'AMBON'
+                                    WHEN upper(city) IN (
+                                        'KEPULAUAN ARU',
+                                        'KOTA TUAL',
+                                        'MALUKU BARAT DAYA',
+                                        'MALUKU TENGGARA',
+                                        'MALUKU TENGGARA BARAT',
+                                        'KEPULAUAN TANIMBAR'
+                                    ) THEN 'KEPULAUAN TUAL'
+                                    WHEN upper(city) IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BARAT BURU'
+                                    WHEN upper(city) IN ('KOTA JAYAPURA') THEN 'KOTA JAYAPURA'
+                                    WHEN upper(city) IN ('JAYAPURA', 'KEEROM', 'MAMBERAMO RAYA', 'SARMI') THEN 'JAYAPURA OUTER'
+                                    WHEN upper(city) IN (
+                                        'BIAK',
+                                        'BIAK NUMFOR',
+                                        'KEPULAUAN YAPEN',
+                                        'SUPIORI',
+                                        'WAROPEN'
+                                    ) THEN 'NEW BIAK NUMFOR'
+                                    WHEN upper(city) IN (
+                                        'JAYAWIJAYA',
+                                        'LANNY JAYA',
+                                        'MAMBERAMO TENGAH',
+                                        'NDUGA',
+                                        'PEGUNUNGAN BINTANG',
+                                        'TOLIKARA',
+                                        'YAHUKIMO',
+                                        'YALIMO'
+                                    ) THEN 'PAPUA PEGUNUNGAN'
+                                    WHEN upper(city) IN ('MANOKWARI') THEN 'MANOKWARI'
+                                    WHEN upper(city) IN (
+                                        'FAKFAK',
+                                        'FAK FAK',
+                                        'KAIMANA',
+                                        'MANOKWARI SELATAN',
+                                        'PEGUNUNGAN ARFAK',
+                                        'TELUK BINTUNI',
+                                        'TELUK WONDAMA'
+                                    ) THEN 'MANOKWARI OUTER'
+                                    WHEN upper(city) IN (
+                                        'KOTA SORONG',
+                                        'MAYBRAT',
+                                        'RAJA AMPAT',
+                                        'SORONG',
+                                        'SORONG SELATAN',
+                                        'TAMBRAUW'
+                                    ) THEN 'NEW SORONG RAJA AMPAT'
+                                    WHEN upper(city) IN (
+                                        'INTAN JAYA',
+                                        'MIMIKA',
+                                        'PUNCAK',
+                                        'PUNCAK JAYA',
+                                        'TIMIKA'
+                                    ) THEN 'MIMIKA PUNCAK'
+                                    WHEN upper(city) IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
+                                    WHEN upper(city) IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'NEW MERAUKE'
+                                    ELSE NULL
+                                END as cluster,
+                                city as kabupaten,
+                                rev
+                            FROM ${table}
+                            WHERE region IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
 
             const queryPrevYtd = prevYtdCVMRev.map(table => `
-                SELECT
-                    region as region,
-                    CASE
-                        WHEN upper(city) IN (
-                            'AMBON',
-                            'KOTA AMBON',
-                            'MALUKU TENGAH',
-                            'SERAM BAGIAN TIMUR',
-                            'KEPULAUAN ARU',
-                            'KOTA TUAL',
-                            'MALUKU BARAT DAYA',
-                            'MALUKU TENGGARA',
-                            'MALUKU TENGGARA BARAT',
-                            'BURU',
-                            'BURU SELATAN',
-                            'SERAM BAGIAN BARAT',
-                            'KEPULAUAN TANIMBAR'
-                        ) THEN 'AMBON'
-                        WHEN upper(city) IN (
-                            'KOTA JAYAPURA',
-                            'JAYAPURA',
-                            'KEEROM',
-                            'MAMBERAMO RAYA',
-                            'SARMI',
-                            'BIAK',
-                            'BIAK NUMFOR',
-                            'KEPULAUAN YAPEN',
-                            'SUPIORI',
-                            'WAROPEN',
-                            'JAYAWIJAYA',
-                            'LANNY JAYA',
-                            'MAMBERAMO TENGAH',
-                            'NDUGA',
-                            'PEGUNUNGAN BINTANG',
-                            'TOLIKARA',
-                            'YAHUKIMO',
-                            'YALIMO'
-                        ) THEN 'JAYAPURA'
-                        WHEN upper(city) IN (
-                            'MANOKWARI',
-                            'FAKFAK',
-                            'FAK FAK',
-                            'KAIMANA',
-                            'MANOKWARI SELATAN',
-                            'PEGUNUNGAN ARFAK',
-                            'TELUK BINTUNI',
-                            'TELUK WONDAMA',
-                            'KOTA SORONG',
-                            'MAYBRAT',
-                            'RAJA AMPAT',
-                            'SORONG',
-                            'SORONG SELATAN',
-                            'TAMBRAUW'
-                        ) THEN 'SORONG'
-                        WHEN upper(city) IN (
-                            'ASMAT',
-                            'BOVEN DIGOEL',
-                            'MAPPI',
-                            'MERAUKE',
-                            'INTAN JAYA',
-                            'MIMIKA',
-                            'PUNCAK',
-                            'PUNCAK JAYA',
-                            'TIMIKA',
-                            'DEIYAI',
-                            'DOGIYAI',
-                            'NABIRE',
-                            'PANIAI'
-                        ) THEN 'TIMIKA'
-                        ELSE NULL
-                    END as branch,
-                    CASE
-                        WHEN upper(city) IN (
-                            'AMBON',
-                            'KOTA AMBON',
-                            'MALUKU TENGAH',
-                            'SERAM BAGIAN TIMUR'
-                        ) THEN 'AMBON'
-                        WHEN upper(city) IN (
-                            'KEPULAUAN ARU',
-                            'KOTA TUAL',
-                            'MALUKU BARAT DAYA',
-                            'MALUKU TENGGARA',
-                            'MALUKU TENGGARA BARAT',
-                            'KEPULAUAN TANIMBAR'
-                        ) THEN 'KEPULAUAN AMBON'
-                        WHEN upper(city) IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BURU'
-                        WHEN upper(city) IN ('KOTA JAYAPURA') THEN 'JAYAPURA'
-                        WHEN upper(city) IN (
-                            'JAYAPURA',
-                            'KEEROM',
-                            'MAMBERAMO RAYA',
-                            'SARMI',
-                            'BIAK',
-                            'BIAK NUMFOR',
-                            'KEPULAUAN YAPEN',
-                            'SUPIORI',
-                            'WAROPEN',
-                            'JAYAWIJAYA',
-                            'LANNY JAYA',
-                            'MAMBERAMO TENGAH',
-                            'NDUGA',
-                            'PEGUNUNGAN BINTANG',
-                            'TOLIKARA',
-                            'YAHUKIMO',
-                            'YALIMO'
-                        ) THEN 'SENTANI'
-                        WHEN upper(city) IN ('MANOKWARI') THEN 'MANOKWARI'
-                        WHEN upper(city) IN (
-                            'FAKFAK',
-                            'FAK FAK',
-                            'KAIMANA',
-                            'MANOKWARI SELATAN',
-                            'PEGUNUNGAN ARFAK',
-                            'TELUK BINTUNI',
-                            'TELUK WONDAMA'
-                        ) THEN 'MANOKWARI OUTER'
-                        WHEN upper(city) IN (
-                            'KOTA SORONG',
-                            'MAYBRAT',
-                            'RAJA AMPAT',
-                            'SORONG',
-                            'SORONG SELATAN',
-                            'TAMBRAUW'
-                        ) THEN 'SORONG RAJA AMPAT'
-                        WHEN upper(city) IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'MERAUKE'
-                        WHEN upper(city) IN (
-                            'INTAN JAYA',
-                            'MIMIKA',
-                            'PUNCAK',
-                            'PUNCAK JAYA',
-                            'TIMIKA'
-                        ) THEN 'MIMIKA'
-                        WHEN upper(city) IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
-                        ELSE NULL
-                    END as subbranch,
-                    CASE
-                        WHEN upper(city) IN (
-                            'AMBON',
-                            'KOTA AMBON',
-                            'MALUKU TENGAH',
-                            'SERAM BAGIAN TIMUR'
-                        ) THEN 'AMBON'
-                        WHEN upper(city) IN (
-                            'KEPULAUAN ARU',
-                            'KOTA TUAL',
-                            'MALUKU BARAT DAYA',
-                            'MALUKU TENGGARA',
-                            'MALUKU TENGGARA BARAT',
-                            'KEPULAUAN TANIMBAR'
-                        ) THEN 'KEPULAUAN TUAL'
-                        WHEN upper(city) IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BARAT BURU'
-                        WHEN upper(city) IN ('KOTA JAYAPURA') THEN 'KOTA JAYAPURA'
-                        WHEN upper(city) IN ('JAYAPURA', 'KEEROM', 'MAMBERAMO RAYA', 'SARMI') THEN 'JAYAPURA OUTER'
-                        WHEN upper(city) IN (
-                            'BIAK',
-                            'BIAK NUMFOR',
-                            'KEPULAUAN YAPEN',
-                            'SUPIORI',
-                            'WAROPEN'
-                        ) THEN 'NEW BIAK NUMFOR'
-                        WHEN upper(city) IN (
-                            'JAYAWIJAYA',
-                            'LANNY JAYA',
-                            'MAMBERAMO TENGAH',
-                            'NDUGA',
-                            'PEGUNUNGAN BINTANG',
-                            'TOLIKARA',
-                            'YAHUKIMO',
-                            'YALIMO'
-                        ) THEN 'PAPUA PEGUNUNGAN'
-                        WHEN upper(city) IN ('MANOKWARI') THEN 'MANOKWARI'
-                        WHEN upper(city) IN (
-                            'FAKFAK',
-                            'FAK FAK',
-                            'KAIMANA',
-                            'MANOKWARI SELATAN',
-                            'PEGUNUNGAN ARFAK',
-                            'TELUK BINTUNI',
-                            'TELUK WONDAMA'
-                        ) THEN 'MANOKWARI OUTER'
-                        WHEN upper(city) IN (
-                            'KOTA SORONG',
-                            'MAYBRAT',
-                            'RAJA AMPAT',
-                            'SORONG',
-                            'SORONG SELATAN',
-                            'TAMBRAUW'
-                        ) THEN 'NEW SORONG RAJA AMPAT'
-                        WHEN upper(city) IN (
-                            'INTAN JAYA',
-                            'MIMIKA',
-                            'PUNCAK',
-                            'PUNCAK JAYA',
-                            'TIMIKA'
-                        ) THEN 'MIMIKA PUNCAK'
-                        WHEN upper(city) IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
-                        WHEN upper(city) IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'NEW MERAUKE'
-                        ELSE NULL
-                    END as cluster,
-                    city as kabupaten,
-                    rev
-                FROM ${table}
-                WHERE region IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
+                            SELECT
+                                region as region,
+                                CASE
+                                    WHEN upper(city) IN (
+                                        'AMBON',
+                                        'KOTA AMBON',
+                                        'MALUKU TENGAH',
+                                        'SERAM BAGIAN TIMUR',
+                                        'KEPULAUAN ARU',
+                                        'KOTA TUAL',
+                                        'MALUKU BARAT DAYA',
+                                        'MALUKU TENGGARA',
+                                        'MALUKU TENGGARA BARAT',
+                                        'BURU',
+                                        'BURU SELATAN',
+                                        'SERAM BAGIAN BARAT',
+                                        'KEPULAUAN TANIMBAR'
+                                    ) THEN 'AMBON'
+                                    WHEN upper(city) IN (
+                                        'KOTA JAYAPURA',
+                                        'JAYAPURA',
+                                        'KEEROM',
+                                        'MAMBERAMO RAYA',
+                                        'SARMI',
+                                        'BIAK',
+                                        'BIAK NUMFOR',
+                                        'KEPULAUAN YAPEN',
+                                        'SUPIORI',
+                                        'WAROPEN',
+                                        'JAYAWIJAYA',
+                                        'LANNY JAYA',
+                                        'MAMBERAMO TENGAH',
+                                        'NDUGA',
+                                        'PEGUNUNGAN BINTANG',
+                                        'TOLIKARA',
+                                        'YAHUKIMO',
+                                        'YALIMO'
+                                    ) THEN 'JAYAPURA'
+                                    WHEN upper(city) IN (
+                                        'MANOKWARI',
+                                        'FAKFAK',
+                                        'FAK FAK',
+                                        'KAIMANA',
+                                        'MANOKWARI SELATAN',
+                                        'PEGUNUNGAN ARFAK',
+                                        'TELUK BINTUNI',
+                                        'TELUK WONDAMA',
+                                        'KOTA SORONG',
+                                        'MAYBRAT',
+                                        'RAJA AMPAT',
+                                        'SORONG',
+                                        'SORONG SELATAN',
+                                        'TAMBRAUW'
+                                    ) THEN 'SORONG'
+                                    WHEN upper(city) IN (
+                                        'ASMAT',
+                                        'BOVEN DIGOEL',
+                                        'MAPPI',
+                                        'MERAUKE',
+                                        'INTAN JAYA',
+                                        'MIMIKA',
+                                        'PUNCAK',
+                                        'PUNCAK JAYA',
+                                        'TIMIKA',
+                                        'DEIYAI',
+                                        'DOGIYAI',
+                                        'NABIRE',
+                                        'PANIAI'
+                                    ) THEN 'TIMIKA'
+                                    ELSE NULL
+                                END as branch,
+                                CASE
+                                    WHEN upper(city) IN (
+                                        'AMBON',
+                                        'KOTA AMBON',
+                                        'MALUKU TENGAH',
+                                        'SERAM BAGIAN TIMUR'
+                                    ) THEN 'AMBON'
+                                    WHEN upper(city) IN (
+                                        'KEPULAUAN ARU',
+                                        'KOTA TUAL',
+                                        'MALUKU BARAT DAYA',
+                                        'MALUKU TENGGARA',
+                                        'MALUKU TENGGARA BARAT',
+                                        'KEPULAUAN TANIMBAR'
+                                    ) THEN 'KEPULAUAN AMBON'
+                                    WHEN upper(city) IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BURU'
+                                    WHEN upper(city) IN ('KOTA JAYAPURA') THEN 'JAYAPURA'
+                                    WHEN upper(city) IN (
+                                        'JAYAPURA',
+                                        'KEEROM',
+                                        'MAMBERAMO RAYA',
+                                        'SARMI',
+                                        'BIAK',
+                                        'BIAK NUMFOR',
+                                        'KEPULAUAN YAPEN',
+                                        'SUPIORI',
+                                        'WAROPEN',
+                                        'JAYAWIJAYA',
+                                        'LANNY JAYA',
+                                        'MAMBERAMO TENGAH',
+                                        'NDUGA',
+                                        'PEGUNUNGAN BINTANG',
+                                        'TOLIKARA',
+                                        'YAHUKIMO',
+                                        'YALIMO'
+                                    ) THEN 'SENTANI'
+                                    WHEN upper(city) IN ('MANOKWARI') THEN 'MANOKWARI'
+                                    WHEN upper(city) IN (
+                                        'FAKFAK',
+                                        'FAK FAK',
+                                        'KAIMANA',
+                                        'MANOKWARI SELATAN',
+                                        'PEGUNUNGAN ARFAK',
+                                        'TELUK BINTUNI',
+                                        'TELUK WONDAMA'
+                                    ) THEN 'MANOKWARI OUTER'
+                                    WHEN upper(city) IN (
+                                        'KOTA SORONG',
+                                        'MAYBRAT',
+                                        'RAJA AMPAT',
+                                        'SORONG',
+                                        'SORONG SELATAN',
+                                        'TAMBRAUW'
+                                    ) THEN 'SORONG RAJA AMPAT'
+                                    WHEN upper(city) IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'MERAUKE'
+                                    WHEN upper(city) IN (
+                                        'INTAN JAYA',
+                                        'MIMIKA',
+                                        'PUNCAK',
+                                        'PUNCAK JAYA',
+                                        'TIMIKA'
+                                    ) THEN 'MIMIKA'
+                                    WHEN upper(city) IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
+                                    ELSE NULL
+                                END as subbranch,
+                                CASE
+                                    WHEN upper(city) IN (
+                                        'AMBON',
+                                        'KOTA AMBON',
+                                        'MALUKU TENGAH',
+                                        'SERAM BAGIAN TIMUR'
+                                    ) THEN 'AMBON'
+                                    WHEN upper(city) IN (
+                                        'KEPULAUAN ARU',
+                                        'KOTA TUAL',
+                                        'MALUKU BARAT DAYA',
+                                        'MALUKU TENGGARA',
+                                        'MALUKU TENGGARA BARAT',
+                                        'KEPULAUAN TANIMBAR'
+                                    ) THEN 'KEPULAUAN TUAL'
+                                    WHEN upper(city) IN ('BURU', 'BURU SELATAN', 'SERAM BAGIAN BARAT') THEN 'SERAM BARAT BURU'
+                                    WHEN upper(city) IN ('KOTA JAYAPURA') THEN 'KOTA JAYAPURA'
+                                    WHEN upper(city) IN ('JAYAPURA', 'KEEROM', 'MAMBERAMO RAYA', 'SARMI') THEN 'JAYAPURA OUTER'
+                                    WHEN upper(city) IN (
+                                        'BIAK',
+                                        'BIAK NUMFOR',
+                                        'KEPULAUAN YAPEN',
+                                        'SUPIORI',
+                                        'WAROPEN'
+                                    ) THEN 'NEW BIAK NUMFOR'
+                                    WHEN upper(city) IN (
+                                        'JAYAWIJAYA',
+                                        'LANNY JAYA',
+                                        'MAMBERAMO TENGAH',
+                                        'NDUGA',
+                                        'PEGUNUNGAN BINTANG',
+                                        'TOLIKARA',
+                                        'YAHUKIMO',
+                                        'YALIMO'
+                                    ) THEN 'PAPUA PEGUNUNGAN'
+                                    WHEN upper(city) IN ('MANOKWARI') THEN 'MANOKWARI'
+                                    WHEN upper(city) IN (
+                                        'FAKFAK',
+                                        'FAK FAK',
+                                        'KAIMANA',
+                                        'MANOKWARI SELATAN',
+                                        'PEGUNUNGAN ARFAK',
+                                        'TELUK BINTUNI',
+                                        'TELUK WONDAMA'
+                                    ) THEN 'MANOKWARI OUTER'
+                                    WHEN upper(city) IN (
+                                        'KOTA SORONG',
+                                        'MAYBRAT',
+                                        'RAJA AMPAT',
+                                        'SORONG',
+                                        'SORONG SELATAN',
+                                        'TAMBRAUW'
+                                    ) THEN 'NEW SORONG RAJA AMPAT'
+                                    WHEN upper(city) IN (
+                                        'INTAN JAYA',
+                                        'MIMIKA',
+                                        'PUNCAK',
+                                        'PUNCAK JAYA',
+                                        'TIMIKA'
+                                    ) THEN 'MIMIKA PUNCAK'
+                                    WHEN upper(city) IN ('DEIYAI', 'DOGIYAI', 'NABIRE', 'PANIAI') THEN 'NABIRE'
+                                    WHEN upper(city) IN ('ASMAT', 'BOVEN DIGOEL', 'MAPPI', 'MERAUKE') THEN 'NEW MERAUKE'
+                                    ELSE NULL
+                                END as cluster,
+                                city as kabupaten,
+                                rev
+                            FROM ${table}
+                            WHERE region IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
 
             const [targetRevenue, currMonthRevenue, prevMonthRevenue, prevYearCurrMonthRevenue] = await Promise.all([
                 p1.execute(),
@@ -2970,6 +2974,8 @@ END
                 p3.execute(),
                 p4.execute()
             ])
+
+            return c.json({}, 200)
         })
 
 export default app;

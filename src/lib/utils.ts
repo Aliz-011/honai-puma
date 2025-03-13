@@ -3,9 +3,24 @@ import { twMerge } from "tailwind-merge";
 import Exceljs from 'exceljs'
 import FileSaver from 'file-saver'
 import { endOfMonth, format, getDaysInMonth, intlFormat, subMonths, subYears } from "date-fns";
+import { encodeBase32UpperCaseNoPadding } from "@oslojs/encoding";
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
+}
+
+export function generateRandomOTP(): string {
+	const bytes = new Uint8Array(5);
+	crypto.getRandomValues(bytes);
+	const code = encodeBase32UpperCaseNoPadding(bytes);
+	return code;
+}
+
+export function generateRandomRecoveryCode(): string {
+	const recoveryCodeBytes = new Uint8Array(10);
+	crypto.getRandomValues(recoveryCodeBytes);
+	const recoveryCode = encodeBase32UpperCaseNoPadding(recoveryCodeBytes);
+	return recoveryCode;
 }
 
 export function formatToBillion(number: number) {
@@ -55,16 +70,16 @@ export async function exportToExcel(data: Regional[], fileName: string, selected
 	const workbook = new Exceljs.Workbook();
 	const worksheet = workbook.addWorksheet('Sheet1');
 
-	const lastDayOfSelectedMonth = endOfMonth(compactDate);
-	const isEndOfMonth = compactDate.getDate() === lastDayOfSelectedMonth.getDate();
+	const lastDayOfSelectedMonth = endOfMonth(selectedDate);
+	const isEndOfMonth = selectedDate.getDate() === lastDayOfSelectedMonth.getDate();
 
 	// Last days of months
-	const daysInCurrMonth = isEndOfMonth ? getDaysInMonth(compactDate) : getDaysInMonth(selectedDate)
-	const currDate = parseInt(format(compactDate, 'd'))
+	const daysInCurrMonth = isEndOfMonth ? getDaysInMonth(selectedDate) : getDaysInMonth(selectedDate)
+	const currDate = parseInt(format(selectedDate, 'd'))
 
-	const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : compactDate;
-	const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(compactDate, 1)) : subMonths(compactDate, 1);
-	const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(compactDate, 1)) : subYears(compactDate, 1);
+	const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : selectedDate;
+	const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(selectedDate, 1)) : subMonths(selectedDate, 1);
+	const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(selectedDate, 1)) : subYears(selectedDate, 1);
 
 	const currMonth = intlFormat(endOfCurrMonth, { dateStyle: 'medium' }, { locale: 'id-ID' })
 	const prevMonth = intlFormat(endOfPrevMonth, { dateStyle: 'medium' }, { locale: 'id-ID' })
@@ -170,7 +185,7 @@ export async function exportToExcel(data: Regional[], fileName: string, selected
 	})
 
 	const buffer = await workbook.xlsx.writeBuffer();
-	FileSaver.saveAs(new Blob([buffer]), `${fileName}_${formatDateForFilename(compactDate)}.xlsx`)
+	FileSaver.saveAs(new Blob([buffer]), `${fileName}_${formatDateForFilename(selectedDate)}.xlsx`)
 }
 
 function formatDateForFilename(date: Date): string {

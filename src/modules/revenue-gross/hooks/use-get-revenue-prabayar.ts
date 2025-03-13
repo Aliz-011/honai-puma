@@ -20,6 +20,7 @@ export const useGetRevenueGrossPrabayar = ({ date }: QueryParams) => {
         },
         gcTime: 1000 * 60 * 60 * 24,
         staleTime: 1000 * 60 * 60 * 12,
+        retry: 2
     });
 
     return query;

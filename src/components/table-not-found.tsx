@@ -1,12 +1,20 @@
 'use client'
 
-import { subMonths, intlFormat, subDays } from "date-fns";
+import { subMonths, intlFormat, subDays, endOfMonth, subYears } from "date-fns";
+import { QueryObserverResult, RefetchOptions } from '@tanstack/react-query';
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table'
-import { useSelectDate } from "@/hooks/use-select-date";
+import Button from "./ui/button/Button";
 
-export const TableNotFound = ({ date: selectedDate, daysBehind, tableName }: { date: Date, daysBehind: number, tableName: string }) => {
+export const TableNotFound = ({ date: selectedDate, daysBehind, tableName, refetch }: { date: Date, daysBehind: number, tableName: string, refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<Regional[], Error>> }) => {
     const compactDate = subDays(selectedDate, daysBehind) // today - 2 days
+    const lastDayOfSelectedMonth = endOfMonth(selectedDate);
+    const isEndOfMonth = selectedDate.getDate() === lastDayOfSelectedMonth.getDate();
+
+    // Last days of months
+    const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : selectedDate;
+    const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(selectedDate, 1)) : subMonths(selectedDate, 1);
+    const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(selectedDate, 1)) : subYears(selectedDate, 1);
 
     return (
         <Table>
@@ -33,7 +41,7 @@ export const TableNotFound = ({ date: selectedDate, daysBehind, tableName }: { d
                     </TableCell>
                     <TableCell isHeader className="px-5 py-3 min-w-[100px] font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
                         {intlFormat(
-                            compactDate,
+                            endOfCurrMonth,
                             {
                                 dateStyle: "medium",
                             },
@@ -42,7 +50,7 @@ export const TableNotFound = ({ date: selectedDate, daysBehind, tableName }: { d
                     </TableCell>
                     <TableCell isHeader className="px-5 py-3 min-w-[100px] font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
                         {intlFormat(
-                            subMonths(compactDate, 1),
+                            endOfPrevMonth,
                             {
                                 dateStyle: "medium",
                             },
@@ -51,7 +59,7 @@ export const TableNotFound = ({ date: selectedDate, daysBehind, tableName }: { d
                     </TableCell>
                     <TableCell isHeader className="px-5 py-3 min-w-[100px] font-medium text-white bg-zinc-950 border-r last:border-r-0 dark:border-r-gray-700 text-center text-theme-xs">
                         {intlFormat(
-                            subMonths(compactDate, 12),
+                            endOfPrevYearSameMonth,
                             {
                                 dateStyle: "medium",
                             },
@@ -83,7 +91,7 @@ export const TableNotFound = ({ date: selectedDate, daysBehind, tableName }: { d
                 {/* REGIONALS */}
                 <TableRow>
                     <TableCell colSpan={12} className="px-5 py-4 sm:px-6 text-center border-r last:border-r-0 font-semibold bg-gray-50 text-theme-sm dark:text-white dark:border-gray-800 dark:bg-white/[0.03]">
-                        No Data
+                        No Data. <Button onClick={() => refetch()} size="sm" variant="outline">Reload</Button>
                     </TableCell>
                 </TableRow>
             </TableBody>

@@ -31,13 +31,13 @@ const app = new Hono()
             // VARIABLE TANGGAL UNTUK IMPORT TABEL SECARA DINAMIS
             const latestDataDate = subDays(selectedDate, 2); // - 2 days
 
-            const currMonth = format(latestDataDate, 'MM')
-            const currYear = format(latestDataDate, 'yyyy')
-            const latestMonth = parseInt(format(latestDataDate, 'M'), 10)
+            const currMonth = format(selectedDate, 'MM')
+            const currYear = format(selectedDate, 'yyyy')
+            const latestMonth = parseInt(format(selectedDate, 'M'), 10)
             const isPrevMonthLastYear = currMonth === '01'
-            const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(latestDataDate, 1), 'MM')
-            const prevMonthYear = isPrevMonthLastYear ? format(subYears(latestDataDate, 1), 'yyyy') : format(latestDataDate, 'yyyy')
-            const prevYear = format(subYears(latestDataDate, 1), 'yyyy')
+            const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(selectedDate, 1), 'MM')
+            const prevMonthYear = isPrevMonthLastYear ? format(subYears(selectedDate, 1), 'yyyy') : format(selectedDate, 'yyyy')
+            const prevYear = format(subYears(selectedDate, 1), 'yyyy')
 
             const currMonthRedeemPVPrabayarRev = dynamicRevenueCVMTable(currYear, currMonth)
             const prevMonthRedeemPVPrabayarRev = dynamicRevenueCVMTable(prevMonthYear, prevMonth)
@@ -55,17 +55,17 @@ const app = new Hono()
 
             // VARIABLE TANGGAL
             // Get the last day of the selected month
-            const lastDayOfSelectedMonth = endOfMonth(latestDataDate);
-            const isEndOfMonth = latestDataDate.getDate() === lastDayOfSelectedMonth.getDate();
+            const lastDayOfSelectedMonth = endOfMonth(selectedDate);
+            const isEndOfMonth = selectedDate.getDate() === lastDayOfSelectedMonth.getDate();
 
-            const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : latestDataDate;
-            const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(latestDataDate, 1)) : subMonths(latestDataDate, 1);
-            const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(latestDataDate, 1)) : subYears(latestDataDate, 1);
+            const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : selectedDate;
+            const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(selectedDate, 1)) : subMonths(selectedDate, 1);
+            const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(selectedDate, 1)) : subYears(selectedDate, 1);
 
             // get the first day and last day of the selected month dynamically
-            const firstDayOfCurrMonth = format(startOfMonth(latestDataDate), 'yyyy-MM-dd')
-            const firstDayOfPrevMonth = format(startOfMonth(subMonths(latestDataDate, 1)), 'yyyy-MM-dd')
-            const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(latestDataDate, 1)), 'yyyy-MM-dd')
+            const firstDayOfCurrMonth = format(startOfMonth(selectedDate), 'yyyy-MM-dd')
+            const firstDayOfPrevMonth = format(startOfMonth(subMonths(selectedDate, 1)), 'yyyy-MM-dd')
+            const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(selectedDate, 1)), 'yyyy-MM-dd')
 
             const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
@@ -282,8 +282,8 @@ const app = new Hono()
                 })
                 .from(currMonthRedeemPVPrabayarRev, {
                     useIndex: [
-                        index('trx_date').on(currMonthRedeemPVPrabayarRev.trxDate),
-                        index('city').on(currMonthRedeemPVPrabayarRev.city),
+                        index('trx_date').on(currMonthRedeemPVPrabayarRev.trxDate).using('btree'),
+                        index('city').on(currMonthRedeemPVPrabayarRev.city).using('btree'),
                     ]
                 })
                 .where(and(
@@ -508,8 +508,8 @@ END
                 })
                 .from(prevMonthRedeemPVPrabayarRev, {
                     useIndex: [
-                        index('trx_date').on(prevMonthRedeemPVPrabayarRev.trxDate),
-                        index('city').on(prevMonthRedeemPVPrabayarRev.city),
+                        index('trx_date').on(prevMonthRedeemPVPrabayarRev.trxDate).using('btree'),
+                        index('city').on(prevMonthRedeemPVPrabayarRev.city).using('btree'),
                     ]
                 })
                 .where(and(
@@ -735,8 +735,8 @@ END
                 })
                 .from(prevYearSameMonthRedeemPVPrabayarRev, {
                     useIndex: [
-                        index('trx_date').on(prevYearSameMonthRedeemPVPrabayarRev.trxDate),
-                        index('city').on(prevYearSameMonthRedeemPVPrabayarRev.city),
+                        index('trx_date').on(prevYearSameMonthRedeemPVPrabayarRev.trxDate).using('btree'),
+                        index('city').on(prevYearSameMonthRedeemPVPrabayarRev.city).using('btree'),
                     ]
                 })
                 .where(and(
@@ -1756,7 +1756,7 @@ END
 
             return c.json({ data: finalDataRevenue }, 200);
         })
-    .get('/redeem-pv-byu', zValidator('query', z.object({ date: z.coerce.date().optional() })),
+    .get('/redeem-pv-prabayar', zValidator('query', z.object({ date: z.coerce.date().optional() })),
         async c => {
             const { date } = c.req.valid('query')
             const selectedDate = date ? new Date(date) : new Date()
@@ -1768,13 +1768,13 @@ END
             // VARIABLE TANGGAL UNTUK IMPORT TABEL SECARA DINAMIS
             const latestDataDate = subDays(selectedDate, 2); // - 2 days
 
-            const currMonth = format(latestDataDate, 'MM')
-            const currYear = format(latestDataDate, 'yyyy')
-            const latestMonth = parseInt(format(latestDataDate, 'M'), 10)
+            const currMonth = format(selectedDate, 'MM')
+            const currYear = format(selectedDate, 'yyyy')
+            const latestMonth = parseInt(format(selectedDate, 'M'), 10)
             const isPrevMonthLastYear = currMonth === '01'
-            const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(latestDataDate, 1), 'MM')
-            const prevMonthYear = isPrevMonthLastYear ? format(subYears(latestDataDate, 1), 'yyyy') : format(latestDataDate, 'yyyy')
-            const prevYear = format(subYears(latestDataDate, 1), 'yyyy')
+            const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(selectedDate, 1), 'MM')
+            const prevMonthYear = isPrevMonthLastYear ? format(subYears(selectedDate, 1), 'yyyy') : format(selectedDate, 'yyyy')
+            const prevYear = format(subYears(selectedDate, 1), 'yyyy')
 
             const currMonthRedeemPVPrabayarRev = dynamicRevenueCVMTable(currYear, currMonth)
             const prevMonthRedeemPVPrabayarRev = dynamicRevenueCVMTable(prevMonthYear, prevMonth)
@@ -1792,17 +1792,17 @@ END
 
             // VARIABLE TANGGAL
             // Get the last day of the selected month
-            const lastDayOfSelectedMonth = endOfMonth(latestDataDate);
-            const isEndOfMonth = latestDataDate.getDate() === lastDayOfSelectedMonth.getDate();
+            const lastDayOfSelectedMonth = endOfMonth(selectedDate);
+            const isEndOfMonth = selectedDate.getDate() === lastDayOfSelectedMonth.getDate();
 
-            const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : latestDataDate;
-            const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(latestDataDate, 1)) : subMonths(latestDataDate, 1);
-            const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(latestDataDate, 1)) : subYears(latestDataDate, 1);
+            const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : selectedDate;
+            const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(selectedDate, 1)) : subMonths(selectedDate, 1);
+            const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(selectedDate, 1)) : subYears(selectedDate, 1);
 
             // get the first day and last day of the selected month dynamically
-            const firstDayOfCurrMonth = format(startOfMonth(latestDataDate), 'yyyy-MM-dd')
-            const firstDayOfPrevMonth = format(startOfMonth(subMonths(latestDataDate, 1)), 'yyyy-MM-dd')
-            const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(latestDataDate, 1)), 'yyyy-MM-dd')
+            const firstDayOfCurrMonth = format(startOfMonth(selectedDate), 'yyyy-MM-dd')
+            const firstDayOfPrevMonth = format(startOfMonth(subMonths(selectedDate, 1)), 'yyyy-MM-dd')
+            const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(selectedDate, 1)), 'yyyy-MM-dd')
 
             const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
@@ -2017,9 +2017,15 @@ END
                     kabupaten: currMonthRedeemPVPrabayarRev.city,
                     rev: currMonthRedeemPVPrabayarRev.revenue
                 })
-                .from(currMonthRedeemPVPrabayarRev)
+                .from(currMonthRedeemPVPrabayarRev, {
+                    useIndex: [
+                        index('trx_date').on(currMonthRedeemPVPrabayarRev.trxDate).using('btree'),
+                        index('city').on(currMonthRedeemPVPrabayarRev.city).using('btree'),
+                    ]
+                })
                 .where(and(
-                    notInArray(currMonthRedeemPVPrabayarRev.city, ['TMP']),
+                    not(eq(currMonthRedeemPVPrabayarRev.city, 'TMP')),
+                    not(eq(currMonthRedeemPVPrabayarRev.brand, 'kartuHALO')),
                     and(
                         like(currMonthRedeemPVPrabayarRev.packageGroup, '04. PV'),
                         between(currMonthRedeemPVPrabayarRev.trxDate, firstDayOfCurrMonth, currDate)
@@ -2236,9 +2242,15 @@ END
                     rev: prevMonthRedeemPVPrabayarRev.revenue,
                     trxDate: prevMonthRedeemPVPrabayarRev.trxDate
                 })
-                .from(prevMonthRedeemPVPrabayarRev)
+                .from(prevMonthRedeemPVPrabayarRev, {
+                    useIndex: [
+                        index('trx_date').on(prevMonthRedeemPVPrabayarRev.trxDate).using('btree'),
+                        index('city').on(prevMonthRedeemPVPrabayarRev.city).using('btree'),
+                    ]
+                })
                 .where(and(
-                    notInArray(prevMonthRedeemPVPrabayarRev.city, ['TMP']),
+                    not(eq(prevMonthRedeemPVPrabayarRev.city, 'TMP')),
+                    not(eq(prevMonthRedeemPVPrabayarRev.brand, 'kartuHALO')),
                     and(
                         like(prevMonthRedeemPVPrabayarRev.packageGroup, '04. PV'),
                         between(prevMonthRedeemPVPrabayarRev.trxDate, firstDayOfPrevMonth, prevDate)
@@ -2456,9 +2468,15 @@ END
                     rev: prevYearSameMonthRedeemPVPrabayarRev.revenue,
                     trxDate: prevYearSameMonthRedeemPVPrabayarRev.trxDate
                 })
-                .from(prevYearSameMonthRedeemPVPrabayarRev)
+                .from(prevYearSameMonthRedeemPVPrabayarRev, {
+                    useIndex: [
+                        index('trx_date').on(prevYearSameMonthRedeemPVPrabayarRev.trxDate).using('btree'),
+                        index('city').on(prevYearSameMonthRedeemPVPrabayarRev.city).using('btree'),
+                    ]
+                })
                 .where(and(
-                    notInArray(prevYearSameMonthRedeemPVPrabayarRev.city, ['TMP']),
+                    not(eq(prevYearSameMonthRedeemPVPrabayarRev.city, 'TMP')),
+                    not(eq(prevYearSameMonthRedeemPVPrabayarRev.brand, 'kartuHALO')),
                     and(
                         like(prevYearSameMonthRedeemPVPrabayarRev.packageGroup, '04. PV'),
                         between(prevYearSameMonthRedeemPVPrabayarRev.trxDate, firstDayOfPrevYearCurrMonth, prevYearCurrDate)
@@ -2752,7 +2770,7 @@ END
                         city as kabupaten,
                         revenue as rev
                     FROM ${table}
-                    WHERE package_group LIKE '%PV%'`).join(' UNION ALL ')
+                    WHERE package_group LIKE '%PV%' AND city <> 'TMP' AND brand <> 'kartuHALO'`).join(' UNION ALL ')
 
             const queryPrevYtd = prevYtdRedeemPVRev.map(table => `
                     SELECT
@@ -2958,7 +2976,7 @@ END
                         city as kabupaten,
                         revenue as rev
                     FROM ${table}
-                    WHERE package_group LIKE '%PV%'`).join(' UNION ALL ')
+                    WHERE package_group LIKE '%PV%' AND city <> 'TMP' AND brand <> 'kartuHALO'`).join(' UNION ALL ')
 
             const sq = `
                     WITH sq AS (
@@ -2976,7 +2994,6 @@ END
                         SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                         SUM(SUM(rev)) OVER (PARTITION BY region) AS currYtdRegionalRev
                     FROM sq
-                    WHERE kabupaten NOT IN ('TMP')
                     GROUP BY 1, 2, 3, 4, 5
                         `
 
@@ -2996,7 +3013,6 @@ END
                         SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                         SUM(SUM(rev)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                     FROM sq5
-                    WHERE kabupaten NOT IN ('TMP')
                     GROUP BY 1, 2, 3, 4, 5
                         `
 

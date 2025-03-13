@@ -23,13 +23,13 @@ const app = new Hono()
             // VARIABLE TANGGAL UNTUK IMPORT TABEL SECARA DINAMIS
             const latestDataDate = subDays(selectedDate, 2);
 
-            const currMonth = format(latestDataDate, 'MM')
-            const currYear = format(latestDataDate, 'yyyy')
-            const latestMonth = parseInt(format(latestDataDate, 'M'), 10)
+            const currMonth = format(selectedDate, 'MM')
+            const currYear = format(selectedDate, 'yyyy')
+            const latestMonth = parseInt(format(selectedDate, 'M'), 10)
             const isPrevMonthLastYear = currMonth === '01'
-            const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(latestDataDate, 1), 'MM')
-            const prevMonthYear = isPrevMonthLastYear ? format(subYears(latestDataDate, 1), 'yyyy') : format(latestDataDate, 'yyyy')
-            const prevYear = format(subYears(latestDataDate, 1), 'yyyy')
+            const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(selectedDate, 1), 'MM')
+            const prevMonthYear = isPrevMonthLastYear ? format(subYears(selectedDate, 1), 'yyyy') : format(selectedDate, 'yyyy')
+            const prevYear = format(subYears(selectedDate, 1), 'yyyy')
 
             // TABEL `merge_new_sales_puma_`
             const currRevNewSales = dynamicMergeNewSalesPumaTable(currYear, currMonth)
@@ -48,17 +48,17 @@ const app = new Hono()
 
             // VARIABLE TANGGAL
             // Get the last day of the selected month
-            const lastDayOfSelectedMonth = endOfMonth(latestDataDate);
-            const isEndOfMonth = latestDataDate.getDate() === lastDayOfSelectedMonth.getDate();
+            const lastDayOfSelectedMonth = endOfMonth(selectedDate);
+            const isEndOfMonth = selectedDate.getDate() === lastDayOfSelectedMonth.getDate();
 
-            const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : latestDataDate;
-            const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(latestDataDate, 1)) : subMonths(latestDataDate, 1);
-            const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(latestDataDate, 1)) : subYears(latestDataDate, 1);
+            const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : selectedDate;
+            const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(selectedDate, 1)) : subMonths(selectedDate, 1);
+            const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(selectedDate, 1)) : subYears(selectedDate, 1);
 
             // get the first day and last day of the selected month dynamically
-            const firstDayOfCurrMonth = format(startOfMonth(latestDataDate), 'yyyy-MM-dd')
-            const firstDayOfPrevMonth = format(startOfMonth(subMonths(latestDataDate, 1)), 'yyyy-MM-dd')
-            const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(latestDataDate, 1)), 'yyyy-MM-dd')
+            const firstDayOfCurrMonth = format(startOfMonth(selectedDate), 'yyyy-MM-dd')
+            const firstDayOfPrevMonth = format(startOfMonth(subMonths(selectedDate, 1)), 'yyyy-MM-dd')
+            const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(selectedDate, 1)), 'yyyy-MM-dd')
 
             const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
@@ -1758,13 +1758,13 @@ const app = new Hono()
             // VARIABLE TANGGAL UNTUK IMPORT TABEL SECARA DINAMIS
             const latestDataDate = subDays(selectedDate, 2);
 
-            const currMonth = format(latestDataDate, 'MM')
-            const currYear = format(latestDataDate, 'yyyy')
-            const latestMonth = parseInt(format(latestDataDate, 'M'), 10)
+            const currMonth = format(selectedDate, 'MM')
+            const currYear = format(selectedDate, 'yyyy')
+            const latestMonth = parseInt(format(selectedDate, 'M'), 10)
             const isPrevMonthLastYear = currMonth === '01'
-            const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(latestDataDate, 1), 'MM')
-            const prevMonthYear = isPrevMonthLastYear ? format(subYears(latestDataDate, 1), 'yyyy') : format(latestDataDate, 'yyyy')
-            const prevYear = format(subYears(latestDataDate, 1), 'yyyy')
+            const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(selectedDate, 1), 'MM')
+            const prevMonthYear = isPrevMonthLastYear ? format(subYears(selectedDate, 1), 'yyyy') : format(selectedDate, 'yyyy')
+            const prevYear = format(subYears(selectedDate, 1), 'yyyy')
 
             // TABEL `merge_new_sales_puma_`
             const currRevNewSales = dynamicMergeNewSalesPumaTable(currYear, currMonth)
@@ -1783,17 +1783,17 @@ const app = new Hono()
 
             // VARIABLE TANGGAL
             // Get the last day of the selected month
-            const lastDayOfSelectedMonth = endOfMonth(latestDataDate);
-            const isEndOfMonth = latestDataDate.getDate() === lastDayOfSelectedMonth.getDate();
+            const lastDayOfSelectedMonth = endOfMonth(selectedDate);
+            const isEndOfMonth = selectedDate.getDate() === lastDayOfSelectedMonth.getDate();
 
-            const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : latestDataDate;
-            const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(latestDataDate, 1)) : subMonths(latestDataDate, 1);
-            const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(latestDataDate, 1)) : subYears(latestDataDate, 1);
+            const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : selectedDate;
+            const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(selectedDate, 1)) : subMonths(selectedDate, 1);
+            const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(selectedDate, 1)) : subYears(selectedDate, 1);
 
             // get the first day and last day of the selected month dynamically
-            const firstDayOfCurrMonth = format(startOfMonth(latestDataDate), 'yyyy-MM-dd')
-            const firstDayOfPrevMonth = format(startOfMonth(subMonths(latestDataDate, 1)), 'yyyy-MM-dd')
-            const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(latestDataDate, 1)), 'yyyy-MM-dd')
+            const firstDayOfCurrMonth = format(startOfMonth(selectedDate), 'yyyy-MM-dd')
+            const firstDayOfPrevMonth = format(startOfMonth(subMonths(selectedDate, 1)), 'yyyy-MM-dd')
+            const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(selectedDate, 1)), 'yyyy-MM-dd')
 
             const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
@@ -3502,13 +3502,13 @@ const app = new Hono()
             // VARIABLE TANGGAL UNTUK IMPORT TABEL SECARA DINAMIS
             const latestDataDate = subDays(selectedDate, 2);
 
-            const currMonth = format(latestDataDate, 'MM')
-            const currYear = format(latestDataDate, 'yyyy')
-            const latestMonth = parseInt(format(latestDataDate, 'M'), 10)
+            const currMonth = format(selectedDate, 'MM')
+            const currYear = format(selectedDate, 'yyyy')
+            const latestMonth = parseInt(format(selectedDate, 'M'), 10)
             const isPrevMonthLastYear = currMonth === '01'
-            const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(latestDataDate, 1), 'MM')
-            const prevMonthYear = isPrevMonthLastYear ? format(subYears(latestDataDate, 1), 'yyyy') : format(latestDataDate, 'yyyy')
-            const prevYear = format(subYears(latestDataDate, 1), 'yyyy')
+            const prevMonth = isPrevMonthLastYear ? '12' : format(subMonths(selectedDate, 1), 'MM')
+            const prevMonthYear = isPrevMonthLastYear ? format(subYears(selectedDate, 1), 'yyyy') : format(selectedDate, 'yyyy')
+            const prevYear = format(subYears(selectedDate, 1), 'yyyy')
 
             // TABEL `merge_new_sales_puma_`
             const currRevNewSales = dynamicMergeNewSalesPumaTable(currYear, currMonth)
@@ -3527,17 +3527,17 @@ const app = new Hono()
 
             // VARIABLE TANGGAL
             // Get the last day of the selected month
-            const lastDayOfSelectedMonth = endOfMonth(latestDataDate);
-            const isEndOfMonth = latestDataDate.getDate() === lastDayOfSelectedMonth.getDate();
+            const lastDayOfSelectedMonth = endOfMonth(selectedDate);
+            const isEndOfMonth = selectedDate.getDate() === lastDayOfSelectedMonth.getDate();
 
-            const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : latestDataDate;
-            const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(latestDataDate, 1)) : subMonths(latestDataDate, 1);
-            const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(latestDataDate, 1)) : subYears(latestDataDate, 1);
+            const endOfCurrMonth = isEndOfMonth ? lastDayOfSelectedMonth : selectedDate;
+            const endOfPrevMonth = isEndOfMonth ? endOfMonth(subMonths(selectedDate, 1)) : subMonths(selectedDate, 1);
+            const endOfPrevYearSameMonth = isEndOfMonth ? endOfMonth(subYears(selectedDate, 1)) : subYears(selectedDate, 1);
 
             // get the first day and last day of the selected month dynamically
-            const firstDayOfCurrMonth = format(startOfMonth(latestDataDate), 'yyyy-MM-dd')
-            const firstDayOfPrevMonth = format(startOfMonth(subMonths(latestDataDate, 1)), 'yyyy-MM-dd')
-            const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(latestDataDate, 1)), 'yyyy-MM-dd')
+            const firstDayOfCurrMonth = format(startOfMonth(selectedDate), 'yyyy-MM-dd')
+            const firstDayOfPrevMonth = format(startOfMonth(subMonths(selectedDate, 1)), 'yyyy-MM-dd')
+            const firstDayOfPrevYearCurrMonth = format(startOfMonth(subYears(selectedDate, 1)), 'yyyy-MM-dd')
 
             const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');

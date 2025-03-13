@@ -50,6 +50,13 @@ const poolConnection6 = mysql.createPool({
 	database: process.env.DB_NAME6,
 })
 
+const poolConnection7 = mysql.createPool({
+	host: process.env.DB_HOST1,
+	user: process.env.DB_USERNAME,
+	password: process.env.DB_PASSWORD,
+	database: process.env.DB_NAME7,
+})
+
 // You can specify any property from the mysql2 connection options
 export const db = drizzle({ client: poolConnection, mode: 'default', schema })
 export const db2 = drizzle({ client: poolConnection2, mode: 'default', schema: schema2 })
