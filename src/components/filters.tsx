@@ -60,8 +60,9 @@ export const Filters = ({ daysBehind }: { daysBehind: number }) => {
         // this for month picker, doesnt include day
         // setSelectedDate(new Date(date!.getFullYear(), date!.getMonth(), day));
 
-        // this for date picker, day included 
-        setSelectedDate(new Date(date!));
+        // this for date picker, day included
+        const notNullDate = date ? date : subDays(new Date(), daysBehind)
+        setSelectedDate(notNullDate)
     }
 
     if (isLoadingRegion || !areas) {
@@ -131,7 +132,7 @@ export const Filters = ({ daysBehind }: { daysBehind: number }) => {
             <div>
                 <Label>Tanggal</Label>
                 <DatePicker
-                    selected={selectedDate}
+                    selected={selectedDate ? selectedDate : subDays(new Date(), daysBehind)}
                     renderMonthContent={renderMonthContent}
                     onChange={(date) => handleDateChange(date)}
                     dateFormat="yyyy-MM-dd"

@@ -66,7 +66,7 @@ export const getAchGrowthColor = (value: number) => {
 	return false
 };
 
-export async function exportToExcel(data: Regional[], fileName: string, selectedDate: Date, compactDate: Date) {
+export async function exportToExcel(data: Regional[], fileName: string, selectedDate: Date) {
 	const workbook = new Exceljs.Workbook();
 	const worksheet = workbook.addWorksheet('Sheet1');
 

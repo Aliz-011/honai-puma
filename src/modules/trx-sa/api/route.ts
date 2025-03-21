@@ -22,8 +22,8 @@ const app = new Hono()
     .get('/', zValidator('query', z.object({ date: z.coerce.date().optional() })),
         async c => {
             const { date } = c.req.valid('query')
-            const selectedDate = date ? new Date(date) : new Date()
-            const month = (subDays(selectedDate, 3).getMonth() + 1).toString()
+            const selectedDate = date ? new Date(date) : subDays(new Date(), 3)
+            const month = (selectedDate.getMonth() + 1).toString()
 
 
             // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
@@ -72,6 +72,9 @@ const app = new Hono()
             const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
             const prevYearCurrDate = format(endOfPrevYearSameMonth, 'yyyy-MM-dd');
+
+            const currJanuaryFirst = `${currYear}-01-01`
+            const prevJanuaryFirst = `${prevYear}-01-01`
 
             const sq2 = db5
                 .select({
@@ -1016,6 +1019,7 @@ const app = new Hono()
                             ELSE NULL
                         END as cluster,
                         kabupaten,
+                        trx_date,
                         COUNT(msisdn) as trx
                     FROM ${table} WHERE regional IN ('MALUKU DAN PAPUA', 'PUMA') GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
 
@@ -1221,8 +1225,9 @@ const app = new Hono()
                                 ELSE NULL
                             END as cluster,
                             kabupaten,
+                            trx_date,
                             COUNT(msisdn) as trx
-                        FROM ${table} WHERE regional IN ('PUMA', 'MALUKU DAN PAPUA') GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
+                    FROM ${table} WHERE regional IN ('PUMA', 'MALUKU DAN PAPUA') GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
 
             const sq = `
                         WITH sq AS (
@@ -1240,6 +1245,7 @@ const app = new Hono()
                             SUM(SUM(trx)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                             SUM(SUM(trx)) OVER (PARTITION BY region) AS currYtdRegionalRev
                         FROM sq
+                        WHERE trx_date BETWEEN '${currJanuaryFirst}' AND '${currDate}' AND kabupaten <> 'TMP'
                         GROUP BY 1, 2, 3, 4, 5
                             `
 
@@ -1259,6 +1265,7 @@ const app = new Hono()
                             SUM(SUM(trx)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                             SUM(SUM(trx)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                         FROM sq5
+                        WHERE trx_date BETWEEN '${prevJanuaryFirst}' AND '${prevYearCurrDate}' AND kabupaten <> 'TMP'
                         GROUP BY 1, 2, 3, 4, 5
                             `
 
@@ -1738,8 +1745,8 @@ const app = new Hono()
     .get('/trx-sa-prabayar', zValidator('query', z.object({ date: z.coerce.date().optional() })),
         async c => {
             const { date } = c.req.valid('query')
-            const selectedDate = date ? new Date(date) : new Date()
-            const month = (subDays(selectedDate, 3).getMonth() + 1).toString()
+            const selectedDate = date ? new Date(date) : subDays(new Date(), 3)
+            const month = (selectedDate.getMonth() + 1).toString()
 
 
             // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
@@ -1788,6 +1795,9 @@ const app = new Hono()
             const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
             const prevYearCurrDate = format(endOfPrevYearSameMonth, 'yyyy-MM-dd');
+
+            const currJanuaryFirst = `${currYear}-01-01`
+            const prevJanuaryFirst = `${prevYear}-01-01`
 
             const sq2 = db5
                 .select({
@@ -2735,8 +2745,9 @@ const app = new Hono()
                             ELSE NULL
                         END as cluster,
                         kabupaten,
+                        trx_date,
                         COUNT(msisdn) as trx
-                    FROM ${table} WHERE regional IN ('MALUKU DAN PAPUA', 'PUMA') AND brand = 'prepaid' GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
+                    FROM ${table} WHERE regional IN ('MALUKU DAN PAPUA', 'PUMA') AND brand = 'prepaid' AND kabupaten <> 'TMP' GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
 
             const queryPrevYtd = prevYtdTrxSARev.map(table => `
                         SELECT
@@ -2940,8 +2951,9 @@ const app = new Hono()
                                 ELSE NULL
                             END as cluster,
                             kabupaten,
+                            trx_date,
                             COUNT(msisdn) as trx
-                        FROM ${table} WHERE regional IN ('PUMA', 'MALUKU DAN PAPUA') AND brand = 'prepaid' GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
+                    FROM ${table} WHERE regional IN ('PUMA', 'MALUKU DAN PAPUA') AND brand = 'prepaid' AND kabupaten <> 'TMP' GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
 
             const sq = `
                         WITH sq AS (
@@ -2959,6 +2971,7 @@ const app = new Hono()
                             SUM(SUM(trx)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                             SUM(SUM(trx)) OVER (PARTITION BY region) AS currYtdRegionalRev
                         FROM sq
+                        WHERE trx_date BETWEEN '${currJanuaryFirst}' AND '${currDate}'
                         GROUP BY 1, 2, 3, 4, 5
                             `
 
@@ -2978,6 +2991,7 @@ const app = new Hono()
                             SUM(SUM(trx)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                             SUM(SUM(trx)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                         FROM sq5
+                        WHERE trx_date BETWEEN '${prevJanuaryFirst}' AND '${prevYearCurrDate}'
                         GROUP BY 1, 2, 3, 4, 5
                             `
 
@@ -3457,8 +3471,8 @@ const app = new Hono()
     .get('/trx-sa-byu', zValidator('query', z.object({ date: z.coerce.date().optional() })),
         async c => {
             const { date } = c.req.valid('query')
-            const selectedDate = date ? new Date(date) : new Date()
-            const month = (subDays(selectedDate, 3).getMonth() + 1).toString()
+            const selectedDate = date ? new Date(date) : subDays(new Date(), 3)
+            const month = (selectedDate.getMonth() + 1).toString()
 
 
             // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
@@ -3507,6 +3521,9 @@ const app = new Hono()
             const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
             const prevYearCurrDate = format(endOfPrevYearSameMonth, 'yyyy-MM-dd');
+
+            const currJanuaryFirst = `${currYear}-01-01`
+            const prevJanuaryFirst = `${prevYear}-01-01`
 
             const sq2 = db5
                 .select({
@@ -4454,8 +4471,9 @@ const app = new Hono()
                         ELSE NULL
                     END as cluster,
                     kabupaten,
+                    trx_date,
                     COUNT(msisdn) as trx
-                FROM ${table} WHERE regional IN ('MALUKU DAN PAPUA', 'PUMA') AND brand = 'prepaid' GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
+                FROM ${table} WHERE regional IN ('MALUKU DAN PAPUA', 'PUMA') AND brand = 'byu' AND kabupaten <> 'TMP' GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
 
             const queryPrevYtd = prevYtdTrxSARev.map(table => `
                     SELECT
@@ -4659,8 +4677,9 @@ const app = new Hono()
                             ELSE NULL
                         END as cluster,
                         kabupaten,
+                        trx_date,
                         COUNT(msisdn) as trx
-                    FROM ${table} WHERE regional IN ('PUMA', 'MALUKU DAN PAPUA') AND brand = 'prepaid' GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
+                FROM ${table} WHERE regional IN ('PUMA', 'MALUKU DAN PAPUA') AND brand = 'byu' AND kabupaten <> 'TMP' GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
 
             const sq = `
                     WITH sq AS (
@@ -4678,6 +4697,7 @@ const app = new Hono()
                         SUM(SUM(trx)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                         SUM(SUM(trx)) OVER (PARTITION BY region) AS currYtdRegionalRev
                     FROM sq
+                    WHERE trx_date BETWEEN '${currJanuaryFirst}' AND '${currDate}'
                     GROUP BY 1, 2, 3, 4, 5
                         `
 
@@ -4697,6 +4717,7 @@ const app = new Hono()
                         SUM(SUM(trx)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                         SUM(SUM(trx)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                     FROM sq5
+                    WHERE trx_date BETWEEN '${prevJanuaryFirst}' AND '${prevYearCurrDate}'
                     GROUP BY 1, 2, 3, 4, 5
                         `
 

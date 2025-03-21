@@ -5,11 +5,11 @@ import { TableData } from "@/components/data-table";
 import { Filters } from "@/components/filters";
 
 import { useSelectDate } from "@/hooks/use-select-date";
-import { useGetRedeemPVPrabayar } from "@/modules/redeem-pv/hooks/use-get-redeem-pv-prabayar";
+import { useGetRedeemPVByu } from "@/modules/redeem-pv/hooks/use-get-redeem-pv-byu";
 
 const RevenueRedeemPVPage = () => {
     const { date } = useSelectDate()
-    const { data, isLoading, isRefetching, refetch } = useGetRedeemPVPrabayar({ date })
+    const { data, isLoading, isRefetching, refetch } = useGetRedeemPVByu({ date })
 
     return (
         <div>

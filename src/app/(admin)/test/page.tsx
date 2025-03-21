@@ -26,7 +26,7 @@ export default function TestPage() {
 
     const handleSearch = () => {
         const query = {
-            date: selectedDate.toDateString(),
+            date: selectedDate?.toDateString(),
             branch: selectedBranch,
             subbranch: selectedSubbranch,
             cluster: selectedCluster,

@@ -7,15 +7,15 @@ import { endOfMonth, format, startOfMonth, subDays, subMonths, subYears } from "
 
 import { zValidator } from "@/lib/validator-wrapper";
 import { branches, clusters, kabupatens, regionals, subbranches, trxNewSales, trxNewSalesByu, trxNewSalesPrabayar } from "@/db/schema";
-import { dynamicMergeNewSalesPumaTable } from "@/db/schema4";
-import { db, db4 } from "@/db";
+import { db, db2 } from "@/db";
+import { dynamicResumeRevenuePumaTable } from "@/db/schema2";
 
 const app = new Hono()
     .get('/', zValidator('query', z.object({ date: z.coerce.date().optional() })),
         async c => {
             const { date } = c.req.valid('query')
-            const selectedDate = date ? new Date(date) : new Date()
-            const month = (subDays(selectedDate, 2).getMonth() + 1).toString()
+            const selectedDate = date ? new Date(date) : subDays(new Date(), 2)
+            const month = (selectedDate.getMonth() + 1).toString()
 
             // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
             const monthColumn = `m${month}` as keyof typeof trxNewSales.$inferSelect
@@ -31,19 +31,19 @@ const app = new Hono()
             const prevMonthYear = isPrevMonthLastYear ? format(subYears(selectedDate, 1), 'yyyy') : format(selectedDate, 'yyyy')
             const prevYear = format(subYears(selectedDate, 1), 'yyyy')
 
-            // TABEL `merge_new_sales_puma_`
-            const currRevNewSales = dynamicMergeNewSalesPumaTable(currYear, currMonth)
-            const prevMonthRevNewSales = dynamicMergeNewSalesPumaTable(prevMonthYear, prevMonth)
-            const prevYearCurrMonthRevNewSales = dynamicMergeNewSalesPumaTable(prevYear, currMonth)
+            // TABEL `resume_revenue_puma_`
+            const currRevNewSales = dynamicResumeRevenuePumaTable(currYear, currMonth)
+            const prevMonthRevNewSales = dynamicResumeRevenuePumaTable(prevMonthYear, prevMonth)
+            const prevYearCurrMonthRevNewSales = dynamicResumeRevenuePumaTable(prevYear, currMonth)
             const currYtdRevNewSales = [];
             for (let month = 1; month <= latestMonth; month++) {
                 const monthStr = month.toString().padStart(2, '0')
-                currYtdRevNewSales.push(`merge_new_sales_puma_${currYear}${monthStr}`)
+                currYtdRevNewSales.push(`resume_revenue_puma_${currYear}${monthStr}`)
             }
             const prevYtdRevNewSales = [];
             for (let month = 1; month <= latestMonth; month++) {
                 const monthStr = month.toString().padStart(2, '0')
-                prevYtdRevNewSales.push(`merge_new_sales_puma_${prevYear}${monthStr}`)
+                prevYtdRevNewSales.push(`resume_revenue_puma_${prevYear}${monthStr}`)
             }
 
             // VARIABLE TANGGAL
@@ -64,7 +64,10 @@ const app = new Hono()
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
             const prevYearCurrDate = format(endOfPrevYearSameMonth, 'yyyy-MM-dd');
 
-            const sq2 = db4
+            const currJanuaryFirst = `${currYear}-01-01`
+            const prevJanuaryFirst = `${prevYear}-01-01`
+
+            const sq2 = db2
                 .select({
                     regionName: currRevNewSales.regionSales,
                     branchName: sql<string>`
@@ -281,6 +284,7 @@ const app = new Hono()
                     ]
                 })
                 .where(and(
+                    eq(currRevNewSales.cat, 'new_sales'),
                     not(eq(currRevNewSales.kabupaten, 'TMP')),
                     and(
                         gte(currRevNewSales.mtdDt, firstDayOfCurrMonth),
@@ -289,7 +293,7 @@ const app = new Hono()
                 ))
                 .as('sq2')
 
-            const sq3 = db4
+            const sq3 = db2
                 .select({
                     regionName: prevMonthRevNewSales.regionSales,
                     branchName: sql<string>`
@@ -506,6 +510,7 @@ const app = new Hono()
                     ]
                 })
                 .where(and(
+                    eq(prevMonthRevNewSales.cat, 'new_sales'),
                     not(eq(prevMonthRevNewSales.kabupaten, 'TMP')),
                     and(
                         gte(prevMonthRevNewSales.mtdDt, firstDayOfPrevMonth),
@@ -514,7 +519,7 @@ const app = new Hono()
                 ))
                 .as('sq3')
 
-            const sq4 = db4
+            const sq4 = db2
                 .select({
                     regionName: prevYearCurrMonthRevNewSales.regionSales,
                     branchName: sql<string>`
@@ -731,6 +736,7 @@ const app = new Hono()
                     ]
                 })
                 .where(and(
+                    eq(prevYearCurrMonthRevNewSales.cat, 'new_sales'),
                     not(eq(prevYearCurrMonthRevNewSales.kabupaten, 'TMP')),
                     and(
                         gte(prevYearCurrMonthRevNewSales.mtdDt, firstDayOfPrevYearCurrMonth),
@@ -768,7 +774,7 @@ const app = new Hono()
                 .prepare()
 
             //  QUERY UNTUK MENDAPAT CURRENT MONTH REVENUE (Mtd)
-            const p2 = db4
+            const p2 = db2
                 .select({
                     region: sql<string>`${sq2.regionName}`.as('region'),
                     branch: sql<string>`${sq2.branchName}`.as('branch'), // Keep only one branchName
@@ -786,7 +792,7 @@ const app = new Hono()
                 .prepare()
 
             // QUERY UNTUK MENDAPAT PREV MONTH REVENUE
-            const p3 = db4
+            const p3 = db2
                 .select({
                     region: sql<string>`${sq3.regionName}`.as('region'),
                     branch: sql<string>`${sq3.branchName}`.as('branch'), // Keep only one branchName
@@ -804,7 +810,7 @@ const app = new Hono()
                 .prepare()
 
             // QUERY UNTUK MENDAPAT PREV YEAR CURR MONTH REVENUE
-            const p4 = db4
+            const p4 = db2
                 .select({
                     region: sql<string>`${sq4.regionName}`.as('region'),
                     branch: sql<string>`${sq4.branchName}`.as('branch'), // Keep only one branchName
@@ -1023,8 +1029,9 @@ const app = new Hono()
                             ELSE NULL
                         END as cluster,
                         kabupaten,
+                        mtd_dt,
                         trx
-                    FROM ${table}`).join(' UNION ALL ')
+                    FROM ${table} WHERE cat = 'new_sales'`).join(' UNION ALL ')
 
             const queryPrevYtd = prevYtdRevNewSales.map(table => `
                     SELECT
@@ -1228,8 +1235,9 @@ const app = new Hono()
                             ELSE NULL
                         END as cluster,
                         kabupaten,
+                        mtd_dt,
                         trx
-                    FROM ${table}`).join(' UNION ALL ')
+                    FROM ${table} WHERE cat = 'new_sales'`).join(' UNION ALL ')
 
             const sq = `
                     WITH sq AS (
@@ -1247,7 +1255,7 @@ const app = new Hono()
                         SUM(SUM(trx)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                         SUM(SUM(trx)) OVER (PARTITION BY region) AS currYtdRegionalRev
                     FROM sq
-                    WHERE kabupaten <> 'TMP'
+                    WHERE kabupaten <> 'TMP' AND mtd_dt BETWEEN '${currJanuaryFirst}' AND '${currDate}'
                     GROUP BY 1, 2, 3, 4, 5
                         `
 
@@ -1267,7 +1275,7 @@ const app = new Hono()
                         SUM(SUM(trx)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                         SUM(SUM(trx)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                     FROM sq5
-                    WHERE kabupaten <> 'TMP'
+                    WHERE kabupaten <> 'TMP' AND mtd_dt BETWEEN '${prevJanuaryFirst}' AND '${prevYearCurrDate}'
                     GROUP BY 1, 2, 3, 4, 5
                         `
 
@@ -1277,8 +1285,8 @@ const app = new Hono()
                 p2.execute(),
                 p3.execute(),
                 p4.execute(),
-                db4.execute(sql.raw(sq)),
-                db4.execute(sql.raw(sq5)),
+                db2.execute(sql.raw(sq)),
+                db2.execute(sql.raw(sq5)),
             ])
 
             // /var/lib/backup_mysql_2025/
@@ -1749,8 +1757,8 @@ const app = new Hono()
     .get('/trx-new-sales-prabayar', zValidator('query', z.object({ date: z.coerce.date().optional() })),
         async c => {
             const { date } = c.req.valid('query')
-            const selectedDate = date ? new Date(date) : new Date()
-            const month = (subDays(selectedDate, 2).getMonth() + 1).toString()
+            const selectedDate = date ? new Date(date) : subDays(new Date(), 2)
+            const month = (selectedDate.getMonth() + 1).toString()
 
             // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
             const monthColumn = `m${month}` as keyof typeof trxNewSalesPrabayar.$inferSelect
@@ -1766,19 +1774,19 @@ const app = new Hono()
             const prevMonthYear = isPrevMonthLastYear ? format(subYears(selectedDate, 1), 'yyyy') : format(selectedDate, 'yyyy')
             const prevYear = format(subYears(selectedDate, 1), 'yyyy')
 
-            // TABEL `merge_new_sales_puma_`
-            const currRevNewSales = dynamicMergeNewSalesPumaTable(currYear, currMonth)
-            const prevMonthRevNewSales = dynamicMergeNewSalesPumaTable(prevMonthYear, prevMonth)
-            const prevYearCurrMonthRevNewSales = dynamicMergeNewSalesPumaTable(prevYear, currMonth)
+            // TABEL `resume_revenue_puma_`
+            const currRevNewSales = dynamicResumeRevenuePumaTable(currYear, currMonth)
+            const prevMonthRevNewSales = dynamicResumeRevenuePumaTable(prevMonthYear, prevMonth)
+            const prevYearCurrMonthRevNewSales = dynamicResumeRevenuePumaTable(prevYear, currMonth)
             const currYtdRevNewSales = [];
             for (let month = 1; month <= latestMonth; month++) {
                 const monthStr = month.toString().padStart(2, '0')
-                currYtdRevNewSales.push(`merge_new_sales_puma_${currYear}${monthStr}`)
+                currYtdRevNewSales.push(`resume_revenue_puma_${currYear}${monthStr}`)
             }
             const prevYtdRevNewSales = [];
             for (let month = 1; month <= latestMonth; month++) {
                 const monthStr = month.toString().padStart(2, '0')
-                prevYtdRevNewSales.push(`merge_new_sales_puma_${prevYear}${monthStr}`)
+                prevYtdRevNewSales.push(`resume_revenue_puma_${prevYear}${monthStr}`)
             }
 
             // VARIABLE TANGGAL
@@ -1799,7 +1807,10 @@ const app = new Hono()
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
             const prevYearCurrDate = format(endOfPrevYearSameMonth, 'yyyy-MM-dd');
 
-            const sq2 = db4
+            const currJanuaryFirst = `${currYear}-01-01`
+            const prevJanuaryFirst = `${prevYear}-01-01`
+
+            const sq2 = db2
                 .select({
                     regionName: currRevNewSales.regionSales,
                     branchName: sql<string>`
@@ -2016,6 +2027,7 @@ const app = new Hono()
                     ]
                 })
                 .where(and(
+                    eq(currRevNewSales.cat, 'new_sales'),
                     and(
                         not(eq(currRevNewSales.kabupaten, 'TMP')),
                         not(eq(currRevNewSales.brand, 'ByU'))
@@ -2027,7 +2039,7 @@ const app = new Hono()
                 ))
                 .as('sq2')
 
-            const sq3 = db4
+            const sq3 = db2
                 .select({
                     regionName: prevMonthRevNewSales.regionSales,
                     branchName: sql<string>`
@@ -2244,6 +2256,7 @@ const app = new Hono()
                     ]
                 })
                 .where(and(
+                    eq(prevMonthRevNewSales.cat, 'new_sales'),
                     and(
                         not(eq(prevMonthRevNewSales.kabupaten, 'TMP')),
                         not(eq(prevMonthRevNewSales.brand, 'ByU'))
@@ -2255,7 +2268,7 @@ const app = new Hono()
                 ))
                 .as('sq3')
 
-            const sq4 = db4
+            const sq4 = db2
                 .select({
                     regionName: prevYearCurrMonthRevNewSales.regionSales,
                     branchName: sql<string>`
@@ -2472,6 +2485,7 @@ const app = new Hono()
                     ]
                 })
                 .where(and(
+                    eq(prevYearCurrMonthRevNewSales.cat, 'new_sales'),
                     and(
                         not(eq(prevYearCurrMonthRevNewSales.kabupaten, 'TMP')),
                         not(eq(prevYearCurrMonthRevNewSales.brand, 'ByU'))
@@ -2512,7 +2526,7 @@ const app = new Hono()
                 .prepare()
 
             //  QUERY UNTUK MENDAPAT CURRENT MONTH REVENUE (Mtd)
-            const p2 = db4
+            const p2 = db2
                 .select({
                     region: sql<string>`${sq2.regionName}`.as('region'),
                     branch: sql<string>`${sq2.branchName}`.as('branch'), // Keep only one branchName
@@ -2530,7 +2544,7 @@ const app = new Hono()
                 .prepare()
 
             // QUERY UNTUK MENDAPAT PREV MONTH REVENUE
-            const p3 = db4
+            const p3 = db2
                 .select({
                     region: sql<string>`${sq3.regionName}`.as('region'),
                     branch: sql<string>`${sq3.branchName}`.as('branch'), // Keep only one branchName
@@ -2548,7 +2562,7 @@ const app = new Hono()
                 .prepare()
 
             // QUERY UNTUK MENDAPAT PREV YEAR CURR MONTH REVENUE
-            const p4 = db4
+            const p4 = db2
                 .select({
                     region: sql<string>`${sq4.regionName}`.as('region'),
                     branch: sql<string>`${sq4.branchName}`.as('branch'), // Keep only one branchName
@@ -2767,8 +2781,9 @@ const app = new Hono()
                             ELSE NULL
                         END as cluster,
                         kabupaten,
+                        mtd_dt,
                         trx
-                    FROM ${table} WHERE brand <> 'ByU'`).join(' UNION ALL ')
+                    FROM ${table} WHERE brand <> 'ByU' AND cat = 'new_sales'`).join(' UNION ALL ')
 
             const queryPrevYtd = prevYtdRevNewSales.map(table => `
                     SELECT
@@ -2972,8 +2987,9 @@ const app = new Hono()
                             ELSE NULL
                         END as cluster,
                         kabupaten,
+                        mtd_dt,
                         trx
-                    FROM ${table} WHERE brand <> 'ByU'`).join(' UNION ALL ')
+                    FROM ${table} WHERE brand <> 'ByU' AND cat = 'new_sales'`).join(' UNION ALL ')
 
             const sq = `
                     WITH sq AS (
@@ -2991,7 +3007,7 @@ const app = new Hono()
                         SUM(SUM(trx)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                         SUM(SUM(trx)) OVER (PARTITION BY region) AS currYtdRegionalRev
                     FROM sq
-                    WHERE kabupaten <> 'TMP'
+                    WHERE kabupaten <> 'TMP' AND mtd_dt BETWEEN '${currJanuaryFirst}' AND '${currDate}'
                     GROUP BY 1, 2, 3, 4, 5
                         `
 
@@ -3011,7 +3027,7 @@ const app = new Hono()
                         SUM(SUM(trx)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                         SUM(SUM(trx)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                     FROM sq5
-                    WHERE kabupaten <> 'TMP'
+                    WHERE kabupaten <> 'TMP' AND mtd_dt BETWEEN '${prevJanuaryFirst}' AND '${prevYearCurrDate}'
                     GROUP BY 1, 2, 3, 4, 5
                         `
 
@@ -3021,8 +3037,8 @@ const app = new Hono()
                 p2.execute(),
                 p3.execute(),
                 p4.execute(),
-                db4.execute(sql.raw(sq)),
-                db4.execute(sql.raw(sq5)),
+                db2.execute(sql.raw(sq)),
+                db2.execute(sql.raw(sq5)),
             ])
 
             // /var/lib/backup_mysql_2025/
@@ -3493,8 +3509,8 @@ const app = new Hono()
     .get('/trx-new-sales-byu', zValidator('query', z.object({ date: z.coerce.date().optional() })),
         async c => {
             const { date } = c.req.valid('query')
-            const selectedDate = date ? new Date(date) : new Date()
-            const month = (subDays(selectedDate, 2).getMonth() + 1).toString()
+            const selectedDate = date ? new Date(date) : subDays(new Date(), 2)
+            const month = (selectedDate.getMonth() + 1).toString()
 
             // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
             const monthColumn = `m${month}` as keyof typeof trxNewSalesByu.$inferSelect
@@ -3510,19 +3526,19 @@ const app = new Hono()
             const prevMonthYear = isPrevMonthLastYear ? format(subYears(selectedDate, 1), 'yyyy') : format(selectedDate, 'yyyy')
             const prevYear = format(subYears(selectedDate, 1), 'yyyy')
 
-            // TABEL `merge_new_sales_puma_`
-            const currRevNewSales = dynamicMergeNewSalesPumaTable(currYear, currMonth)
-            const prevMonthRevNewSales = dynamicMergeNewSalesPumaTable(prevMonthYear, prevMonth)
-            const prevYearCurrMonthRevNewSales = dynamicMergeNewSalesPumaTable(prevYear, currMonth)
+            // TABEL `resume_revenue_puma_`
+            const currRevNewSales = dynamicResumeRevenuePumaTable(currYear, currMonth)
+            const prevMonthRevNewSales = dynamicResumeRevenuePumaTable(prevMonthYear, prevMonth)
+            const prevYearCurrMonthRevNewSales = dynamicResumeRevenuePumaTable(prevYear, currMonth)
             const currYtdRevNewSales = [];
             for (let month = 1; month <= latestMonth; month++) {
                 const monthStr = month.toString().padStart(2, '0')
-                currYtdRevNewSales.push(`merge_new_sales_puma_${currYear}${monthStr}`)
+                currYtdRevNewSales.push(`resume_revenue_puma_${currYear}${monthStr}`)
             }
             const prevYtdRevNewSales = [];
             for (let month = 1; month <= latestMonth; month++) {
                 const monthStr = month.toString().padStart(2, '0')
-                prevYtdRevNewSales.push(`merge_new_sales_puma_${prevYear}${monthStr}`)
+                prevYtdRevNewSales.push(`resume_revenue_puma_${prevYear}${monthStr}`)
             }
 
             // VARIABLE TANGGAL
@@ -3543,7 +3559,10 @@ const app = new Hono()
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
             const prevYearCurrDate = format(endOfPrevYearSameMonth, 'yyyy-MM-dd');
 
-            const sq2 = db4
+            const currJanuaryFirst = `${currYear}-01-01`
+            const prevJanuaryFirst = `${prevYear}-01-01`
+
+            const sq2 = db2
                 .select({
                     regionName: currRevNewSales.regionSales,
                     branchName: sql<string>`
@@ -3760,6 +3779,7 @@ const app = new Hono()
                     ]
                 })
                 .where(and(
+                    eq(currRevNewSales.cat, 'new_sales'),
                     and(
                         not(eq(currRevNewSales.kabupaten, 'TMP')),
                         eq(currRevNewSales.brand, 'ByU')
@@ -3771,7 +3791,7 @@ const app = new Hono()
                 ))
                 .as('sq2')
 
-            const sq3 = db4
+            const sq3 = db2
                 .select({
                     regionName: prevMonthRevNewSales.regionSales,
                     branchName: sql<string>`
@@ -3988,6 +4008,7 @@ const app = new Hono()
                     ]
                 })
                 .where(and(
+                    eq(prevMonthRevNewSales.cat, 'new_sales'),
                     and(
                         not(eq(prevMonthRevNewSales.kabupaten, 'TMP')),
                         eq(prevMonthRevNewSales.brand, 'ByU')
@@ -3999,7 +4020,7 @@ const app = new Hono()
                 ))
                 .as('sq3')
 
-            const sq4 = db4
+            const sq4 = db2
                 .select({
                     regionName: prevYearCurrMonthRevNewSales.regionSales,
                     branchName: sql<string>`
@@ -4216,6 +4237,7 @@ const app = new Hono()
                     ]
                 })
                 .where(and(
+                    eq(prevYearCurrMonthRevNewSales.cat, 'new_sales'),
                     and(
                         not(eq(prevYearCurrMonthRevNewSales.kabupaten, 'TMP')),
                         eq(prevYearCurrMonthRevNewSales.brand, 'ByU')
@@ -4256,7 +4278,7 @@ const app = new Hono()
                 .prepare()
 
             //  QUERY UNTUK MENDAPAT CURRENT MONTH REVENUE (Mtd)
-            const p2 = db4
+            const p2 = db2
                 .select({
                     region: sql<string>`${sq2.regionName}`.as('region'),
                     branch: sql<string>`${sq2.branchName}`.as('branch'), // Keep only one branchName
@@ -4274,7 +4296,7 @@ const app = new Hono()
                 .prepare()
 
             // QUERY UNTUK MENDAPAT PREV MONTH REVENUE
-            const p3 = db4
+            const p3 = db2
                 .select({
                     region: sql<string>`${sq3.regionName}`.as('region'),
                     branch: sql<string>`${sq3.branchName}`.as('branch'), // Keep only one branchName
@@ -4292,7 +4314,7 @@ const app = new Hono()
                 .prepare()
 
             // QUERY UNTUK MENDAPAT PREV YEAR CURR MONTH REVENUE
-            const p4 = db4
+            const p4 = db2
                 .select({
                     region: sql<string>`${sq4.regionName}`.as('region'),
                     branch: sql<string>`${sq4.branchName}`.as('branch'), // Keep only one branchName
@@ -4511,8 +4533,9 @@ const app = new Hono()
                             ELSE NULL
                         END as cluster,
                         kabupaten,
+                        mtd_dt,
                         trx
-                    FROM ${table} WHERE brand = 'ByU'`).join(' UNION ALL ')
+                    FROM ${table} WHERE brand = 'ByU' AND cat = 'new_sales'`).join(' UNION ALL ')
 
             const queryPrevYtd = prevYtdRevNewSales.map(table => `
                     SELECT
@@ -4716,8 +4739,9 @@ const app = new Hono()
                             ELSE NULL
                         END as cluster,
                         kabupaten,
+                        mtd_dt,
                         trx
-                    FROM ${table} WHERE brand = 'ByU'`).join(' UNION ALL ')
+                    FROM ${table} WHERE brand = 'ByU' AND cat = 'new_sales'`).join(' UNION ALL ')
 
             const sq = `
                     WITH sq AS (
@@ -4735,7 +4759,7 @@ const app = new Hono()
                         SUM(SUM(trx)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                         SUM(SUM(trx)) OVER (PARTITION BY region) AS currYtdRegionalRev
                     FROM sq
-                    WHERE kabupaten <> 'TMP'
+                    WHERE kabupaten <> 'TMP' AND mtd_dt BETWEEN '${currJanuaryFirst}' AND '${currDate}'
                     GROUP BY 1, 2, 3, 4, 5
                         `
 
@@ -4755,7 +4779,7 @@ const app = new Hono()
                         SUM(SUM(trx)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                         SUM(SUM(trx)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                     FROM sq5
-                    WHERE kabupaten <> 'TMP'
+                    WHERE kabupaten <> 'TMP' AND mtd_dt BETWEEN '${prevJanuaryFirst}' AND '${prevYearCurrDate}'
                     GROUP BY 1, 2, 3, 4, 5
                         `
 
@@ -4765,8 +4789,8 @@ const app = new Hono()
                 p2.execute(),
                 p3.execute(),
                 p4.execute(),
-                db4.execute(sql.raw(sq)),
-                db4.execute(sql.raw(sq5)),
+                db2.execute(sql.raw(sq)),
+                db2.execute(sql.raw(sq5)),
             ])
 
             // /var/lib/backup_mysql_2025/

@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { endOfMonth, format, startOfMonth, subDays, subMonths, subYears } from "date-fns";
-import { and, count, eq } from "drizzle-orm";
+import { and, count, eq, getTableColumns } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import Exceljs from "exceljs";
@@ -65,7 +65,7 @@ const app = new Hono()
 
             const p1 = db2
                 .select({
-                    rows: count()
+                    ...getTableColumns(currRevCVM)
                 })
                 .from(currRevCVM)
                 .where(
@@ -83,14 +83,51 @@ const app = new Hono()
                 p1.execute()
             ])
 
-            console.log(thisMonthRows);
-
-
             const workbook = new Exceljs.Workbook();
             const worksheet = workbook.addWorksheet('Sheet1');
 
             worksheet.columns = [
-                { header: 'Rows', key: 'rows', width: 25 }
+                { header: 'msisdn', key: 'msisdn', width: 25 },
+                { header: 'trx_date', key: 'trx_date', width: 25 },
+                { header: 'content_id', key: 'content_id', width: 25 },
+                { header: 'pack_id', key: 'pack_id', width: 25 },
+                { header: 'cp_name', key: 'cp_name', width: 25 },
+                { header: 'region', key: 'region', width: 25 },
+                { header: 'cluster', key: 'cluster', width: 25 },
+                { header: 'branch', key: 'branch', width: 25 },
+                { header: 'subbranch', key: 'subbranch', width: 25 },
+                { header: 'city', key: 'city', width: 25 },
+                { header: 'kecamatan', key: 'kecamatan', width: 25 },
+                { header: 'brand', key: 'brand', width: 25 },
+                { header: 'harga', key: 'harga', width: 25 },
+                { header: 'package_type', key: 'package_type', width: 25 },
+                { header: 'package_service', key: 'package_service', width: 25 },
+                { header: 'package_category', key: 'package_category', width: 25 },
+                { header: 'validity', key: 'validity', width: 25 },
+                { header: 'numeric_quota', key: 'numeric_quota', width: 25 },
+                { header: 'periode', key: 'periode', width: 25 },
+                { header: 'zona', key: 'zona', width: 25 },
+                { header: 'channel', key: 'channel', width: 25 },
+                { header: 'detail_quota', key: 'detail_quota', width: 25 },
+                { header: 'act_date', key: 'act_date', width: 25 },
+                { header: 'los_segment', key: 'los_segment', width: 25 },
+                { header: 'new_service', key: 'new_service', width: 25 },
+                { header: 'new_tipe', key: 'new_tipe', width: 25 },
+                { header: 'category', key: 'category', width: 25 },
+                { header: 'trx', key: 'trx', width: 25 },
+                { header: 'revenue', key: 'revenue', width: 25 },
+                { header: 'channel_id', key: 'channel_id', width: 25 },
+                { header: 'channel_name', key: 'channel_name', width: 25 },
+                { header: 'vas_code', key: 'vas_code', width: 25 },
+                { header: 'l4_name', key: 'l4_name', width: 25 },
+                { header: 'lac', key: 'lac', width: 25 },
+                { header: 'ci', key: 'ci', width: 25 },
+                { header: 'payment_id', key: 'payment_id', width: 25 },
+                { header: 'payment_method', key: 'payment_method', width: 25 },
+                { header: 'flag_gift', key: 'flag_gift', width: 25 },
+                { header: 'package_group', key: 'package_group', width: 25 },
+                { header: 'package_subgroup', key: 'package_subgroup', width: 25 },
+                { header: 'channel_new', key: 'channel_new', width: 25 },
             ]
 
             worksheet.addRows(thisMonthRows)

@@ -23,8 +23,8 @@ const app = new Hono()
   .get("/", zValidator('query', z.object({ date: z.string().optional() })),
     async (c) => {
       const { date } = c.req.valid('query')
-      const selectedDate = date ? new Date(date) : new Date()
-      const month = (subDays(selectedDate, 2).getMonth() + 1).toString()
+      const selectedDate = date ? new Date(date) : subDays(new Date(), 2)
+      const month = (selectedDate.getMonth() + 1).toString()
 
       // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
       const monthColumn = `m${month}` as keyof typeof revenueGrosses.$inferSelect
@@ -72,6 +72,9 @@ const app = new Hono()
       const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
       const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
       const prevYearCurrDate = format(endOfPrevYearSameMonth, 'yyyy-MM-dd');
+
+      const currJanuaryFirst = `${currYear}-01-01`
+      const prevJanuaryFirst = `${prevYear}-01-01`
 
       const sq2 = db2
         .select({
@@ -1015,6 +1018,7 @@ END
                   ELSE NULL
               END as cluster,
               kabupaten,
+              mtd_dt,
               rev
           FROM ${table}
           WHERE branch IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
@@ -1221,6 +1225,7 @@ END
                   ELSE NULL
               END as cluster,
               kabupaten,
+              mtd_dt,
               rev
           FROM ${table}
           WHERE branch IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
@@ -1241,6 +1246,7 @@ END
                       SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                       SUM(SUM(rev)) OVER (PARTITION BY region) AS currYtdRegionalRev
                   FROM sq
+                  WHERE mtd_dt BETWEEN '${currJanuaryFirst}' AND '${currDate}'
                   GROUP BY 1, 2, 3, 4, 5
                       `
 
@@ -1260,6 +1266,7 @@ END
                       SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                       SUM(SUM(rev)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                   FROM sq5
+                  WHERE mtd_dt BETWEEN '${prevJanuaryFirst}' AND '${prevYearCurrDate}'
                   GROUP BY 1, 2, 3, 4, 5
                       `
 
@@ -1740,8 +1747,8 @@ END
   .get('/revenue-gross-prabayar', zValidator('query', z.object({ date: z.coerce.date().optional() })),
     async c => {
       const { date } = c.req.valid('query')
-      const selectedDate = date ? new Date(date) : new Date()
-      const month = (subDays(selectedDate, 2).getMonth() + 1).toString()
+      const selectedDate = date ? new Date(date) : subDays(new Date(), 2)
+      const month = (selectedDate.getMonth() + 1).toString()
 
       // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
       const monthColumn = `m${month}` as keyof typeof revenueGrossPrabayar.$inferSelect
@@ -1789,6 +1796,9 @@ END
       const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
       const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
       const prevYearCurrDate = format(endOfPrevYearSameMonth, 'yyyy-MM-dd');
+
+      const currJanuaryFirst = `${currYear}-01-01`
+      const prevJanuaryFirst = `${prevYear}-01-01`
 
       const sq2 = db2
         .select({
@@ -2737,6 +2747,7 @@ END
                   ELSE NULL
               END as cluster,
               kabupaten,
+              mtd_dt,
               rev
           FROM ${table}
           WHERE brand <> 'ByU' AND branch IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
@@ -2943,6 +2954,7 @@ END
                   ELSE NULL
               END as cluster,
               kabupaten,
+              mtd_dt,
               rev
           FROM ${table}
           WHERE brand <> 'ByU' AND branch IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
@@ -2963,6 +2975,7 @@ END
                       SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                       SUM(SUM(rev)) OVER (PARTITION BY region) AS currYtdRegionalRev
                   FROM sq
+                  WHERE mtd_dt BETWEEN '${currJanuaryFirst}' AND '${currDate}'
                   GROUP BY 1, 2, 3, 4, 5
                       `
 
@@ -2982,6 +2995,7 @@ END
                       SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                       SUM(SUM(rev)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                   FROM sq5
+                  WHERE mtd_dt BETWEEN '${prevJanuaryFirst}' AND '${prevYearCurrDate}'
                   GROUP BY 1, 2, 3, 4, 5
                       `
 
@@ -3462,8 +3476,8 @@ END
   .get('/revenue-gross-byu', zValidator('query', z.object({ date: z.coerce.date().optional() })),
     async c => {
       const { date } = c.req.valid('query')
-      const selectedDate = date ? new Date(date) : new Date()
-      const month = (subDays(selectedDate, 2).getMonth() + 1).toString()
+      const selectedDate = date ? new Date(date) : subDays(new Date(), 2)
+      const month = (selectedDate.getMonth() + 1).toString()
 
       // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
       const monthColumn = `m${month}` as keyof typeof revenueByu.$inferSelect
@@ -3511,6 +3525,9 @@ END
       const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
       const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
       const prevYearCurrDate = format(endOfPrevYearSameMonth, 'yyyy-MM-dd');
+
+      const currJanuaryFirst = `${currYear}-01-01`
+      const prevJanuaryFirst = `${prevYear}-01-01`
 
       const queryCurrYtd = currYtdGrossPrabayarRev.map(table => `
         SELECT
@@ -3714,6 +3731,7 @@ END
                 ELSE NULL
             END as cluster,
             kabupaten,
+            mtd_dt,
             rev
         FROM ${table}
         WHERE brand = 'ByU' AND branch IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
@@ -3920,6 +3938,7 @@ END
                 ELSE NULL
             END as cluster,
             kabupaten,
+            mtd_dt,
             rev
         FROM ${table}
         WHERE brand = 'ByU' AND branch IN ('AMBON', 'TIMIKA', 'SORONG', 'JAYAPURA')`).join(' UNION ALL ')
@@ -3940,6 +3959,7 @@ END
                     SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                     SUM(SUM(rev)) OVER (PARTITION BY region) AS currYtdRegionalRev
                 FROM sq
+                WHERE mtd_dt BETWEEN '${currJanuaryFirst}' AND '${currDate}'
                 GROUP BY 1, 2, 3, 4, 5
                     `
 
@@ -3959,6 +3979,7 @@ END
                     SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                     SUM(SUM(rev)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                 FROM sq5
+                WHERE mtd_dt BETWEEN '${prevJanuaryFirst}' AND '${prevYearCurrDate}'
                 GROUP BY 1, 2, 3, 4, 5
                     `
 

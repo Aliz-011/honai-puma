@@ -18,14 +18,14 @@ import { useSelectKabupaten } from '@/hooks/use-select-kabupaten';
 
 type Params = {
     data?: Regional[];
-    selectedDate: Date;
+    selectedDate?: Date;
     latestUpdatedData: number;
     isLoading?: boolean;
     title: string;
     refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<Regional[], Error>>
 }
 
-export const TableData = ({ latestUpdatedData, selectedDate, title, data: revenues, isLoading, refetch }: Params) => {
+export const TableData = ({ latestUpdatedData: daysBehind, selectedDate: date, title, data: revenues, isLoading, refetch }: Params) => {
     const [sortField, setSortField] = React.useState<string | null>(null);
     const [sortDirection, setSortDirection] = React.useState('asc');
 
@@ -34,7 +34,7 @@ export const TableData = ({ latestUpdatedData, selectedDate, title, data: revenu
     const { cluster: selectedCluster } = useSelectCluster()
     const { kabupaten: selectedKabupaten } = useSelectKabupaten()
 
-    const compactDate = subDays(selectedDate, latestUpdatedData) // today - 2 days
+    const selectedDate = date ? date : subDays(new Date(), daysBehind) // today - 2 days
     const lastDayOfSelectedMonth = endOfMonth(selectedDate);
     const isEndOfMonth = selectedDate.getDate() === lastDayOfSelectedMonth.getDate();
 
@@ -65,7 +65,7 @@ export const TableData = ({ latestUpdatedData, selectedDate, title, data: revenu
     }
 
     const handleDownload = () => {
-        exportToExcel(revenues, title, selectedDate, compactDate)
+        exportToExcel(revenues, title, selectedDate)
     }
 
     const handleSort = (field: string) => {
@@ -238,7 +238,7 @@ export const TableData = ({ latestUpdatedData, selectedDate, title, data: revenu
                     <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
                         {/* REGIONALS */}
                         <TableRow>
-                            <TableCell colSpan={13} className="px-1 py-2 border-r last:border-r-0 text-start font-semibold bg-gray-50 text-theme-sm dark:text-white dark:border-gray-800 dark:bg-white/[0.03]">
+                            <TableCell colSpan={13} className="px-1 py-0.5 border-r last:border-r-0 text-start font-semibold bg-gray-200 text-theme-sm dark:text-white dark:border-gray-800 dark:bg-white/[0.03]">
                                 Regional
                             </TableCell>
                         </TableRow>

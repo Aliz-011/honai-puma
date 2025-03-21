@@ -38,8 +38,8 @@ const navItems: NavItem[] = [
     name: 'Target SO',
     subItems: [
       { name: 'SO All', path: '/target-so' },
-      { name: 'SO Prabayar', path: '/target-so-prabayar' },
-      { name: 'SO ByU', path: '/target-so-byu' },
+      // { name: 'SO Prabayar', path: '/target-so-prabayar' },
+      // { name: 'SO ByU', path: '/target-so-byu' },
     ]
   },
   {
@@ -57,8 +57,8 @@ const navItems: NavItem[] = [
     subItems: [
       { name: 'Paying Subs All', 'path': '/paying-subs' },
       { name: 'Paying LOS 0-1 All', 'path': '/paying-los' },
-      { name: 'Paying LOS 0-1 Prabayar', 'path': '/paying-los-prabayar' },
-      { name: 'Paying LOS 0-1 ByU', 'path': '/paying-los-byu' },
+      // { name: 'Paying LOS 0-1 Prabayar', 'path': '/paying-los-prabayar' },
+      // { name: 'Paying LOS 0-1 ByU', 'path': '/paying-los-byu' },
     ]
   },
   {
@@ -73,9 +73,9 @@ const navItems: NavItem[] = [
     icon: <BoxCubeIcon />,
     name: 'Revenue Redeem PV',
     subItems: [
-      { name: 'Revenue Redeem PV All', path: '/redeem-pv', },
-      { name: 'Revenue Redeem PV Prabayar', path: '/redeem-pv-prabayar', },
-      { name: 'Revenue Redeem PV ByU', path: '/redeem-pv-byu' },
+      { name: 'Revenue Redeem PV Prabayar', path: '/redeem-pv', },
+      // { name: 'Revenue Redeem PV Prabayar', path: '/redeem-pv-prabayar', },
+      // { name: 'Revenue Redeem PV ByU', path: '/redeem-pv-byu' },
     ]
   },
   {

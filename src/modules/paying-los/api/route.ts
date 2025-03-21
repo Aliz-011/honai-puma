@@ -13,8 +13,8 @@ const app = new Hono()
     .get('/', zValidator('query', z.object({ date: z.coerce.date().optional() })),
         async c => {
             const { date } = c.req.valid('query')
-            const selectedDate = date ? new Date(date) : new Date()
-            const month = (subDays(selectedDate, 2).getMonth() + 1).toString()
+            const selectedDate = date ? new Date(date) : subDays(new Date(), 2)
+            const month = (selectedDate.getMonth() + 1).toString()
 
             // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
             const monthColumn = `m${month}` as keyof typeof payingLOS_01.$inferSelect
@@ -1712,8 +1712,8 @@ END
     .get('/paying-los-prabayar', zValidator('query', z.object({ date: z.coerce.date().optional() })),
         async c => {
             const { date } = c.req.valid('query')
-            const selectedDate = date ? new Date(date) : new Date()
-            const month = (subDays(selectedDate, 2).getMonth() + 1).toString()
+            const selectedDate = date ? new Date(date) : subDays(new Date(), 2)
+            const month = (selectedDate.getMonth() + 1).toString()
 
             // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
             const monthColumn = `m${month}` as keyof typeof payingLOS_01_Prabayar.$inferSelect

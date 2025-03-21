@@ -13,8 +13,8 @@ const app = new Hono()
         zValidator('query', z.object({ date: z.coerce.date().optional() })),
         async c => {
             const { date } = c.req.valid('query')
-            const selectedDate = date ? new Date(date) : new Date()
-            const month = (subDays(selectedDate, 3).getMonth() + 1).toString()
+            const selectedDate = date ? new Date(date) : subDays(new Date(), 3)
+            const month = (selectedDate.getMonth() + 1).toString()
 
             // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
             const monthColumn = `m${month}` as keyof typeof targetSO.$inferSelect
@@ -63,6 +63,8 @@ const app = new Hono()
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
             const prevYearCurrDate = format(endOfPrevYearSameMonth, 'yyyy-MM-dd');
 
+            const currJanuaryFirst = `${currYear}-01-01`
+            const prevJanuaryFirst = `${prevYear}-01-01`
 
             const sq2 = db5
                 .select({
@@ -1015,6 +1017,7 @@ const app = new Hono()
                             ELSE NULL
                         END as cluster,
                         kab_so AS kabupaten,
+                        date_so,
                         COUNT(so) as trx
                     FROM ${table} WHERE region_so IN ('MALUKU DAN PAPUA', 'PUMA') AND kab_so <> 'TMP' GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
 
@@ -1220,6 +1223,7 @@ const app = new Hono()
                                 ELSE NULL
                             END as cluster,
                             kab_so as kabupaten,
+                            date_so,
                             COUNT(so) as trx
                         FROM ${table} WHERE region_so IN ('PUMA', 'MALUKU DAN PAPUA') AND kab_so <> 'TMP' GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
 
@@ -1239,6 +1243,7 @@ const app = new Hono()
                             SUM(SUM(trx)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                             SUM(SUM(trx)) OVER (PARTITION BY region) AS currYtdRegionalRev
                         FROM sq
+                        WHERE date_so BETWEEN '${currJanuaryFirst}' AND '${currDate}'
                         GROUP BY 1, 2, 3, 4, 5
                             `
 
@@ -1258,6 +1263,7 @@ const app = new Hono()
                             SUM(SUM(trx)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                             SUM(SUM(trx)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                         FROM sq5
+                        WHERE date_so BETWEEN '${prevJanuaryFirst}' AND '${prevYearCurrDate}'
                         GROUP BY 1, 2, 3, 4, 5
                             `
 

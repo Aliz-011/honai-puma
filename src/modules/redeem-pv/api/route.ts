@@ -22,8 +22,8 @@ const app = new Hono()
     .get('/', zValidator('query', z.object({ date: z.coerce.date().optional() })),
         async c => {
             const { date } = c.req.valid('query')
-            const selectedDate = date ? new Date(date) : new Date()
-            const month = (subDays(selectedDate, 2).getMonth() + 1).toString()
+            const selectedDate = date ? new Date(date) : subDays(new Date(), 2)
+            const month = (selectedDate.getMonth() + 1).toString()
 
             // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
             const monthColumn = `m${month}` as keyof typeof redeemPVPrabayar.$inferSelect
@@ -70,6 +70,9 @@ const app = new Hono()
             const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
             const prevYearCurrDate = format(endOfPrevYearSameMonth, 'yyyy-MM-dd');
+
+            const currJanuaryFirst = `${currYear}-01-01`
+            const prevJanuaryFirst = `${prevYear}-01-01`
 
             const sq2 = db2
                 .select({
@@ -1035,6 +1038,7 @@ END
                             ELSE NULL
                         END as cluster,
                         city as kabupaten,
+                        trx_date,
                         revenue as rev
                     FROM ${table}
                     WHERE package_group = '04. PV' AND city <> 'TMP'`).join(' UNION ALL ')
@@ -1241,6 +1245,7 @@ END
                             ELSE NULL
                         END as cluster,
                         city as kabupaten,
+                        trx_date,
                         revenue as rev
                     FROM ${table}
                     WHERE package_group = '04. PV' AND city <> 'TMP'`).join(' UNION ALL ')
@@ -1261,6 +1266,7 @@ END
                         SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                         SUM(SUM(rev)) OVER (PARTITION BY region) AS currYtdRegionalRev
                     FROM sq
+                    WHERE trx_date BETWEEN '${currJanuaryFirst}' AND '${currDate}'
                     GROUP BY 1, 2, 3, 4, 5
                         `
 
@@ -1280,6 +1286,7 @@ END
                         SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                         SUM(SUM(rev)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                     FROM sq5
+                    WHERE trx_date BETWEEN '${prevJanuaryFirst}' AND '${prevYearCurrDate}'
                     GROUP BY 1, 2, 3, 4, 5
                         `
 
@@ -1756,11 +1763,11 @@ END
 
             return c.json({ data: finalDataRevenue }, 200);
         })
-    .get('/redeem-pv-prabayar', zValidator('query', z.object({ date: z.coerce.date().optional() })),
+    .get('/redeem-pv-byu', zValidator('query', z.object({ date: z.coerce.date().optional() })),
         async c => {
             const { date } = c.req.valid('query')
-            const selectedDate = date ? new Date(date) : new Date()
-            const month = (subDays(selectedDate, 2).getMonth() + 1).toString()
+            const selectedDate = date ? new Date(date) : subDays(new Date(), 2)
+            const month = (selectedDate.getMonth() + 1).toString()
 
             // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
             const monthColumn = `m${month}` as keyof typeof redeemPVByu.$inferSelect
@@ -1807,6 +1814,9 @@ END
             const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
             const prevYearCurrDate = format(endOfPrevYearSameMonth, 'yyyy-MM-dd');
+
+            const currJanuaryFirst = `${currYear}-01-01`
+            const prevJanuaryFirst = `${prevYear}-01-01`
 
             const sq2 = db2
                 .select({
@@ -2768,6 +2778,7 @@ END
                             ELSE NULL
                         END as cluster,
                         city as kabupaten,
+                        trx_date,
                         revenue as rev
                     FROM ${table}
                     WHERE package_group LIKE '%PV%' AND city <> 'TMP' AND brand <> 'kartuHALO'`).join(' UNION ALL ')
@@ -2974,6 +2985,7 @@ END
                             ELSE NULL
                         END as cluster,
                         city as kabupaten,
+                        trx_date,
                         revenue as rev
                     FROM ${table}
                     WHERE package_group LIKE '%PV%' AND city <> 'TMP' AND brand <> 'kartuHALO'`).join(' UNION ALL ')
@@ -2994,6 +3006,7 @@ END
                         SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                         SUM(SUM(rev)) OVER (PARTITION BY region) AS currYtdRegionalRev
                     FROM sq
+                    WHERE trx_date BETWEEN '${currJanuaryFirst}' AND '${currDate}'
                     GROUP BY 1, 2, 3, 4, 5
                         `
 
@@ -3013,6 +3026,7 @@ END
                         SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                         SUM(SUM(rev)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                     FROM sq5
+                    WHERE trx_date BETWEEN '${prevJanuaryFirst}' AND '${prevYearCurrDate}'
                     GROUP BY 1, 2, 3, 4, 5
                         `
 

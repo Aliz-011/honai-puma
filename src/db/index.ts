@@ -7,6 +7,7 @@ import * as schema3 from "./schema3";
 import * as schema4 from "./schema4";
 import * as schema5 from "./schema5";
 import * as schema6 from "./schema6";
+import * as schema7 from "./schema7";
 
 const poolConnection = mysql.createPool({
 	host: process.env.DB_HOST!,
@@ -51,7 +52,7 @@ const poolConnection6 = mysql.createPool({
 })
 
 const poolConnection7 = mysql.createPool({
-	host: process.env.DB_HOST1,
+	host: process.env.DB_HOST,
 	user: process.env.DB_USERNAME,
 	password: process.env.DB_PASSWORD,
 	database: process.env.DB_NAME7,
@@ -64,3 +65,4 @@ export const db3 = drizzle({ client: poolConnection3, mode: 'default', schema: s
 export const db4 = drizzle({ client: poolConnection4, mode: "default", schema: schema4 });
 export const db5 = drizzle({ client: poolConnection5, mode: "default", schema: schema5 });
 export const db6 = drizzle({ client: poolConnection6, mode: "default", schema: schema6 });
+export const db7 = drizzle({ client: poolConnection7, mode: "default", schema: schema7 });

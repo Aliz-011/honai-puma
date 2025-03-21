@@ -23,8 +23,8 @@ const app = new Hono()
         zValidator('query', z.object({ date: z.string().optional() })),
         async c => {
             const { date } = c.req.valid('query')
-            const selectedDate = date ? new Date(date) : new Date()
-            const month = (subDays(selectedDate, 3).getMonth() + 1).toString()
+            const selectedDate = date ? new Date(date) : subDays(new Date(), 3)
+            const month = (selectedDate.getMonth() + 1).toString()
 
             // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
             const monthColumn = `m${month}` as keyof typeof revenueSA.$inferSelect
@@ -72,6 +72,9 @@ const app = new Hono()
             const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
             const prevYearCurrDate = format(endOfPrevYearSameMonth, 'yyyy-MM-dd');
+
+            const currJanuaryFirst = `${currYear}-01-01`
+            const prevJanuaryFirst = `${prevYear}-01-01`
 
             const queryCurrYtd = currYtdRevNewSales.map(table => `
                 SELECT
@@ -276,6 +279,7 @@ const app = new Hono()
                     END as cluster,
                     kabupaten,
                     price,
+                    trx_date,
                     COUNT(msisdn) as trx
                 FROM ${table} GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
 
@@ -482,6 +486,7 @@ const app = new Hono()
                     END as cluster,
                     kabupaten,
                     price,
+                    trx_date,
                     COUNT(msisdn) as trx
                 FROM ${table} GROUP BY 1,2,3,4,5`).join(' UNION ALL ')
 
@@ -498,6 +503,7 @@ const app = new Hono()
                         kabupaten,
                         SUM(price * trx) AS rev
                     FROM aa
+                    WHERE trx_date BETWEEN '${currJanuaryFirst}' AND '${currDate}'
                     GROUP BY 1,2,3,4,5
                 )
                 SELECT
@@ -512,7 +518,7 @@ const app = new Hono()
                     SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS currYtdBranchRev,
                     SUM(SUM(rev)) OVER (PARTITION BY region) AS currYtdRegionalRev
                 FROM bb
-                WHERE kabupaten NOT IN ('TMP') AND region IN ('MALUKU DAN PAPUA', 'PUMA')
+                WHERE kabupaten <> 'TMP' AND region IN ('MALUKU DAN PAPUA', 'PUMA')
                 GROUP BY 1, 2, 3, 4, 5
                     `
 
@@ -529,6 +535,7 @@ const app = new Hono()
                         kabupaten,
                         SUM(price * trx) AS rev
                     FROM aa
+                    WHERE trx_date BETWEEN '${prevJanuaryFirst}' AND '${prevYearCurrDate}'
                     GROUP BY 1,2,3,4,5
                 )
                 SELECT
@@ -543,7 +550,7 @@ const app = new Hono()
                     SUM(SUM(rev)) OVER (PARTITION BY region, branch) AS prevYtdBranchRev,
                     SUM(SUM(rev)) OVER (PARTITION BY region) AS prevYtdRegionalRev
                 FROM bb
-                WHERE kabupaten NOT IN ('TMP') AND region IN ('MALUKU DAN PAPUA', 'PUMA')
+                WHERE kabupaten <> 'TMP' AND region IN ('MALUKU DAN PAPUA', 'PUMA')
                 GROUP BY 1, 2, 3, 4, 5
                     `
 
@@ -1807,8 +1814,8 @@ const app = new Hono()
         zValidator('query', z.object({ date: z.string().optional() })),
         async c => {
             const { date } = c.req.valid('query')
-            const selectedDate = date ? new Date(date) : new Date()
-            const month = (subDays(selectedDate, 3).getMonth() + 1).toString()
+            const selectedDate = date ? new Date(date) : subDays(new Date(), 3)
+            const month = (selectedDate.getMonth() + 1).toString()
 
             // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
             const monthColumn = `m${month}` as keyof typeof revenueSAPrabayar.$inferSelect
@@ -1856,6 +1863,9 @@ const app = new Hono()
             const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
             const prevYearCurrDate = format(endOfPrevYearSameMonth, 'yyyy-MM-dd');
+
+            const currJanuaryFirst = `${currYear}-01-01`
+            const prevJanuaryFirst = `${prevYear}-01-01`
 
             const queryCurrYtd = currYtdRevNewSales.map(table => `
                 SELECT
@@ -2060,6 +2070,7 @@ const app = new Hono()
                     END as cluster,
                     kabupaten,
                     price,
+                    trx_date,
                     COUNT(msisdn) as trx
                 FROM ${table}
                 WHERE kabupaten NOT IN ('TMP') AND regional IN ('MALUKU DAN PAPUA', 'PUMA') AND brand NOT IN ('byu', 'ByU') 
@@ -2268,6 +2279,7 @@ const app = new Hono()
                     END as cluster,
                     kabupaten,
                     price,
+                    trx_date,
                     COUNT(msisdn) as trx
                 FROM ${table}
                 WHERE kabupaten NOT IN ('TMP') AND regional IN ('MALUKU DAN PAPUA', 'PUMA') AND brand NOT IN ('byu', 'ByU')
@@ -2286,6 +2298,7 @@ const app = new Hono()
                         kabupaten,
                         SUM(price * trx) AS rev
                     FROM aa
+                    WHERE trx_date BETWEEN '${currJanuaryFirst}' AND '${currDate}' AND kabupaten <> 'TMP'
                     GROUP BY 1,2,3,4,5
                 )
                 SELECT
@@ -2316,6 +2329,7 @@ const app = new Hono()
                         kabupaten,
                         SUM(price * trx) AS rev
                     FROM aa
+                    WHERE trx_date BETWEEN '${prevJanuaryFirst}' AND '${prevYearCurrDate}' AND kabupaten <> 'TMP'
                     GROUP BY 1,2,3,4,5
                 )
                 SELECT
@@ -3589,8 +3603,8 @@ const app = new Hono()
     .get('/revenue-sa-byu', zValidator('query', z.object({ date: z.coerce.date().optional() })),
         async c => {
             const { date } = c.req.valid('query')
-            const selectedDate = date ? new Date(date) : new Date()
-            const month = (subDays(selectedDate, 3).getMonth() + 1).toString()
+            const selectedDate = date ? new Date(date) : subDays(new Date(), 3)
+            const month = (selectedDate.getMonth() + 1).toString()
 
             // KOLOM DINAMIS UNTUK MEMILIH ANTARA KOLOM `m1-m12`
             const monthColumn = `m${month}` as keyof typeof revenueSAByu.$inferSelect
@@ -3638,6 +3652,9 @@ const app = new Hono()
             const currDate = format(endOfCurrMonth, 'yyyy-MM-dd');
             const prevDate = format(endOfPrevMonth, 'yyyy-MM-dd');
             const prevYearCurrDate = format(endOfPrevYearSameMonth, 'yyyy-MM-dd');
+
+            const currJanuaryFirst = `${currYear}-01-01`
+            const prevJanuaryFirst = `${prevYear}-01-01`
 
             const queryCurrYtd = currYtdRevNewSales.map(table => `
                 SELECT
@@ -3842,6 +3859,7 @@ const app = new Hono()
                     END as cluster,
                     kabupaten,
                     price,
+                    trx_date,
                     COUNT(msisdn) as trx
                 FROM ${table}
                 WHERE kabupaten NOT IN ('TMP') AND regional IN ('MALUKU DAN PAPUA', 'PUMA') AND brand IN ('byu', 'ByU')
@@ -4050,6 +4068,7 @@ const app = new Hono()
                     END as cluster,
                     kabupaten,
                     price,
+                    trx_date,
                     COUNT(msisdn) as trx
                 FROM ${table}
                 WHERE kabupaten NOT IN ('TMP') AND regional IN ('MALUKU DAN PAPUA', 'PUMA') AND brand IN ('byu', 'ByU')
@@ -4068,6 +4087,7 @@ const app = new Hono()
                         kabupaten,
                         SUM(price * trx) AS rev
                     FROM aa
+                    WHERE trx_date BETWEEN '${currJanuaryFirst}' AND '${currDate}'
                     GROUP BY 1,2,3,4,5
                 )
                 SELECT
@@ -4098,6 +4118,7 @@ const app = new Hono()
                         kabupaten,
                         SUM(price * trx) AS rev
                     FROM aa
+                    WHERE trx_date BETWEEN '${prevJanuaryFirst}' AND '${prevYearCurrDate}'
                     GROUP BY 1,2,3,4,5
                 )
                 SELECT
