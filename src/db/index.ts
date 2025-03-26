@@ -1,5 +1,7 @@
 import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle as drizzleSQLite } from 'drizzle-orm/better-sqlite3';
 import mysql from "mysql2/promise";
+import SQLite from 'better-sqlite3';
 
 import * as schema from "./schema";
 import * as schema2 from "./schema2";
@@ -8,12 +10,14 @@ import * as schema4 from "./schema4";
 import * as schema5 from "./schema5";
 import * as schema6 from "./schema6";
 import * as schema7 from "./schema7";
+import * as schema8 from "./schema8";
 
 const poolConnection = mysql.createPool({
 	host: process.env.DB_HOST!,
 	user: process.env.DB_USERNAME!,
 	password: process.env.DB_PASSWORD!,
 	database: process.env.DB_NAME!,
+	waitForConnections: true,
 });
 
 const poolConnection2 = mysql.createPool({
@@ -66,3 +70,5 @@ export const db4 = drizzle({ client: poolConnection4, mode: "default", schema: s
 export const db5 = drizzle({ client: poolConnection5, mode: "default", schema: schema5 });
 export const db6 = drizzle({ client: poolConnection6, mode: "default", schema: schema6 });
 export const db7 = drizzle({ client: poolConnection7, mode: "default", schema: schema7 });
+const sqlite = new SQLite('./src/sqlite.db')
+export const dbsqlite = drizzleSQLite({ client: sqlite, schema: schema8, logger: true })

@@ -1602,7 +1602,7 @@ END
                 kabupaten.prevYearCurrMonthRevenue = Number(row.prevYearCurrMonthKabupatenRev)
             })
 
-            currYtdRevenue.forEach((row: any) => {
+            currYtdRevenue.forEach((row) => {
                 const regionalName = row.region;
                 const branchName = row.branch;
                 const subbranchName = row.subbranch;
@@ -1676,7 +1676,7 @@ END
                 kabupaten.currYtdRevenue = Number(row.currYtdKabupatenRev)
             })
 
-            prevYtdRevenue.forEach((row: any) => {
+            prevYtdRevenue.forEach((row) => {
                 const regionalName = row.region;
                 const branchName = row.branch;
                 const subbranchName = row.subbranch;
@@ -1750,16 +1750,16 @@ END
                 kabupaten.prevYtdRevenue = Number(row.prevYtdKabupatenRev)
             })
 
-            const finalDataRevenue: Regional[] = Array.from(regionalsMap.values()).map((regional: any) => ({
+            const finalDataRevenue: Regional[] = Array.from(regionalsMap.values()).map((regional: Regional) => ({
                 ...regional,
-                branches: Array.from(regional.branches.values()).map((branch: any) => ({
+                branches: Array.from(regional.branches.values()).map((branch) => ({
                     ...branch,
-                    subbranches: Array.from(branch.subbranches.values()).map((subbranch: any) => ({
+                    subbranches: Array.from(branch.subbranches.values()).map((subbranch) => ({
                         ...subbranch,
-                        clusters: Array.from(subbranch.clusters.values().map((cluster: any) => ({
+                        clusters: Array.from(subbranch.clusters.values()).map((cluster) => ({
                             ...cluster,
                             kabupatens: Array.from(cluster.kabupatens.values())
-                        }))),
+                        })),
                     })),
                 })),
             }));
@@ -3335,7 +3335,7 @@ END
                 kabupaten.prevYearCurrMonthRevenue = Number(row.prevYearCurrMonthKabupatenRev)
             })
 
-            currYtdRevenue.forEach((row: any) => {
+            currYtdRevenue.forEach((row) => {
                 const regionalName = row.region;
                 const branchName = row.branch;
                 const subbranchName = row.subbranch;
@@ -3409,7 +3409,7 @@ END
                 kabupaten.currYtdRevenue = Number(row.currYtdKabupatenRev)
             })
 
-            prevYtdRevenue.forEach((row: any) => {
+            prevYtdRevenue.forEach((row) => {
                 const regionalName = row.region;
                 const branchName = row.branch;
                 const subbranchName = row.subbranch;
@@ -3483,13 +3483,13 @@ END
                 kabupaten.prevYtdRevenue = Number(row.prevYtdKabupatenRev)
             })
 
-            const finalDataRevenue: Regional[] = Array.from(regionalsMap.values()).map((regional: any) => ({
+            const finalDataRevenue: Regional[] = Array.from(regionalsMap.values()).map((regional: Regional) => ({
                 ...regional,
-                branches: Array.from(regional.branches.values()).map((branch: any) => ({
+                branches: Array.from(regional.branches.values()).map((branch) => ({
                     ...branch,
-                    subbranches: Array.from(branch.subbranches.values()).map((subbranch: any) => ({
+                    subbranches: Array.from(branch.subbranches.values()).map((subbranch) => ({
                         ...subbranch,
-                        clusters: Array.from(subbranch.clusters.values().map((cluster: any) => ({
+                        clusters: Array.from(subbranch.clusters.values().map((cluster) => ({
                             ...cluster,
                             kabupatens: Array.from(cluster.kabupatens.values())
                         }))),

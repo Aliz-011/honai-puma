@@ -1,7 +1,6 @@
-import { mysqlSchema, varchar, decimal, index, datetime, text, int, timestamp, json } from "drizzle-orm/mysql-core";
+import { mysqlSchema, varchar, decimal, index, datetime, text, int, timestamp, json, uniqueIndex } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { format } from "date-fns";
 
 export const pumaSchema = mysqlSchema("puma_2025");
 

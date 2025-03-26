@@ -7,6 +7,7 @@ import "swiper/css/autoplay";
 import { SidebarProvider } from "@/context/SidebarContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { QueryProvider } from "@/providers/query-client-provider";
+import { Toaster } from "sonner";
 
 const outfit = Outfit({
   variable: "--font-outfit-sans",
@@ -29,6 +30,7 @@ export default function RootLayout({
         <ThemeProvider>
           <SidebarProvider>
             <QueryProvider>
+              <Toaster position="top-right" richColors />
               {children}
             </QueryProvider>
           </SidebarProvider>

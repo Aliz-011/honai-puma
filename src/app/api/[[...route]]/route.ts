@@ -14,7 +14,7 @@ import trxNewSales from "@/modules/trx-new-sales/api/route"
 import redeemPV from "@/modules/redeem-pv/api/route"
 import payingLOS from '@/modules/paying-los/api/route'
 import targetSO from '@/modules/target-so/api/route'
-import test from "@/modules/test/api/route"
+import auth from '@/modules/auth/api/route'
 
 const app = new Hono().basePath("/api");
 
@@ -39,7 +39,9 @@ const routes = app
   .route('/trx-new-sales', trxNewSales)
   .route('/redeem-pv', redeemPV)
   .route('/target-so', targetSO)
-  .route('/test', test)
+  .route('/auth', auth)
 
 export const GET = handle(app);
+export const POST = handle(app)
+export const UPDATE = handle(app)
 export type AppType = typeof routes;

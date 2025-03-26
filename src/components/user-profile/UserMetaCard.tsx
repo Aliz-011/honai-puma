@@ -24,7 +24,7 @@ export default function UserMetaCard() {
               <Image
                 width={80}
                 height={80}
-                src="https://github.com/shadcn.png"
+                src="/images/user/user-33.jpg"
                 alt="user"
               />
             </div>

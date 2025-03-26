@@ -108,6 +108,16 @@ const navItems: NavItem[] = [
 ];
 
 const othersItems: NavItem[] = [
+  {
+    name: 'FMC',
+    icon: <PieChartIcon />,
+    subItems: [
+      {
+        name: 'FMC Line In Service',
+        path: '/linein-service'
+      }
+    ]
+  }
 ];
 
 const AppSidebar: React.FC = () => {
