@@ -4,8 +4,8 @@ import { eq } from "drizzle-orm";
 import { cache } from "react";
 import { cookies } from "next/headers";
 
-import { sessionTable, userTable } from "@/db/schema8";
-import { dbsqlite as db } from "@/db";
+import { sessionTable, userTable } from "@/db/schema";
+import { db } from "@/db";
 import { User } from "./user";
 
 export function generateSessionToken(): string {
@@ -16,20 +16,18 @@ export function generateSessionToken(): string {
 
 }
 
-export async function createSession(token: string, userId: string, flags: SessionFlags): Promise<Session> {
+export async function createSession(token: string, userId: string): Promise<Session> {
     const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
     const session: Session = {
         id: sessionId,
         userId,
         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
-        twoFactorVerified: flags.twoFactorVerified,
     };
 
     await db.insert(sessionTable).values({
         id: sessionId,
         userId: session.userId,
         expiresAt: session.expiresAt,
-        twoFactorVerified: Number(session.twoFactorVerified)
     });
 
     return session;
@@ -52,15 +50,12 @@ export async function validateSessionToken(token: string): Promise<SessionValida
     const sessionNew: Session = {
         id: session.id,
         expiresAt: session.expiresAt,
-        twoFactorVerified: Boolean(session.twoFactorVerified),
         userId: session.userId,
     };
 
     const userNew: User = {
         id: user.id,
         email: user.email,
-        emailVerified: Boolean(user.emailVerified),
-        registered2FA: Boolean(user.totpKey !== null ? 1 : 0),
         username: user.username
     };
 
@@ -90,17 +85,6 @@ export async function invalidateAllSessionTable(userId: string): Promise<void> {
     await db.delete(sessionTable).where(eq(sessionTable.userId, userId));
 }
 
-export async function setSessionAs2FAVerified(
-    sessionId: string
-): Promise<void> {
-    await db
-        .update(sessionTable)
-        .set({
-            twoFactorVerified: 1,
-        })
-        .where(eq(sessionTable.id, sessionId));
-}
-
 export const getCurrentSession = cache(async (): Promise<SessionValidationResult> => {
     const cookieStore = await cookies();
     const token = cookieStore.get("honai-session")?.value ?? null;
@@ -111,11 +95,7 @@ export const getCurrentSession = cache(async (): Promise<SessionValidationResult
     return result;
 });
 
-export interface SessionFlags {
-    twoFactorVerified: boolean;
-}
-
-export interface Session extends SessionFlags {
+export interface Session {
     id: string;
     expiresAt: Date;
     userId: string;

@@ -1,4 +1,4 @@
-import { mysqlSchema, varchar, decimal, index } from "drizzle-orm/mysql-core";
+import { mysqlSchema, varchar, decimal, index, datetime } from "drizzle-orm/mysql-core";
 
 export const household = mysqlSchema("household");
 
@@ -48,6 +48,37 @@ export const dynamicMrCbIndihomeTable = (year: string, month: string) => {
         index('event_date').on(t.eventDate).using('btree'),
         index('city').on(t.city).using('btree'),
     ])
+}
+
+export const dynamicIhOrderingDetailOrderTable = (year: string, month: string) => {
+    return household.table(`ih_ordering_detail_order_new_${year}${month}`, {
+        stoCo: varchar('sto_co', { length: 50 }),
+        kabupaten: varchar('kabupaten', { length: 50 }),
+        cluster: varchar('cluster', { length: 50 }),
+        branch: varchar('branch', { length: 50 }),
+        wok: varchar('wok', { length: 255 }),
+        region: varchar('region', { length: 30 }),
+        area: varchar('area', { length: 30 }),
+        orderId: varchar('order_id'),
+        packageType: varchar('package_type'),
+        orderType: varchar('order_type'),
+        orderMode: varchar('order_mode'),
+        orderInitiatorId: varchar('order_initiator_id'),
+        orderInitiatorIdType: varchar('order_initiator_id_type'),
+        longitude: varchar('longitude'),
+        latitude: varchar('latitude'),
+        serviceId: varchar('service_id'),
+        productCommercialName: varchar('product_commercial_name'),
+        packageCat: varchar('package_cat'),
+        psTs: datetime('ps_ts'),
+        proviTs: datetime('provi_ts'),
+        name: varchar('name'),
+        address: varchar('address'),
+        noHandphone: varchar('no_handphone'),
+        eventDate: varchar('event_date'),
+    }, t => ({
+        eventDate: index('event_date').on(t.eventDate).using('btree')
+    }))
 }
 
 export const fmcMconTable = household.table('fmc_mcon_final_dd', {

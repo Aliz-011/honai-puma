@@ -19,11 +19,7 @@ export const useLogin = () => {
 
             return await response.json()
         },
-        onSuccess: (data) => {
-            if (data.redirectUrl) {
-                router.push(data.redirectUrl)
-            }
-
+        onSuccess: () => {
             toast.success('Logged in')
             router.refresh()
             queryClient.invalidateQueries({ queryKey: ['current'] })

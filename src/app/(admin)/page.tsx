@@ -9,19 +9,10 @@ export const metadata: Metadata = {
 };
 
 export default async function Ecommerce() {
-  const { session, user } = await getCurrentSession();
+  const { session } = await getCurrentSession();
 
   if (session === null) {
     redirect('/signin');
-  }
-  if (!user.emailVerified) {
-    redirect('/verify-email');
-  }
-  if (!user.registered2FA) {
-    redirect('/2fa/setup');
-  }
-  if (!session.twoFactorVerified) {
-    redirect('/2fa');
   }
 
   return redirect('/revenue-new-sales');

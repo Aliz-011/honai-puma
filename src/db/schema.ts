@@ -27,6 +27,7 @@ export const branchRelations = relations(branches, ({ one, many }) => ({
 		references: [regionals.id],
 	}),
 	subbranches: many(subbranches),
+	woks: many(woks)
 }));
 
 export const subbranches = pumaSchema.table("subbranches_new", {
@@ -659,6 +660,59 @@ export const redeemPVPrabayarRelations = relations(redeemPVPrabayar, ({ one }) =
 		references: [kabupatens.id],
 	}),
 }));
+
+export const woks = pumaSchema.table('wok', {
+	id: int().primaryKey(),
+	wok: varchar({ length: 30 }).notNull(),
+	branchId: varchar('branch_id', { length: 100 })
+})
+
+export const wokRelations = relations(woks, ({ one, many }) => ({
+	branch: one(branches, {
+		fields: [woks.branchId],
+		references: [branches.id]
+	}),
+	stos: many(stos)
+}))
+
+export const stos = pumaSchema.table('sto', {
+	id: int().primaryKey(),
+	sto: varchar({ length: 4 }).notNull(),
+	wokId: int('wok_id').notNull()
+})
+
+export const stoRelations = relations(stos, ({ one }) => ({
+	wok: one(woks, {
+		fields: [stos.wokId],
+		references: [woks.id]
+	})
+}))
+
+
+export const sessionTable = pumaSchema.table('sessions', {
+	id: varchar('id', { length: 100 }).primaryKey().$defaultFn(() => nanoid()),
+	userId: varchar('user_id', { length: 100 })
+		.notNull()
+		.references(() => userTable.id),
+	expiresAt: timestamp('expires_at', {
+		mode: 'date',
+	}).notNull(),
+});
+
+export const userTable = pumaSchema.table(
+	'users',
+	{
+		id: varchar('id', { length: 100 }).primaryKey().$defaultFn(() => nanoid()),
+		username: varchar('username', { length: 100 }).unique().notNull(),
+		email: varchar('email', { length: 100 }).unique().notNull(),
+		password: text('password').notNull(),
+		createdAt: timestamp('created_at', { mode: 'date' }).$defaultFn(() => new Date())
+	},
+	(table) => ({
+		emailIdx: uniqueIndex('email_idx').on(table.email),
+		username: uniqueIndex('username').on(table.username),
+	})
+);
 
 export type Kabupaten = typeof kabupatens.$inferSelect
 export type Cluster = typeof clusters.$inferSelect

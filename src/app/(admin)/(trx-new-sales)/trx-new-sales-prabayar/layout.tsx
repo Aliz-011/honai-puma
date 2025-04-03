@@ -14,14 +14,5 @@ export default async function PageLayout() {
     if (session === null) {
         redirect('/signin');
     }
-    if (!user.emailVerified) {
-        redirect('/verify-email');
-    }
-    if (!user.registered2FA) {
-        redirect('/2fa/setup');
-    }
-    if (!session.twoFactorVerified) {
-        redirect('/2fa');
-    }
     return (<TrxNewSalesPrabayarPage />)
 };

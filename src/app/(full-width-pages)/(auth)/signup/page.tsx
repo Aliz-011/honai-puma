@@ -21,14 +21,8 @@ export default async function SignUp() {
     );
   }
 
-  const { session, user } = await getCurrentSession()
+  const { session } = await getCurrentSession()
   if (session !== null) {
-    if (!user.registered2FA) {
-      redirect('/2fa/setup')
-    }
-    if (!session.twoFactorVerified) {
-      redirect('/2fa')
-    }
     redirect('/')
   }
 
