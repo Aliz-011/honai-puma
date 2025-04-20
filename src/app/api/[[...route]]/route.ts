@@ -15,6 +15,7 @@ import redeemPV from "@/modules/redeem-pv/api/route"
 import payingLOS from '@/modules/paying-los/api/route'
 import targetSO from '@/modules/target-so/api/route'
 import auth from '@/modules/auth/api/route'
+import lineinservice from '@/modules/fmc/api/route'
 
 const app = new Hono().basePath("/api");
 
@@ -39,6 +40,7 @@ const routes = app
   .route('/trx-new-sales', trxNewSales)
   .route('/redeem-pv', redeemPV)
   .route('/target-so', targetSO)
+  .route('/linein-service', lineinservice)
   .route('/auth', auth)
 
 export const GET = handle(app);

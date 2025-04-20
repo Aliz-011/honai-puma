@@ -1,4 +1,4 @@
-import { mysqlSchema, varchar, decimal, index, datetime } from "drizzle-orm/mysql-core";
+import { mysqlSchema, varchar, decimal, index, datetime, date, text } from "drizzle-orm/mysql-core";
 
 export const household = mysqlSchema("household");
 
@@ -59,26 +59,33 @@ export const dynamicIhOrderingDetailOrderTable = (year: string, month: string) =
         wok: varchar('wok', { length: 255 }),
         region: varchar('region', { length: 30 }),
         area: varchar('area', { length: 30 }),
-        orderId: varchar('order_id'),
-        packageType: varchar('package_type'),
-        orderType: varchar('order_type'),
-        orderMode: varchar('order_mode'),
-        orderInitiatorId: varchar('order_initiator_id'),
-        orderInitiatorIdType: varchar('order_initiator_id_type'),
-        longitude: varchar('longitude'),
-        latitude: varchar('latitude'),
-        serviceId: varchar('service_id'),
-        productCommercialName: varchar('product_commercial_name'),
-        packageCat: varchar('package_cat'),
+        orderId: varchar('order_id', { length: 255 }),
+        packageType: varchar('package_type', { length: 255 }),
+        productIdCo: varchar('product_id_co', { length: 255 }),
+        orderType: varchar('order_type', { length: 255 }),
+        orderMode: varchar('order_mode', { length: 255 }),
+        orderTs: datetime('order_ts'),
+        channelName: varchar('channel_name', { length: 255 }),
+        channelGroup: varchar('channel_group', { length: 255 }),
+        orderInitiatorId: varchar('order_initiator_id', { length: 255 }),
+        orderInitiatorIdType: varchar('order_initiator_id_type', { length: 255 }),
+        longitude: varchar('longitude', { length: 255 }),
+        latitude: varchar('latitude', { length: 255 }),
+        serviceId: varchar('service_id', { length: 255 }),
+        productCommercialName: varchar('product_commercial_name', { length: 255 }),
+        packageCat: varchar('package_cat', { length: 255 }),
+        ioTs: datetime('io_ts'),
         psTs: datetime('ps_ts'),
         proviTs: datetime('provi_ts'),
-        name: varchar('name'),
-        address: varchar('address'),
-        noHandphone: varchar('no_handphone'),
-        eventDate: varchar('event_date'),
-    }, t => ({
-        eventDate: index('event_date').on(t.eventDate).using('btree')
-    }))
+        completedTs: datetime('completed_ts'),
+        name: varchar('name', { length: 255 }),
+        address: varchar('address', { length: 255 }),
+        noHandphone: varchar('no_handphone', { length: 255 }),
+        productType: text('product_type'),
+        eventDate: date('event_date'),
+    }, t => [
+        index('event_date').on(t.eventDate).using('btree')
+    ])
 }
 
 export const fmcMconTable = household.table('fmc_mcon_final_dd', {

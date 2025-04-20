@@ -48,9 +48,9 @@ const poolConnection5 = mysql.createPool({
 })
 
 const poolConnection6 = mysql.createPool({
-	host: process.env.DB_HOST2,
-	user: process.env.DB_USERNAME2,
-	password: process.env.DB_PASSWORD2,
+	host: process.env.DB_HOST,
+	user: process.env.DB_USERNAME,
+	password: process.env.DB_PASSWORD,
 	database: process.env.DB_NAME6,
 })
 

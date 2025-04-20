@@ -1,7 +1,7 @@
 'use client'
 
 import DatePicker from 'react-datepicker'
-import { subDays } from 'date-fns';
+import { getDaysInMonth, subDays, setDate, getYear, getMonth } from 'date-fns';
 
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -13,11 +13,11 @@ import { useSelectRegion } from "@/hooks/use-select-region"
 import { useSelectSto } from "@/hooks/use-select-sto"
 import { useSelectWok } from "@/hooks/use-select-wok"
 import { useGetFMCAreas } from "@/modules/areas/hooks/use-get-fmc-areas"
-import { useSelectDate } from '@/hooks/use-select-date';
+import { useSelectDateFmc } from '@/hooks/use-select-date-fmc';
 
 export const Filter = () => {
     const { data: areas, isLoading } = useGetFMCAreas()
-    const { date: selectedDate, setDate: setSelectedDate } = useSelectDate()
+    const { date: selectedDate, setDate: setSelectedDate } = useSelectDateFmc()
     const { region: selectedRegion, setSelectedRegion } = useSelectRegion()
     const { branch: selectedBranch, setSelectedBranch } = useSelectBranch()
     const { wok, setSelectedWok } = useSelectWok()
@@ -67,8 +67,14 @@ export const Filter = () => {
     }
 
     const handleDateChange = (date: Date | null) => {
-        const notNullDate = date ? date : subDays(new Date(), 2)
-        setSelectedDate(notNullDate)
+        const today = new Date().getDate() - 2;
+        const safeDate = date ?? subDays(new Date(), 2)
+
+        const lastDayOfMonth = getDaysInMonth(safeDate)
+        const day = Math.min(today, lastDayOfMonth); // Ensure valid day in the month
+
+        // this for month picker, doesnt include day
+        setSelectedDate(setDate(new Date(getYear(safeDate), getMonth(safeDate), 1), day));
     }
 
     const regionalOptions = areas.map(area => ({
@@ -155,8 +161,55 @@ export const Filter = () => {
                 <DatePicker
                     selected={selectedDate ? selectedDate : subDays(new Date(), 2)}
                     renderMonthContent={renderMonthContent}
+                    renderCustomHeader={({
+                        monthDate,
+                        customHeaderCount,
+                        decreaseMonth,
+                        increaseMonth,
+                    }) => (
+                        <div>
+                            <button
+                                aria-label="Previous Month"
+                                className={
+                                    "react-datepicker__navigation react-datepicker__navigation--previous"
+                                }
+                                style={customHeaderCount === 1 ? { visibility: "hidden" } : undefined}
+                                onClick={decreaseMonth}
+                            >
+                                <span
+                                    className={
+                                        "react-datepicker__navigation-icon react-datepicker__navigation-icon--previous"
+                                    }
+                                >
+                                    {"<"}
+                                </span>
+                            </button>
+                            <span className="react-datepicker__current-month">
+                                {monthDate.toLocaleString("en-US", {
+                                    month: "long",
+                                    year: "numeric",
+                                })}
+                            </span>
+                            <button
+                                aria-label="Next Month"
+                                className={
+                                    "react-datepicker__navigation react-datepicker__navigation--next"
+                                }
+                                style={customHeaderCount === 0 ? { visibility: "hidden" } : undefined}
+                                onClick={increaseMonth}
+                            >
+                                <span
+                                    className={
+                                        "react-datepicker__navigation-icon react-datepicker__navigation-icon--next"
+                                    }
+                                >
+                                    {">"}
+                                </span>
+                            </button>
+                        </div>
+                    )}
                     onChange={(date) => handleDateChange(date)}
-                    dateFormat="yyyy-MM-dd"
+                    dateFormat="yyyy-MM"
                     maxDate={subDays(new Date(), 2)}
                     className="w-full text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     calendarClassName="shadow-lg border-0"
@@ -165,7 +218,7 @@ export const Filter = () => {
                     }
                     wrapperClassName="w-full"
                     showPopperArrow={false}
-                    showDateSelect
+                    showMonthYearPicker
                 />
             </div>
         </div>

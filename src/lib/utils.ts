@@ -34,8 +34,8 @@ export function formatToIDR(number: number) {
 	return (number).toLocaleString("id-ID", {
 		style: 'currency',
 		currency: 'IDR',
-		maximumFractionDigits: 2,
-		minimumFractionDigits: 2,
+		maximumFractionDigits: 0,
+		minimumFractionDigits: 0,
 	})
 }
 
